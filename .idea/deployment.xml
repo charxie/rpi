@@ -11,6 +11,15 @@
           </mappings>
         </serverdata>
       </paths>
+      <paths name="Pi2">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/" local="$PROJECT_DIR$" web="/" />
+            <mapping deploy="/src/main" local="$PROJECT_DIR$/src/main" web="/src/main" />
+            <mapping deploy="/src/test" local="$PROJECT_DIR$/src/test" web="/src/test" />
+          </mappings>
+        </serverdata>
+      </paths>
     </serverData>
     <option name="myAutoUpload" value="ALWAYS" />
   </component>

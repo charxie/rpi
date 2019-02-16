@@ -12,7 +12,11 @@ import com.pi4j.io.gpio.*;
 import com.pi4j.io.gpio.event.GpioPinDigitalStateChangeEvent;
 import com.pi4j.io.gpio.event.GpioPinListenerDigital;
 
-public class Hello {
+/**
+ * @author Charles Xie
+ */
+
+public class RainbowHat {
 
     public static void main(final String[] args) {
 
@@ -24,7 +28,7 @@ public class Hello {
         GpioPinDigitalOutput greenLed = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_24, "Green LED", PinState.HIGH);
         GpioPinDigitalOutput blueLed = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_25, "Blue LED", PinState.HIGH);
 
-        System.out.println("Hello " + redLed.isHigh() + ", " + greenLed.isHigh() + ", " + blueLed.isHigh() + ", " + buttonA.isHigh() + ", " + buttonB.isHigh() + ", " + buttonC.isHigh());
+        System.out.println("RainbowHat " + redLed.isHigh() + ", " + greenLed.isHigh() + ", " + blueLed.isHigh() + ", " + buttonA.isHigh() + ", " + buttonB.isHigh() + ", " + buttonC.isHigh());
         //redLed.blink(1000);
         //greenLed.blink(1000);
         //blueLed.blink(1000);

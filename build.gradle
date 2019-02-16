@@ -18,4 +18,4 @@ dependencies {
 }
 
 apply plugin: 'application'
-mainClassName = 'org.concord.iot.Hello'
+mainClassName = 'org.concord.iot.RainbowHat'
