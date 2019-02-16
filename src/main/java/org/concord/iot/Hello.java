@@ -8,11 +8,16 @@ import com.google.firebase.database.*;
 import java.io.FileInputStream;
 import java.io.IOException;
 
+import com.pi4j.io.gpio.GpioController;
+import com.pi4j.io.gpio.GpioFactory;
+
 public class Hello {
 
     public static void main(final String[] args) {
 
         System.out.println("Hello");
+
+        final GpioController gpio = GpioFactory.getInstance();
 
         try {
             FileInputStream serviceAccount = new FileInputStream("raspberry-pi-java-firebase-adminsdk-eeeo1-f7e5dc2054.json");
