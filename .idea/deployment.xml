@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PublishConfigData" autoUpload="Always" serverName="Pi1" autoUploadExternalChanges="true">
+    <serverData>
+      <paths name="Pi1">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/" local="$PROJECT_DIR$" web="/" />
+            <mapping deploy="/src/main" local="$PROJECT_DIR$/src/main" web="/src/main" />
+            <mapping deploy="/src/test" local="$PROJECT_DIR$/src/test" web="/src/test" />
+          </mappings>
+        </serverdata>
+      </paths>
+    </serverData>
+    <option name="myAutoUpload" value="ALWAYS" />
+  </component>
+</project>
