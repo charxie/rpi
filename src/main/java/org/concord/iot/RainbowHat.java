@@ -139,6 +139,7 @@ public class RainbowHat {
                 System.out.println("You typed: " + line);
             }
             scanner.close();
+            System.exit(0); // call this to exit and avoid a broken pipe error
 
         } else {
             EventQueue.invokeLater(() -> rainbowHat.createAndShowGui());
