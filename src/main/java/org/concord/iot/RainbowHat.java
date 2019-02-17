@@ -4,17 +4,16 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.firebase.database.*;
+import com.pi4j.io.gpio.*;
+import com.pi4j.io.gpio.event.GpioPinListenerDigital;
 
+import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.FileInputStream;
 import java.io.IOException;
-
-import com.pi4j.io.gpio.*;
-import com.pi4j.io.gpio.event.GpioPinListenerDigital;
-
-import javax.swing.*;
+import java.util.Scanner;
 
 /**
  * @author Charles Xie
@@ -95,9 +94,7 @@ public class RainbowHat {
         buttonC.removeAllListeners();
     }
 
-    private static void createAndShowGui() {
-
-        final RainbowHat rainbowHat = new RainbowHat();
+    private void createAndShowGui() {
 
         final JFrame frame = new JFrame("Rainbow HAT");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -105,7 +102,7 @@ public class RainbowHat {
         frame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                rainbowHat.destroy();
+                destroy();
                 System.exit(0);
             }
         });
@@ -118,7 +115,7 @@ public class RainbowHat {
 
         JButton button = new JButton("Close");
         button.addActionListener(e -> {
-            rainbowHat.destroy();
+            destroy();
             frame.dispose();
             System.exit(0);
         });
@@ -130,7 +127,23 @@ public class RainbowHat {
     }
 
     public static void main(final String[] args) {
-        EventQueue.invokeLater(() -> createAndShowGui());
+
+        final RainbowHat rainbowHat = new RainbowHat();
+
+        if (GraphicsEnvironment.isHeadless()) {
+
+            Scanner scanner = new Scanner(System.in);
+            String line = "";
+            while (!"exit".equalsIgnoreCase(line)) {
+                line = scanner.next();
+                System.out.println("You typed: " + line);
+            }
+            scanner.close();
+
+        } else {
+            EventQueue.invokeLater(() -> rainbowHat.createAndShowGui());
+        }
+
     }
 
 }
