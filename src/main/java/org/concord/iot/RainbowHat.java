@@ -6,6 +6,9 @@ import com.google.firebase.FirebaseOptions;
 import com.google.firebase.database.*;
 import com.pi4j.io.gpio.*;
 import com.pi4j.io.gpio.event.GpioPinListenerDigital;
+import com.pi4j.io.spi.SpiChannel;
+import com.pi4j.io.spi.SpiDevice;
+import com.pi4j.io.spi.SpiFactory;
 
 import javax.swing.*;
 import java.awt.*;
@@ -13,6 +16,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 /**
@@ -21,6 +25,9 @@ import java.util.Scanner;
 
 public class RainbowHat {
 
+    private static final int LEDSTRIP_BRIGHTNESS = 1;
+    private static final int MINIMUM_SENSOR_DATA_TRANSMISSION_INTERVAL = 1000;
+
     private GpioController gpio;
     private GpioPinDigitalInput buttonA;
     private GpioPinDigitalInput buttonB;
@@ -28,6 +35,10 @@ public class RainbowHat {
     private GpioPinDigitalOutput redLed;
     private GpioPinDigitalOutput greenLed;
     private GpioPinDigitalOutput blueLed;
+    private SpiDevice spi;
+    private int[] rainbow = new int[RainbowHatState.NUMBER_OF_LED_IN_STRIP];
+
+    private DatabaseReference database;
 
     public RainbowHat() {
         init();
@@ -37,23 +48,51 @@ public class RainbowHat {
 
         gpio = GpioFactory.getInstance();
 
-        buttonA = gpio.provisionDigitalInputPin(RaspiPin.GPIO_29, "Button A", PinPullResistance.PULL_DOWN);
-        buttonB = gpio.provisionDigitalInputPin(RaspiPin.GPIO_28, "Button B", PinPullResistance.PULL_DOWN);
-        buttonC = gpio.provisionDigitalInputPin(RaspiPin.GPIO_27, "Button C", PinPullResistance.PULL_DOWN);
+        buttonA = gpio.provisionDigitalInputPin(RaspiPin.GPIO_29, "Button A");
+        buttonB = gpio.provisionDigitalInputPin(RaspiPin.GPIO_28, "Button B");
+        buttonC = gpio.provisionDigitalInputPin(RaspiPin.GPIO_27, "Button C");
         redLed = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_22, "Red LED", PinState.LOW);
         greenLed = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_24, "Green LED", PinState.LOW);
         blueLed = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_25, "Blue LED", PinState.LOW);
 
-        System.out.println("Initial state: red LED = " + redLed.isHigh() + ", green LED = " + greenLed.isHigh() + ", blue LED = " + blueLed.isHigh() + ", button A = " + buttonA.isHigh() + ", button B = " + buttonB.isHigh() + ", button C = " + buttonC.isHigh());
+        System.out.println("Setting up SPI...");
+        try {
+            spi = SpiFactory.getInstance(SpiChannel.CS0, SpiDevice.DEFAULT_SPI_SPEED, SpiDevice.DEFAULT_SPI_MODE);
+            spi.write(new byte[]{(byte) 0b11111111, (byte) 0b00000000, (byte) 0b00000000, (byte) 0b11111111});
+        } catch (IOException e) {
+            System.out.println("Failed setting up SPI...");
+            e.printStackTrace();
+        }
 
         GpioPinListenerDigital listener = event -> {
             GpioPin pin = event.getPin();
             PinState pinState = event.getState();
             System.out.println("GPIO Pin state change: " + pin + " = " + pinState);
-            if (pinState.isHigh()) {
-                redLed.low();
-            } else {
-                redLed.high();
+            switch (pin.getPin().getAddress()) {
+                case 29:
+                    if (pinState.isHigh()) {
+                        redLed.low();
+                    } else {
+                        redLed.high();
+                    }
+                    database.child("redLed").setValue(redLed.isHigh(), null);
+                    break;
+                case 28:
+                    if (pinState.isHigh()) {
+                        greenLed.low();
+                    } else {
+                        greenLed.high();
+                    }
+                    database.child("greenLed").setValue(greenLed.isHigh(), null);
+                    break;
+                case 27:
+                    if (pinState.isHigh()) {
+                        blueLed.low();
+                    } else {
+                        blueLed.high();
+                    }
+                    database.child("blueLed").setValue(blueLed.isHigh(), null);
+                    break;
             }
         };
         buttonA.addListener(listener);
@@ -62,15 +101,27 @@ public class RainbowHat {
 
         try {
             FileInputStream serviceAccount = new FileInputStream("raspberry-pi-java-firebase-adminsdk-eeeo1-f7e5dc2054.json");
-            FirebaseOptions options = new FirebaseOptions.Builder().setCredentials(GoogleCredentials.fromStream(serviceAccount))
-                    .setDatabaseUrl("https://raspberry-pi-java.firebaseio.com").build();
+            FirebaseOptions options = new FirebaseOptions.Builder().setCredentials(GoogleCredentials.fromStream(serviceAccount)).setDatabaseUrl("https://raspberry-pi-java.firebaseio.com").build();
             FirebaseApp.initializeApp(options);
-            final FirebaseDatabase database = FirebaseDatabase.getInstance();
-            DatabaseReference ref = database.getReference("Name");
-            ref.addValueEventListener(new ValueEventListener() {
+            database = FirebaseDatabase.getInstance().getReference("rainbow_hat");
+            // database.setValue(new RainbowHatState(), null);
+            database.addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) { // This method is called once with the initial value and again whenever data at this location is updated.
+
                     System.out.println("Value changed: " + dataSnapshot.getValue());
+                    RainbowHatState state = dataSnapshot.getValue(RainbowHatState.class);
+
+                    redLed.setState(state.redLed);
+                    greenLed.setState(state.greenLed);
+                    blueLed.setState(state.blueLed);
+
+                    for (int i = 0; i < rainbow.length; i++) { // the led strip goes from the right to the left (0 is the rightmost and 6 is the leftmost).
+                        ArrayList<Integer> rgb = state.ledStripColors.get(i);
+                        rainbow[i] = Util.rgbToInt(rgb.get(0), rgb.get(1), rgb.get(2));
+                    }
+                    //spi.write()
+
                 }
 
                 @Override
@@ -82,16 +133,15 @@ public class RainbowHat {
             e.printStackTrace();
         }
 
-        //redLed.blink(1000);
-        //greenLed.blink(1000);
-        //blueLed.blink(1000);
-
     }
 
     private void destroy() {
         buttonA.removeAllListeners();
         buttonB.removeAllListeners();
         buttonC.removeAllListeners();
+        redLed.setShutdownOptions(true, PinState.LOW, PinPullResistance.OFF);
+        greenLed.setShutdownOptions(true, PinState.LOW, PinPullResistance.OFF);
+        blueLed.setShutdownOptions(true, PinState.LOW, PinPullResistance.OFF);
     }
 
     private void createAndShowGui() {
@@ -134,11 +184,12 @@ public class RainbowHat {
 
             Scanner scanner = new Scanner(System.in);
             String line = "";
-            while (!"exit".equalsIgnoreCase(line)) {
+            while (!"q".equalsIgnoreCase(line)) {
                 line = scanner.next();
                 System.out.println("You typed: " + line);
             }
             scanner.close();
+            rainbowHat.destroy();
             System.exit(0); // call this to exit and avoid a broken pipe error
 
         } else {
