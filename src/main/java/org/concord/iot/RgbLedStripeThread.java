@@ -26,14 +26,6 @@ public class RgbLedStripeThread extends Thread {
     byte bB = 0;
     byte bSegment = 0;
 
-    byte[] init = new byte[]{(byte) 0b00000000, (byte) 0b00000000, (byte) 0b00000000, (byte) 0b00000000};
-    byte[] black = new byte[]{(byte) 0b11111111, (byte) 0b00000000, (byte) 0b00000000, (byte) 0b00000000};
-    byte[] red = new byte[]{(byte) 0b11111111, (byte) 0b00000000, (byte) 0b00000000, (byte) 0b11111111};
-    byte[] green = new byte[]{(byte) 0b11111111, (byte) 0b00000000, (byte) 0b11111111, (byte) 0b00000000};
-    byte[] blue = new byte[]{(byte) 0b11111111, (byte) 0b11111111, (byte) 0b00000000, (byte) 0b00000000};
-    byte[] white = new byte[]{(byte) 0b11111111, (byte) 0b11111111, (byte) 0b11111111, (byte) 0b11111111};
-
-
     public RgbLedStripeThread() {
         try {
             spi = SpiFactory.getInstance(SpiChannel.CS0, SpiDevice.DEFAULT_SPI_SPEED, SpiDevice.DEFAULT_SPI_MODE);
@@ -48,7 +40,7 @@ public class RgbLedStripeThread extends Thread {
 
     private void turn(byte[] color, int pixels, int sleep) {
         try {
-            spi.write(init);
+            spi.write(RainbowHat.INIT);
             if (sleep > 0) Thread.sleep(sleep);
             for (int i = 0; i < pixels; i++) {
                 spi.write(color);
@@ -60,12 +52,12 @@ public class RgbLedStripeThread extends Thread {
     }
 
 
-    private void blink(byte[] color, int times, int delay) {
+    private void blink(byte[] color, int pixels, int times, int delay) {
         try {
             for (int i = 0; i < times; i++) {
-                turn(black, 20, 0);
+                turn(RainbowHat.BLACK, 20, 0);
                 Thread.sleep(delay);
-                turn(color, 20, 0);
+                turn(color, pixels, 0);
                 Thread.sleep(delay);
             }
         } catch (InterruptedException e) {
@@ -79,7 +71,7 @@ public class RgbLedStripeThread extends Thread {
         byte max = 0b00011111;
         byte min = 0b00000000;
         try {
-            spi.write(init);
+            spi.write(RainbowHat.INIT);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -163,26 +155,24 @@ public class RgbLedStripeThread extends Thread {
 
     }
 
-
     @Override
     public void run() {
-        turn(red, 8, 0);
         // Blink each RGB color and also white 3 times.
-//        blink(red, 3, 500);
-//        blink(green, 3, 500);
-//        blink(blue, 3, 500);
-//        blink(white, 3, 500);
-//        try {
-//            // Start a continuously rolling rainbow, stepping at 100 ms intervals.
-//            while (!stop) {
-//                rainbowNext(RainbowHatState.NUMBER_OF_LEDS_IN_STRIPE);
-//                Thread.sleep(100);
-//            }
-//        } catch (Exception e) {
-//            log("Fatal error in LED controller.\n" + e);
-//            System.exit(1);
-//        } finally {
-//        }
+        blink(RainbowHat.RED, RainbowHatState.NUMBER_OF_LEDS_IN_STRIPE, 3,500);
+        blink(RainbowHat.GREEN, RainbowHatState.NUMBER_OF_LEDS_IN_STRIPE, 3, 500);
+        blink(RainbowHat.BLUE, RainbowHatState.NUMBER_OF_LEDS_IN_STRIPE,3, 500);
+        blink(RainbowHat.WHITE, RainbowHatState.NUMBER_OF_LEDS_IN_STRIPE,3, 500);
+        try {
+            // Start a continuously rolling rainbow, stepping at 100 ms intervals.
+            while (!stop) {
+                rainbowNext(RainbowHatState.NUMBER_OF_LEDS_IN_STRIPE);
+                Thread.sleep(100);
+            }
+        } catch (Exception e) {
+            log("Fatal error in LED controller.\n" + e);
+            System.exit(1);
+        } finally {
+        }
     }
 
 }
