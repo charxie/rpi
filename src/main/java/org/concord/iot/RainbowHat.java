@@ -34,6 +34,8 @@ public class RainbowHat {
     private GpioPinDigitalOutput blueLed;
     private Apa102 apa102;
     private Bmp280 bmp280;
+    private AlphanumericDisplay display;
+    private String displayMode = "None";
 
     private DatabaseReference database;
 
@@ -48,6 +50,8 @@ public class RainbowHat {
 
     private void init() {
 
+        synchronizeWithCloud();
+
         gpio = GpioFactory.getInstance();
 
         buttonA = gpio.provisionDigitalInputPin(RaspiPin.GPIO_29, "Button A");
@@ -57,43 +61,12 @@ public class RainbowHat {
         greenLed = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_24, "Green LED", PinState.LOW);
         blueLed = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_25, "Blue LED", PinState.LOW);
 
-        GpioPinListenerDigital listener = event -> {
-            GpioPin pin = event.getPin();
-            PinState pinState = event.getState();
-            System.out.println("GPIO Pin state change: " + pin + " = " + pinState);
-            switch (pin.getPin().getAddress()) {
-                case 29:
-                    if (pinState.isHigh()) {
-                        redLed.low();
-                    } else {
-                        redLed.high();
-                    }
-                    database.child("redLed").setValue(redLed.isHigh(), null);
-                    break;
-                case 28:
-                    if (pinState.isHigh()) {
-                        greenLed.low();
-                    } else {
-                        greenLed.high();
-                    }
-                    database.child("greenLed").setValue(greenLed.isHigh(), null);
-                    break;
-                case 27:
-                    if (pinState.isHigh()) {
-                        blueLed.low();
-                    } else {
-                        blueLed.high();
-                    }
-                    database.child("blueLed").setValue(blueLed.isHigh(), null);
-                    break;
-            }
-        };
-        buttonA.addListener(listener);
-        buttonB.addListener(listener);
-        buttonC.addListener(listener);
-
         apa102 = new Apa102();
         //apa102.setColor(2, Color.BLUE); // test
+
+        display = new AlphanumericDisplay(AlphanumericDisplay.HT16K33.BLINK_OFF, AlphanumericDisplay.HT16K33.DUTY_01);
+        display.displayOn();
+        display.display("----");
 
         try {
             bmp280 = new Bmp280(Bmp280.Protocol.I2C, Bmp280.ADDR_SDO_2_VDDIO, I2CBus.BUS_1);
@@ -106,6 +79,76 @@ public class RainbowHat {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        setupButtons();
+        startSensorDataCollection();
+
+    }
+
+    private void setupButtons() {
+        GpioPinListenerDigital listener = event -> {
+            GpioPin pin = event.getPin();
+            PinState pinState = event.getState();
+            System.out.println("GPIO Pin state change: " + pin + " = " + pinState);
+            switch (pin.getPin().getAddress()) {
+                case 29: // button A pressed
+                    if (pinState.isHigh()) {
+                        redLed.low();
+                    } else {
+                        redLed.high();
+                    }
+                    database.child("redLed").setValue(redLed.isHigh(), null);
+                    displayMode = "Temperature";
+                    database.child("displayMode").setValue(displayMode, null);
+                    updateDisplay();
+                    break;
+                case 28: // button B pressed
+                    if (pinState.isHigh()) {
+                        greenLed.low();
+                    } else {
+                        greenLed.high();
+                    }
+                    database.child("greenLed").setValue(greenLed.isHigh(), null);
+                    displayMode = "Pressure";
+                    database.child("displayMode").setValue(displayMode, null);
+                    updateDisplay();
+                    break;
+                case 27: // button C pressed
+                    if (pinState.isHigh()) {
+                        blueLed.low();
+                    } else {
+                        blueLed.high();
+                    }
+                    database.child("blueLed").setValue(blueLed.isHigh(), null);
+                    break;
+            }
+        };
+        buttonA.addListener(listener);
+        buttonB.addListener(listener);
+        buttonC.addListener(listener);
+    }
+
+    private void updateDisplay() {
+        if (display != null) {
+            String text = "----";
+            if ("Temperature".equalsIgnoreCase(displayMode)) {
+                text = removeDot(Float.toString(temperature)).substring(0, 4);
+            } else if ("Pressure".equalsIgnoreCase(displayMode)) {
+                text = removeDot(Float.toString(barometricPressure)).substring(0, 4);
+            }
+            display.display(text);
+        }
+    }
+
+    private static String removeDot(String s){
+        int i = s.indexOf('.');
+        if (i != -1) {
+            s = s.substring(0, i) + s.substring(i + 1);
+        }
+        return s;
+    }
+
+    private void startSensorDataCollection() {
         Thread sensorThread = new Thread(() -> {
             while (true) {
                 try {
@@ -114,6 +157,7 @@ public class RainbowHat {
                     barometricPressure = (float) results[Bmp280.PRES_VAL];
                     System.out.printf("Temperature in Celsius : %.2f C %n", temperature);
                     System.out.printf("Pressure : %.2f hPa %n", barometricPressure);
+                    updateDisplay();
                     if (allowTemperatureTransmission) {
                         database.child("temperature").setValue(temperature, null);
                     }
@@ -131,7 +175,9 @@ public class RainbowHat {
         });
         sensorThread.setPriority(Thread.MIN_PRIORITY);
         sensorThread.start();
+    }
 
+    private void synchronizeWithCloud() {
         try {
             FileInputStream serviceAccount = new FileInputStream("raspberry-pi-java-firebase-adminsdk-eeeo1-f7e5dc2054.json");
             FirebaseOptions options = new FirebaseOptions.Builder().setCredentials(GoogleCredentials.fromStream(serviceAccount)).setDatabaseUrl("https://raspberry-pi-java.firebaseio.com").build();
@@ -155,6 +201,8 @@ public class RainbowHat {
                         apa102.setColor(i, new Color(rgb.get(0), rgb.get(1), rgb.get(2)));
                     }
 
+                    displayMode = state.displayMode;
+
                 }
 
                 @Override
@@ -165,7 +213,6 @@ public class RainbowHat {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
     private void destroy() {
@@ -176,6 +223,7 @@ public class RainbowHat {
         greenLed.setShutdownOptions(true, PinState.LOW, PinPullResistance.OFF);
         blueLed.setShutdownOptions(true, PinState.LOW, PinPullResistance.OFF);
         apa102.turnoff();
+        display.displayOff();
         // stop all GPIO activity/threads by shutting down the GPIO controller (this method will forcefully shutdown all GPIO monitoring threads and scheduled tasks)
         gpio.shutdown();
     }
