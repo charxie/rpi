@@ -1,5 +1,9 @@
 package org.concord.iot;
 
+/**
+ * @author Charles Xie
+ */
+
 public final class Util {
 
     public static int rgbToInt(int r, int g, int b) {

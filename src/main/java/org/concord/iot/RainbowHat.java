@@ -6,9 +6,6 @@ import com.google.firebase.FirebaseOptions;
 import com.google.firebase.database.*;
 import com.pi4j.io.gpio.*;
 import com.pi4j.io.gpio.event.GpioPinListenerDigital;
-import com.pi4j.io.spi.SpiChannel;
-import com.pi4j.io.spi.SpiDevice;
-import com.pi4j.io.spi.SpiFactory;
 
 import javax.swing.*;
 import java.awt.*;
@@ -35,7 +32,6 @@ public class RainbowHat {
     private GpioPinDigitalOutput redLed;
     private GpioPinDigitalOutput greenLed;
     private GpioPinDigitalOutput blueLed;
-    private SpiDevice spi;
     private int[] rainbow = new int[RainbowHatState.NUMBER_OF_LED_IN_STRIP];
 
     private DatabaseReference database;
@@ -54,15 +50,6 @@ public class RainbowHat {
         redLed = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_22, "Red LED", PinState.LOW);
         greenLed = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_24, "Green LED", PinState.LOW);
         blueLed = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_25, "Blue LED", PinState.LOW);
-
-        System.out.println("Setting up SPI...");
-        try {
-            spi = SpiFactory.getInstance(SpiChannel.CS0, SpiDevice.DEFAULT_SPI_SPEED, SpiDevice.DEFAULT_SPI_MODE);
-            spi.write(new byte[]{(byte) 0b11111111, (byte) 0b00000000, (byte) 0b00000000, (byte) 0b11111111});
-        } catch (IOException e) {
-            System.out.println("Failed setting up SPI...");
-            e.printStackTrace();
-        }
 
         GpioPinListenerDigital listener = event -> {
             GpioPin pin = event.getPin();
@@ -120,7 +107,6 @@ public class RainbowHat {
                         ArrayList<Integer> rgb = state.ledStripColors.get(i);
                         rainbow[i] = Util.rgbToInt(rgb.get(0), rgb.get(1), rgb.get(2));
                     }
-                    //spi.write()
 
                 }
 
@@ -133,6 +119,12 @@ public class RainbowHat {
             e.printStackTrace();
         }
 
+        try {
+            new RgbLedSpi().start();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
     private void destroy() {
@@ -142,6 +134,8 @@ public class RainbowHat {
         redLed.setShutdownOptions(true, PinState.LOW, PinPullResistance.OFF);
         greenLed.setShutdownOptions(true, PinState.LOW, PinPullResistance.OFF);
         blueLed.setShutdownOptions(true, PinState.LOW, PinPullResistance.OFF);
+        // stop all GPIO activity/threads by shutting down the GPIO controller (this method will forcefully shutdown all GPIO monitoring threads and scheduled tasks)
+        gpio.shutdown();
     }
 
     private void createAndShowGui() {
