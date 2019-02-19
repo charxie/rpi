@@ -7,6 +7,8 @@ import com.google.firebase.database.*;
 import com.pi4j.io.gpio.*;
 import com.pi4j.io.gpio.event.GpioPinListenerDigital;
 import com.pi4j.io.i2c.I2CBus;
+import com.pi4j.wiringpi.Gpio;
+import com.pi4j.wiringpi.SoftPwm;
 
 import javax.swing.*;
 import java.awt.*;
@@ -32,6 +34,7 @@ public class RainbowHat {
     private GpioPinDigitalOutput redLed;
     private GpioPinDigitalOutput greenLed;
     private GpioPinDigitalOutput blueLed;
+    private GpioPinDigitalOutput buzzer;
     private Apa102 apa102;
     private Bmp280 bmp280;
     private AlphanumericDisplay display;
@@ -52,6 +55,7 @@ public class RainbowHat {
 
         synchronizeWithCloud();
 
+        Gpio.wiringPiSetup(); // initialize the wiringPi library, this is needed for PWM
         gpio = GpioFactory.getInstance();
 
         buttonA = gpio.provisionDigitalInputPin(RaspiPin.GPIO_29, "Button A");
@@ -60,6 +64,7 @@ public class RainbowHat {
         redLed = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_22, "Red LED", PinState.LOW);
         greenLed = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_24, "Green LED", PinState.LOW);
         blueLed = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_25, "Blue LED", PinState.LOW);
+        buzzer = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_23, "Buzzer", PinState.LOW);
 
         apa102 = new Apa102();
         //apa102.setColor(2, Color.BLUE); // test
@@ -85,6 +90,26 @@ public class RainbowHat {
 
     }
 
+    private void buzz(int k) {
+        SoftPwm.softPwmStop(buzzer.getPin().getAddress());
+        switch (k) {
+            case 1:
+                SoftPwm.softPwmCreate(buzzer.getPin().getAddress(), 0, 100);
+                SoftPwm.softPwmWrite(buzzer.getPin().getAddress(), 1);
+                break;
+            case 2:
+                SoftPwm.softPwmCreate(buzzer.getPin().getAddress(), 0, 1000);
+                SoftPwm.softPwmWrite(buzzer.getPin().getAddress(), 10);
+                break;
+            case 3:
+                SoftPwm.softPwmCreate(buzzer.getPin().getAddress(), 0, 100);
+                SoftPwm.softPwmWrite(buzzer.getPin().getAddress(), 100);
+                break;
+            default:
+                SoftPwm.softPwmWrite(buzzer.getPin().getAddress(), 0);
+        }
+    }
+
     private void setupButtons() {
         GpioPinListenerDigital listener = event -> {
             GpioPin pin = event.getPin();
@@ -94,8 +119,10 @@ public class RainbowHat {
                 case 29: // button A pressed
                     if (pinState.isHigh()) {
                         redLed.low();
+                        buzz(0);
                     } else {
                         redLed.high();
+                        buzz(1);
                     }
                     database.child("redLed").setValue(redLed.isHigh(), null);
                     displayMode = "Temperature";
@@ -105,8 +132,10 @@ public class RainbowHat {
                 case 28: // button B pressed
                     if (pinState.isHigh()) {
                         greenLed.low();
+                        buzz(0);
                     } else {
                         greenLed.high();
+                        buzz(2);
                     }
                     database.child("greenLed").setValue(greenLed.isHigh(), null);
                     displayMode = "Pressure";
@@ -116,8 +145,10 @@ public class RainbowHat {
                 case 27: // button C pressed
                     if (pinState.isHigh()) {
                         blueLed.low();
+                        buzz(0);
                     } else {
                         blueLed.high();
+                        buzz(3);
                     }
                     database.child("blueLed").setValue(blueLed.isHigh(), null);
                     break;
@@ -128,19 +159,23 @@ public class RainbowHat {
         buttonC.addListener(listener);
     }
 
+    // TODO: Demical point
     private void updateDisplay() {
         if (display != null) {
             String text = "----";
             if ("Temperature".equalsIgnoreCase(displayMode)) {
-                text = removeDot(Float.toString(temperature)).substring(0, 4);
+                text = removeDot(Float.toString(temperature));
             } else if ("Pressure".equalsIgnoreCase(displayMode)) {
-                text = removeDot(Float.toString(barometricPressure)).substring(0, 4);
+                text = removeDot(Float.toString(barometricPressure));
+            }
+            if (text.length() > 4) {
+                text = text.substring(0, 4);
             }
             display.display(text);
         }
     }
 
-    private static String removeDot(String s){
+    private static String removeDot(String s) {
         int i = s.indexOf('.');
         if (i != -1) {
             s = s.substring(0, i) + s.substring(i + 1);

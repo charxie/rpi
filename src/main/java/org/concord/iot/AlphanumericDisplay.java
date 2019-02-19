@@ -388,7 +388,7 @@ public class AlphanumericDisplay {
 
         // The passed displayString must be exactly 4 characters in length.
         if (displayString.length() != 4) {
-            System.out.println("*** Error *** The displayString passed must be exactly 4 characters!");
+            System.out.println("*** Error *** The displayString passed must be exactly 4 characters! -- " + displayString);
             System.out.println("displayString length found: " + displayString.length());
             System.exit(-1);
         }
