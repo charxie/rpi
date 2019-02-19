@@ -6,6 +6,7 @@ import com.google.firebase.FirebaseOptions;
 import com.google.firebase.database.*;
 import com.pi4j.io.gpio.*;
 import com.pi4j.io.gpio.event.GpioPinListenerDigital;
+import com.pi4j.io.i2c.I2CBus;
 
 import javax.swing.*;
 import java.awt.*;
@@ -22,7 +23,7 @@ import java.util.Scanner;
 
 public class RainbowHat {
 
-    private static final int MINIMUM_SENSOR_DATA_TRANSMISSION_INTERVAL = 1000;
+    private static final int SENSOR_DATA_COLLECTION_INTERVAL = 1000; // milliseconds
 
     private GpioController gpio;
     private GpioPinDigitalInput buttonA;
@@ -32,8 +33,14 @@ public class RainbowHat {
     private GpioPinDigitalOutput greenLed;
     private GpioPinDigitalOutput blueLed;
     private Apa102 apa102;
+    private Bmp280 bmp280;
 
     private DatabaseReference database;
+
+    private float temperature;
+    private float barometricPressure;
+    private boolean allowTemperatureTransmission;
+    private boolean allowBarometricPressureTransmission;
 
     public RainbowHat() {
         init();
@@ -89,6 +96,43 @@ public class RainbowHat {
         //apa102.setColor(2, Color.BLUE); // test
 
         try {
+            bmp280 = new Bmp280(Bmp280.Protocol.I2C, Bmp280.ADDR_SDO_2_VDDIO, I2CBus.BUS_1);
+            bmp280.setIndoorNavigationMode();
+            bmp280.setMode(Bmp280.Mode.NORMAL, true);
+            bmp280.setTemperatureSampleRate(Bmp280.Temperature_Sample_Resolution.TWO, true);
+            bmp280.setPressureSampleRate(Bmp280.Pressure_Sample_Resolution.SIXTEEN, true);
+            bmp280.setIIRFilter(Bmp280.IIRFilter.SIXTEEN, true);
+            bmp280.setStandbyTime(Bmp280.Standby_Time.MS_POINT_5, true);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        Thread sensorThread = new Thread(() -> {
+            while (true) {
+                try {
+                    double[] results = bmp280.sampleDeviceReads();
+                    temperature = (float) results[Bmp280.TEMP_VAL_C];
+                    barometricPressure = (float) results[Bmp280.PRES_VAL];
+                    System.out.printf("Temperature in Celsius : %.2f C %n", temperature);
+                    System.out.printf("Pressure : %.2f hPa %n", barometricPressure);
+                    if (allowTemperatureTransmission) {
+                        database.child("temperature").setValue(temperature, null);
+                    }
+                    if (allowBarometricPressureTransmission) {
+                        database.child("barometricPressure").setValue(barometricPressure, null);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                try {
+                    Thread.sleep(SENSOR_DATA_COLLECTION_INTERVAL);
+                } catch (InterruptedException e) {
+                }
+            }
+        });
+        sensorThread.setPriority(Thread.MIN_PRIORITY);
+        sensorThread.start();
+
+        try {
             FileInputStream serviceAccount = new FileInputStream("raspberry-pi-java-firebase-adminsdk-eeeo1-f7e5dc2054.json");
             FirebaseOptions options = new FirebaseOptions.Builder().setCredentials(GoogleCredentials.fromStream(serviceAccount)).setDatabaseUrl("https://raspberry-pi-java.firebaseio.com").build();
             FirebaseApp.initializeApp(options);
@@ -100,6 +144,8 @@ public class RainbowHat {
 
                     System.out.println("Value changed: " + dataSnapshot.getValue());
                     RainbowHatState state = dataSnapshot.getValue(RainbowHatState.class);
+                    allowTemperatureTransmission = state.allowTemperatureTransmission;
+                    allowBarometricPressureTransmission = state.allowBarometricPressureTransmission;
 
                     redLed.setState(state.redLed);
                     greenLed.setState(state.greenLed);
