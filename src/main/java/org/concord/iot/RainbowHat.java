@@ -31,9 +31,7 @@ public class RainbowHat {
     private GpioPinDigitalOutput redLed;
     private GpioPinDigitalOutput greenLed;
     private GpioPinDigitalOutput blueLed;
-
     private Apa102 apa102;
-    private Color[] rainbow = new Color[RainbowHatState.NUMBER_OF_RGB_LEDS];
 
     private DatabaseReference database;
 
@@ -88,9 +86,7 @@ public class RainbowHat {
         buttonC.addListener(listener);
 
         apa102 = new Apa102();
-        apa102.setColor(0, Color.RED);
-        apa102.setColor(2, Color.BLUE);
-        apa102.setColor(6, Color.MAGENTA);
+        //apa102.setColor(2, Color.BLUE); // test
 
         try {
             FileInputStream serviceAccount = new FileInputStream("raspberry-pi-java-firebase-adminsdk-eeeo1-f7e5dc2054.json");
@@ -108,10 +104,9 @@ public class RainbowHat {
                     redLed.setState(state.redLed);
                     greenLed.setState(state.greenLed);
                     blueLed.setState(state.blueLed);
-
-                    for (int i = 0; i < rainbow.length; i++) { // the led strip goes from the right to the left (0 is the rightmost and 6 is the leftmost).
-                        ArrayList<Integer> rgb = state.ledRgb.get(i);
-                        rainbow[i] = new Color(rgb.get(0), rgb.get(1), rgb.get(2));
+                    for (int i = 0; i < RainbowHatState.NUMBER_OF_RGB_LEDS; i++) { // the led strip goes from the right to the left (0 is the rightmost and 6 is the leftmost).
+                        ArrayList<Integer> rgb = state.rainbowRgb.get(i);
+                        apa102.setColor(i, new Color(rgb.get(0), rgb.get(1), rgb.get(2)));
                     }
 
                 }

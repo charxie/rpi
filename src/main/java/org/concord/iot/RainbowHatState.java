@@ -14,7 +14,7 @@ public class RainbowHatState {
     public boolean greenLed;
     public boolean blueLed;
     public boolean buzzer;
-    public ArrayList<ArrayList<Integer>> ledRgb = new ArrayList<>(NUMBER_OF_RGB_LEDS);
+    public ArrayList<ArrayList<Integer>> rainbowRgb = new ArrayList<>(NUMBER_OF_RGB_LEDS);
 
     public float temperature = 20; // Celsius
     public float barometricPressure = 1000; // hPa
@@ -29,7 +29,7 @@ public class RainbowHatState {
             rgb.add(0);
             rgb.add(0);
             rgb.add(0);
-            ledRgb.add(rgb);
+            rainbowRgb.add(rgb);
         }
     }
 
@@ -65,12 +65,12 @@ public class RainbowHatState {
         this.barometricPressure = barometricPressure;
     }
 
-    public ArrayList<ArrayList<Integer>> getLedRgb() {
-        return ledRgb;
+    public ArrayList<ArrayList<Integer>> getRainbowRgb() {
+        return rainbowRgb;
     }
 
-    public void setLedRgb(ArrayList<ArrayList<Integer>> ledRgb) {
-        this.ledRgb = ledRgb;
+    public void setRainbowRgb(ArrayList<ArrayList<Integer>> rainbowRgb) {
+        this.rainbowRgb = rainbowRgb;
     }
 
     public boolean getRedLed() {
