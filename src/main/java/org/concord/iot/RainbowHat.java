@@ -120,7 +120,7 @@ public class RainbowHat {
         }
 
         try {
-            new RgbLedStripeSpi().start();
+            new RgbLedStripeDriver().turn(RgbLedStripeDriver.GREEN, 8);
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -6,7 +6,7 @@ import com.pi4j.io.spi.SpiFactory;
 
 import java.io.IOException;
 
-public class RgbLedStripeSpi extends Thread {
+public class RgbLedStripeThread extends Thread {
 
     // Pi4J SPI device
     private static SpiDevice spi;
@@ -26,18 +26,15 @@ public class RgbLedStripeSpi extends Thread {
     byte bB = 0;
     byte bSegment = 0;
 
-    // Start each sending of pixels with an "initialize" command
     byte[] init = new byte[]{(byte) 0b00000000, (byte) 0b00000000, (byte) 0b00000000, (byte) 0b00000000};
-
-    // Some hard coded colors for testing
+    byte[] black = new byte[]{(byte) 0b11111111, (byte) 0b00000000, (byte) 0b00000000, (byte) 0b00000000};
     byte[] red = new byte[]{(byte) 0b11111111, (byte) 0b00000000, (byte) 0b00000000, (byte) 0b11111111};
     byte[] green = new byte[]{(byte) 0b11111111, (byte) 0b00000000, (byte) 0b11111111, (byte) 0b00000000};
     byte[] blue = new byte[]{(byte) 0b11111111, (byte) 0b11111111, (byte) 0b00000000, (byte) 0b00000000};
-    byte[] black = new byte[]{(byte) 0b11111111, (byte) 0b00000000, (byte) 0b00000000, (byte) 0b00000000};
     byte[] white = new byte[]{(byte) 0b11111111, (byte) 0b11111111, (byte) 0b11111111, (byte) 0b11111111};
 
 
-    public RgbLedStripeSpi() {
+    public RgbLedStripeThread() {
         try {
             spi = SpiFactory.getInstance(SpiChannel.CS0, SpiDevice.DEFAULT_SPI_SPEED, SpiDevice.DEFAULT_SPI_MODE);
         } catch (Exception e) {
@@ -169,7 +166,7 @@ public class RgbLedStripeSpi extends Thread {
 
     @Override
     public void run() {
-        turn(blue, 8, 0);
+        turn(red, 8, 0);
         // Blink each RGB color and also white 3 times.
 //        blink(red, 3, 500);
 //        blink(green, 3, 500);
