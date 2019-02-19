@@ -22,6 +22,7 @@ public class Apa102 {
 
     private SpiDevice spi;
     private int brightness = 1;
+    private byte[][] data; // keep the data as the state of this driver
 
     public Apa102() {
         try {
@@ -29,17 +30,42 @@ public class Apa102 {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        data = new byte[RainbowHatState.NUMBER_OF_RGB_LEDS + 1][4];
+        for (int i = 0; i < data.length; i++) {
+            updateData(i, Color.BLACK);
+        }
     }
 
-    public void setColor(int i, Color color){
+    public Color getColor(int i) {
+        return new Color(data[i][3] & 0xFF, data[i][2] & 0xFF, data[i][1] & 0xFF, data[i][0] & 0xFF); // byte is signed
+    }
 
+    public void setColor(int led, Color color) {
+        if (led < 0 || led >= data.length) return;
+        updateData(led, color);
+        try {
+            spi.write(START_FRAME); // start frame
+            for (int i = 0; i <= RainbowHatState.NUMBER_OF_RGB_LEDS; i++) {
+                spi.write(data[i]);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void updateData(int i, Color color) {
+        data[i][0] = (byte) color.getAlpha();
+        data[i][1] = (byte) color.getBlue();
+        data[i][2] = (byte) color.getGreen();
+        data[i][3] = (byte) color.getRed();
     }
 
     public void setColorForAll(Color color) {
         try {
             spi.write(START_FRAME); // start frame
-            for (int i = 0; i <= RainbowHatState.NUMBER_OF_LEDS_IN_STRIPE; i++) {
-                spi.write(toABGR(color));
+            for (int i = 0; i <= RainbowHatState.NUMBER_OF_RGB_LEDS; i++) {
+                updateData(i, color);
+                spi.write(data[i]);
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -61,10 +87,6 @@ public class Apa102 {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-    }
-
-    private static byte[] toABGR(Color color) {
-        return new byte[]{(byte) color.getAlpha(), (byte) color.getBlue(), (byte) color.getGreen(), (byte) color.getRed()};
     }
 
 }
