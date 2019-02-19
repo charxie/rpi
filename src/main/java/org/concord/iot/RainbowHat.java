@@ -6,9 +6,6 @@ import com.google.firebase.FirebaseOptions;
 import com.google.firebase.database.*;
 import com.pi4j.io.gpio.*;
 import com.pi4j.io.gpio.event.GpioPinListenerDigital;
-import com.pi4j.io.spi.SpiChannel;
-import com.pi4j.io.spi.SpiDevice;
-import com.pi4j.io.spi.SpiFactory;
 
 import javax.swing.*;
 import java.awt.*;
@@ -25,14 +22,6 @@ import java.util.Scanner;
 
 public class RainbowHat {
 
-    public final static byte[] INIT = new byte[]{(byte) 0b00000000, (byte) 0b00000000, (byte) 0b00000000, (byte) 0b00000000};
-    public final static byte[] RED = new byte[]{(byte) 0b11111111, (byte) 0b00000000, (byte) 0b00000000, (byte) 0b11111111};
-    public final static byte[] GREEN = new byte[]{(byte) 0b11111111, (byte) 0b00000000, (byte) 0b11111111, (byte) 0b00000000};
-    public final static byte[] BLUE = new byte[]{(byte) 0b11111111, (byte) 0b11111111, (byte) 0b00000000, (byte) 0b00000000};
-    public final static byte[] BLACK = new byte[]{(byte) 0b11111111, (byte) 0b00000000, (byte) 0b00000000, (byte) 0b00000000};
-    public final static byte[] WHITE = new byte[]{(byte) 0b11111111, (byte) 0b11111111, (byte) 0b11111111, (byte) 0b11111111};
-
-    private static final int LEDSTRIP_BRIGHTNESS = 1;
     private static final int MINIMUM_SENSOR_DATA_TRANSMISSION_INTERVAL = 1000;
 
     private GpioController gpio;
@@ -43,7 +32,7 @@ public class RainbowHat {
     private GpioPinDigitalOutput greenLed;
     private GpioPinDigitalOutput blueLed;
 
-    private SpiDevice spi;
+    private Apa102 apa102;
     private int[] rainbow = new int[RainbowHatState.NUMBER_OF_LEDS_IN_STRIPE];
 
     private DatabaseReference database;
@@ -98,12 +87,8 @@ public class RainbowHat {
         buttonB.addListener(listener);
         buttonC.addListener(listener);
 
-        try {
-            spi = SpiFactory.getInstance(SpiChannel.CS0, SpiDevice.DEFAULT_SPI_SPEED, SpiDevice.DEFAULT_SPI_MODE);
-            setLedStripeColor(RED);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        apa102 = new Apa102();
+        apa102.setColorForAll(Color.RED);
 
         try {
             FileInputStream serviceAccount = new FileInputStream("raspberry-pi-java-firebase-adminsdk-eeeo1-f7e5dc2054.json");
@@ -140,30 +125,6 @@ public class RainbowHat {
 
     }
 
-    public void setLedStripeColor(byte[] color) {
-        try {
-            spi.write(INIT);
-            for (int i = 0; i <= RainbowHatState.NUMBER_OF_LEDS_IN_STRIPE; i++) {
-                spi.write(color);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void blinkLedStripe(byte[] color, int times, int delay) {
-        try {
-            for (int i = 0; i < times; i++) {
-                setLedStripeColor(BLACK);
-                Thread.sleep(delay);
-                setLedStripeColor(color);
-                Thread.sleep(delay);
-            }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
     private void destroy() {
         buttonA.removeAllListeners();
         buttonB.removeAllListeners();
@@ -171,7 +132,7 @@ public class RainbowHat {
         redLed.setShutdownOptions(true, PinState.LOW, PinPullResistance.OFF);
         greenLed.setShutdownOptions(true, PinState.LOW, PinPullResistance.OFF);
         blueLed.setShutdownOptions(true, PinState.LOW, PinPullResistance.OFF);
-        setLedStripeColor(BLACK);
+        apa102.turnoff();
         // stop all GPIO activity/threads by shutting down the GPIO controller (this method will forcefully shutdown all GPIO monitoring threads and scheduled tasks)
         gpio.shutdown();
     }
