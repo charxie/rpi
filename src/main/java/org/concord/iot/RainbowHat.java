@@ -32,7 +32,7 @@ public class RainbowHat {
     private GpioPinDigitalOutput redLed;
     private GpioPinDigitalOutput greenLed;
     private GpioPinDigitalOutput blueLed;
-    private int[] rainbow = new int[RainbowHatState.NUMBER_OF_LED_IN_STRIP];
+    private int[] rainbow = new int[RainbowHatState.NUMBER_OF_LEDS_IN_STRIPE];
 
     private DatabaseReference database;
 
@@ -104,7 +104,7 @@ public class RainbowHat {
                     blueLed.setState(state.blueLed);
 
                     for (int i = 0; i < rainbow.length; i++) { // the led strip goes from the right to the left (0 is the rightmost and 6 is the leftmost).
-                        ArrayList<Integer> rgb = state.ledStripColors.get(i);
+                        ArrayList<Integer> rgb = state.ledStripeColors.get(i);
                         rainbow[i] = Util.rgbToInt(rgb.get(0), rgb.get(1), rgb.get(2));
                     }
 
@@ -120,7 +120,7 @@ public class RainbowHat {
         }
 
         try {
-            new RgbLedSpi().start();
+            new RgbLedStripeSpi().start();
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -8,13 +8,13 @@ import java.util.ArrayList;
 
 public class RainbowHatState {
 
-    public final static int NUMBER_OF_LED_IN_STRIP = 7;
+    public final static int NUMBER_OF_LEDS_IN_STRIPE = 7;
 
     public boolean redLed;
     public boolean greenLed;
     public boolean blueLed;
     public boolean buzzer;
-    public ArrayList<ArrayList<Integer>> ledStripColors = new ArrayList<>(NUMBER_OF_LED_IN_STRIP);
+    public ArrayList<ArrayList<Integer>> ledStripeColors = new ArrayList<>(NUMBER_OF_LEDS_IN_STRIPE);
 
     public float temperature = 20; // Celsius
     public float barometricPressure = 1000; // hPa
@@ -24,12 +24,12 @@ public class RainbowHatState {
     public String displayMode = "Temperature";
 
     public RainbowHatState() {
-        for (int i = 0; i < NUMBER_OF_LED_IN_STRIP; i++) {
+        for (int i = 0; i < NUMBER_OF_LEDS_IN_STRIPE; i++) {
             ArrayList<Integer> rgb = new ArrayList<>(3);
             rgb.add(0);
             rgb.add(0);
             rgb.add(0);
-            ledStripColors.add(rgb);
+            ledStripeColors.add(rgb);
         }
     }
 
@@ -65,12 +65,12 @@ public class RainbowHatState {
         this.barometricPressure = barometricPressure;
     }
 
-    public ArrayList<ArrayList<Integer>> getLedStripColors() {
-        return ledStripColors;
+    public ArrayList<ArrayList<Integer>> getLedStripeColors() {
+        return ledStripeColors;
     }
 
-    public void setLedStripColors(ArrayList<ArrayList<Integer>> ledStripColors) {
-        this.ledStripColors = ledStripColors;
+    public void setLedStripeColors(ArrayList<ArrayList<Integer>> ledStripeColors) {
+        this.ledStripeColors = ledStripeColors;
     }
 
     public boolean getRedLed() {

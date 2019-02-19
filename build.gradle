@@ -14,7 +14,7 @@ repositories {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'com.google.firebase:firebase-admin:6.7.0'
-    compile group: 'org.python', name: 'jython-standalone', version: '2.7.0'
+    // compile group: 'org.python', name: 'jython-standalone', version: '2.7.0'
 }
 
 apply plugin: 'application'
