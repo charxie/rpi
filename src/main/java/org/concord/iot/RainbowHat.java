@@ -12,8 +12,6 @@ import com.pi4j.wiringpi.SoftPwm;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.FileInputStream;
@@ -237,6 +235,15 @@ public class RainbowHat {
                     redLed.setState(state.redLed);
                     greenLed.setState(state.greenLed);
                     blueLed.setState(state.blueLed);
+                    if (state.redLed) {
+                        buzz(1);
+                    } else if (state.greenLed) {
+                        buzz(2);
+                    } else if (state.blueLed) {
+                        buzz(3);
+                    } else {
+                        buzz(0);
+                    }
                     for (int i = 0; i < RainbowHatState.NUMBER_OF_RGB_LEDS; i++) { // the led strip goes from the right to the left (0 is the rightmost and 6 is the leftmost).
                         ArrayList<Integer> rgb = state.rainbowRgb.get(i);
                         apa102.setColor(i, new Color(rgb.get(0), rgb.get(1), rgb.get(2)));
