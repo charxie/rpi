@@ -47,6 +47,8 @@ public class RainbowHat {
     private boolean allowTemperatureTransmission;
     private boolean allowBarometricPressureTransmission;
 
+    private RainbowHatBoardView boardView;
+
     public RainbowHat() {
         init();
     }
@@ -122,6 +124,9 @@ public class RainbowHat {
         displayMode = "Temperature";
         database.child("displayMode").setValue(displayMode, null);
         updateDisplay();
+        if (boardView != null) {
+            boardView.setRedLedPressed(on);
+        }
     }
 
     public void touchB(boolean on) {
@@ -136,6 +141,9 @@ public class RainbowHat {
         displayMode = "Pressure";
         database.child("displayMode").setValue(displayMode, null);
         updateDisplay();
+        if (boardView != null) {
+            boardView.setGreenLedPressed(on);
+        }
     }
 
     public void touchC(boolean on) {
@@ -147,6 +155,9 @@ public class RainbowHat {
             buzz(0);
         }
         database.child("blueLed").setValue(on, null);
+        if (boardView != null) {
+            boardView.setBlueLedPressed(on);
+        }
     }
 
     public void setRedLedState(boolean high) {
@@ -335,7 +346,7 @@ public class RainbowHat {
 
         JPanel contentPane = new JPanel(new BorderLayout(25, 25));
         frame.setContentPane(contentPane);
-        RainbowHatBoardView boardView = new RainbowHatBoardView(this);
+        boardView = new RainbowHatBoardView(this);
         contentPane.add(boardView, BorderLayout.CENTER);
 
         JPanel buttonPanel = new JPanel();

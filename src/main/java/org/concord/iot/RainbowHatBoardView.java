@@ -4,6 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.Ellipse2D;
+import java.text.DecimalFormat;
 
 class RainbowHatBoardView extends JPanel {
 
@@ -14,6 +15,7 @@ class RainbowHatBoardView extends JPanel {
     private int yImageOffset;
     private Font labelFont = new Font(null, Font.PLAIN, 10);
     private Stroke thinStroke = new BasicStroke(1);
+    private DecimalFormat decimalFormat = new DecimalFormat("#.00");
     private String label;
     private Point mouseMovedPoint = new Point(-1, -1);
 
@@ -26,6 +28,10 @@ class RainbowHatBoardView extends JPanel {
     private Ellipse2D.Double[] leds = new Ellipse2D.Double[RainbowHatState.NUMBER_OF_RGB_LEDS];
     private Rectangle temperatureSensor;
     private Rectangle barometricPressureSensor;
+
+    private Symbol.MonochromaticLedLight redLedSymbol;
+    private Symbol.MonochromaticLedLight greenLedSymbol;
+    private Symbol.MonochromaticLedLight blueLedSymbol;
 
     RainbowHatBoardView(RainbowHat rainbowHat) {
 
@@ -53,6 +59,10 @@ class RainbowHatBoardView extends JPanel {
 
         setPreferredSize(new Dimension(500, 400));
         image = Toolkit.getDefaultToolkit().createImage(getClass().getResource("images/rainbow-hat.png"));
+
+        redLedSymbol = new Symbol.MonochromaticLedLight(Color.RED, 8, 8, 16, 8);
+        greenLedSymbol = new Symbol.MonochromaticLedLight(Color.GREEN, 8, 8, 16, 8);
+        blueLedSymbol = new Symbol.MonochromaticLedLight(Color.BLUE, 8, 8, 16, 8);
 
         addMouseListener(new MouseAdapter() {
             @Override
@@ -113,6 +123,15 @@ class RainbowHatBoardView extends JPanel {
         yImageOffset = (h - hi) / 2;
 
         g2.drawImage(image, xImageOffset, yImageOffset, this);
+
+        g2.translate(xImageOffset, yImageOffset);
+        int a = (redLed.width - redLedSymbol.wSymbol) / 2;
+        int b = (redLed.height - redLedSymbol.hSymbol) / 2;
+        redLedSymbol.paintIcon(this, g, redLed.x + a, redLed.y + b);
+        greenLedSymbol.paintIcon(this, g, greenLed.x + a, greenLed.y + b);
+        blueLedSymbol.paintIcon(this, g, blueLed.x + a, blueLed.y + b);
+        g2.translate(-xImageOffset, -yImageOffset);
+
         if (label != null) {
             drawString(g2, mouseMovedPoint, label);
         }
@@ -134,7 +153,14 @@ class RainbowHatBoardView extends JPanel {
         g.drawLine(nearRightBorder ? x + stringWidth + 5 : x - 5, p.y - 5, p.x, p.y);
         g.fillOval(p.x - 2, p.y - 2, 4, 4);
         g.setColor(Color.WHITE);
-        g.drawString(s, x, p.y);
+        drawString(g, s, x, p.y);
+    }
+
+    private void drawString(Graphics2D g, String text, int x, int y) {
+        for (String line : text.split("\n")) {
+            g.drawString(line, x, y);
+            y += g.getFontMetrics().getHeight();
+        }
     }
 
     private void onMouseClicked(MouseEvent e) {
@@ -153,15 +179,19 @@ class RainbowHatBoardView extends JPanel {
         if (!found) {
             setLatchingSwitch(x2, y2);
         }
+        repaint();
     }
 
     private void setLatchingSwitch(int x, int y) {
         if (redLed.contains(x, y)) {
             rainbowHat.setRedLedState(!rainbowHat.getRedLedState());
+            redLedSymbol.setPressed(rainbowHat.getRedLedState());
         } else if (greenLed.contains(x, y)) {
             rainbowHat.setGreenLedState(!rainbowHat.getGreenLedState());
+            greenLedSymbol.setPressed(rainbowHat.getGreenLedState());
         } else if (blueLed.contains(x, y)) {
             rainbowHat.setBlueLedState(!rainbowHat.getBlueLedState());
+            blueLedSymbol.setPressed(rainbowHat.getBlueLedState());
         }
     }
 
@@ -223,10 +253,10 @@ class RainbowHatBoardView extends JPanel {
         }
 
         if (label == null && temperatureSensor.contains(x2, y2)) {
-            label = "Temperature sensor";
+            label = "Temperature sensor (" + decimalFormat.format(rainbowHat.getTemperature()) + "\u00B0C)";
         }
         if (label == null && barometricPressureSensor.contains(x2, y2)) {
-            label = "Barometric pressure sensor";
+            label = "Barometric pressure sensor (" + decimalFormat.format(rainbowHat.getBarometricPressure()) + "hPa)";
         }
 
         if (label == null) {
@@ -250,6 +280,21 @@ class RainbowHatBoardView extends JPanel {
 
     private void onMouseDragged(MouseEvent e) {
 
+    }
+
+    public void setRedLedPressed(boolean on) {
+        redLedSymbol.setPressed(on);
+        repaint();
+    }
+
+    public void setGreenLedPressed(boolean on) {
+        greenLedSymbol.setPressed(on);
+        repaint();
+    }
+
+    public void setBlueLedPressed(boolean on) {
+        blueLedSymbol.setPressed(on);
+        repaint();
     }
 
 }
