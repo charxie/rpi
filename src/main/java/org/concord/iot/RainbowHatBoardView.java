@@ -3,33 +3,39 @@ package org.concord.iot;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.geom.Ellipse2D;
 
 class RainbowHatBoardView extends JPanel {
 
     private RainbowHat rainbowHat;
 
     private Image image;
+    private int xImageOffset;
+    private int yImageOffset;
 
-    private Rectangle buttonA = new Rectangle(69, 266, 78, 30);
-    private Rectangle buttonB = new Rectangle(152, 266, 78, 30);
-    private Rectangle buttonC = new Rectangle(236, 266, 78, 30);
-
-    private Rectangle led0;
-    private Rectangle led1;
-    private Rectangle led2;
-    private Rectangle led3;
-    private Rectangle led4;
-    private Rectangle led5;
-    private Rectangle led6;
-
-    private int xOffset;
-    private int yOffset;
+    private Rectangle buttonA;
+    private Rectangle buttonB;
+    private Rectangle buttonC;
+    private Ellipse2D.Double[] leds = new Ellipse2D.Double[RainbowHatState.NUMBER_OF_RGB_LEDS];
 
     RainbowHatBoardView(RainbowHat rainbowHat) {
 
         super();
+        setBackground(Color.WHITE);
 
         this.rainbowHat = rainbowHat;
+
+        buttonA = new Rectangle(69, 266, 78, 30);
+        buttonB = new Rectangle(152, 266, 78, 30);
+        buttonC = new Rectangle(236, 266, 78, 30);
+        int radius = 10;
+        leds[0] = new Ellipse2D.Double(294 - radius, 112 - radius, 2 * radius, 2 * radius);
+        leds[1] = new Ellipse2D.Double(263 - radius, 95 - radius, 2 * radius, 2 * radius);
+        leds[2] = new Ellipse2D.Double(228 - radius, 87 - radius, 2 * radius, 2 * radius);
+        leds[3] = new Ellipse2D.Double(190 - radius, 83 - radius, 2 * radius, 2 * radius);
+        leds[4] = new Ellipse2D.Double(155 - radius, 87 - radius, 2 * radius, 2 * radius);
+        leds[5] = new Ellipse2D.Double(120 - radius, 95 - radius, 2 * radius, 2 * radius);
+        leds[6] = new Ellipse2D.Double(87 - radius, 112 - radius, 2 * radius, 2 * radius);
 
         setPreferredSize(new Dimension(500, 400));
         image = Toolkit.getDefaultToolkit().createImage(getClass().getResource("images/rainbow-hat.png"));
@@ -84,27 +90,34 @@ class RainbowHatBoardView extends JPanel {
         int h = getHeight();
         int wi = image.getWidth(this);
         int hi = image.getHeight(this);
-        xOffset = (w - wi) / 2;
-        yOffset = (h - hi) / 2;
+        xImageOffset = (w - wi) / 2;
+        yImageOffset = (h - hi) / 2;
 
-        g2.drawImage(image, xOffset, yOffset, this);
+        g2.drawImage(image, xImageOffset, yImageOffset, this);
 
         g2.dispose();
 
     }
 
     private void onMouseClicked(MouseEvent e) {
-
+        int x = e.getX();
+        int y = e.getY();
+        for (int i = 0; i < leds.length; i++) {
+            if (leds[i].contains(x - xImageOffset, y - yImageOffset)) {
+                rainbowHat.chooseLedColor(SwingUtilities.getWindowAncestor(this), i);
+                break;
+            }
+        }
     }
 
     private void onMousePressed(MouseEvent e) {
         int x = e.getX();
         int y = e.getY();
-        if (buttonA.contains(x - xOffset, y - yOffset)) {
+        if (buttonA.contains(x - xImageOffset, y - yImageOffset)) {
             rainbowHat.pressButtonA(true);
-        } else if (buttonB.contains(x - xOffset, y - yOffset)) {
+        } else if (buttonB.contains(x - xImageOffset, y - yImageOffset)) {
             rainbowHat.pressButtonB(true);
-        } else if (buttonC.contains(x - xOffset, y - yOffset)) {
+        } else if (buttonC.contains(x - xImageOffset, y - yImageOffset)) {
             rainbowHat.pressButtonC(true);
         }
     }
@@ -112,11 +125,11 @@ class RainbowHatBoardView extends JPanel {
     private void onMouseReleased(MouseEvent e) {
         int x = e.getX();
         int y = e.getY();
-        if (buttonA.contains(x - xOffset, y - yOffset)) {
+        if (buttonA.contains(x - xImageOffset, y - yImageOffset)) {
             rainbowHat.pressButtonA(false);
-        } else if (buttonB.contains(x - xOffset, y - yOffset)) {
+        } else if (buttonB.contains(x - xImageOffset, y - yImageOffset)) {
             rainbowHat.pressButtonB(false);
-        } else if (buttonC.contains(x - xOffset, y - yOffset)) {
+        } else if (buttonC.contains(x - xImageOffset, y - yImageOffset)) {
             rainbowHat.pressButtonC(false);
         }
     }
@@ -131,11 +144,19 @@ class RainbowHatBoardView extends JPanel {
         int x = e.getX();
         int y = e.getY();
 
-        boolean overButtonA = buttonA.contains(x - xOffset, y - yOffset);
-        boolean overButtonB = buttonB.contains(x - xOffset, y - yOffset);
-        boolean overButtonC = buttonC.contains(x - xOffset, y - yOffset);
+        boolean overButtonA = buttonA.contains(x - xImageOffset, y - yImageOffset);
+        boolean overButtonB = buttonB.contains(x - xImageOffset, y - yImageOffset);
+        boolean overButtonC = buttonC.contains(x - xImageOffset, y - yImageOffset);
 
-        if (overButtonA || overButtonB || overButtonC) {
+        boolean overLed = false;
+        for (int i = 0; i < leds.length; i++) {
+            if (leds[i].contains(x - xImageOffset, y - yImageOffset)) {
+                overLed = true;
+                break;
+            }
+        }
+
+        if (overButtonA || overButtonB || overButtonC || overLed) {
             setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         } else {
             setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));

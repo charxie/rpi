@@ -304,13 +304,7 @@ public class RainbowHat {
         JPanel contentPane = new JPanel(new BorderLayout(25, 25));
         frame.setContentPane(contentPane);
         RainbowHatBoardView boardView = new RainbowHatBoardView(this);
-        contentPane.add(boardView, BorderLayout.NORTH);
-
-        JPanel mainPanel = new JPanel();
-        contentPane.add(mainPanel, BorderLayout.CENTER);
-        for (int i = 0; i < RainbowHatState.NUMBER_OF_RGB_LEDS; i++) {
-            mainPanel.add(createLedColorButton(frame, RainbowHatState.NUMBER_OF_RGB_LEDS - 1 - i));
-        }
+        contentPane.add(boardView, BorderLayout.CENTER);
 
         JPanel buttonPanel = new JPanel();
         contentPane.add(buttonPanel, BorderLayout.SOUTH);
@@ -328,34 +322,29 @@ public class RainbowHat {
 
     }
 
-    private JButton createLedColorButton(final Frame parent, final int i) {
-        final JButton button = new JButton("LED" + i);
-        button.addActionListener(e -> {
-            Color c = JColorChooser.showDialog(parent, "LED1 Color", apa102.getColor(i));
-            if (c != null) {
-                apa102.setColor(i, c);
-                // button.setBackground(c);
-                ArrayList<ArrayList<Integer>> list = new ArrayList<>();
-                for (int j = 0; j < RainbowHatState.NUMBER_OF_RGB_LEDS; j++) {
-                    if (i == j) {
-                        ArrayList<Integer> rgb = new ArrayList<>(3);
-                        rgb.add(c.getRed());
-                        rgb.add(c.getGreen());
-                        rgb.add(c.getBlue());
-                        list.add(rgb);
-                    } else {
-                        ArrayList<Integer> rgb = new ArrayList<>(3);
-                        Color c2 = apa102.getColor(j);
-                        rgb.add(c2.getRed());
-                        rgb.add(c2.getGreen());
-                        rgb.add(c2.getBlue());
-                        list.add(rgb);
-                    }
+    void chooseLedColor(Window parent, final int i) {
+        Color c = JColorChooser.showDialog(parent, "LED1 Color", apa102.getColor(i));
+        if (c != null) {
+            apa102.setColor(i, c);
+            ArrayList<ArrayList<Integer>> list = new ArrayList<>();
+            for (int j = 0; j < RainbowHatState.NUMBER_OF_RGB_LEDS; j++) {
+                if (i == j) {
+                    ArrayList<Integer> rgb = new ArrayList<>(3);
+                    rgb.add(c.getRed());
+                    rgb.add(c.getGreen());
+                    rgb.add(c.getBlue());
+                    list.add(rgb);
+                } else {
+                    ArrayList<Integer> rgb = new ArrayList<>(3);
+                    Color c2 = apa102.getColor(j);
+                    rgb.add(c2.getRed());
+                    rgb.add(c2.getGreen());
+                    rgb.add(c2.getBlue());
+                    list.add(rgb);
                 }
-                database.child("rainbowRgb").setValue(list, null); // TODO: There must be a way to set only the element of the list
             }
-        });
-        return button;
+            database.child("rainbowRgb").setValue(list, null); // TODO: There must be a way to set only the element of the list
+        }
     }
 
     public static void main(final String[] args) {
