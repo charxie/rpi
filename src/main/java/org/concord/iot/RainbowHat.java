@@ -110,47 +110,59 @@ public class RainbowHat {
         }
     }
 
+    void pressButtonA(boolean on) {
+        if (on) {
+            redLed.high();
+            buzz(1);
+        } else {
+            redLed.low();
+            buzz(0);
+        }
+        database.child("redLed").setValue(on, null);
+        displayMode = "Temperature";
+        database.child("displayMode").setValue(displayMode, null);
+        updateDisplay();
+    }
+
+    void pressButtonB(boolean on) {
+        if (on) {
+            greenLed.high();
+            buzz(2);
+        } else {
+            greenLed.low();
+            buzz(0);
+        }
+        database.child("greenLed").setValue(on, null);
+        displayMode = "Pressure";
+        database.child("displayMode").setValue(displayMode, null);
+        updateDisplay();
+    }
+
+    void pressButtonC(boolean on) {
+        if (on) {
+            blueLed.high();
+            buzz(3);
+        } else {
+            blueLed.low();
+            buzz(0);
+        }
+        database.child("blueLed").setValue(on, null);
+    }
+
     private void setupButtons() {
         GpioPinListenerDigital listener = event -> {
             GpioPin pin = event.getPin();
             PinState pinState = event.getState();
             System.out.println("GPIO Pin state change: " + pin + " = " + pinState);
             switch (pin.getPin().getAddress()) {
-                case 29: // button A pressed
-                    if (pinState.isHigh()) {
-                        redLed.low();
-                        buzz(0);
-                    } else {
-                        redLed.high();
-                        buzz(1);
-                    }
-                    database.child("redLed").setValue(redLed.isHigh(), null);
-                    displayMode = "Temperature";
-                    database.child("displayMode").setValue(displayMode, null);
-                    updateDisplay();
+                case 29:
+                    pressButtonA(!pinState.isHigh());
                     break;
-                case 28: // button B pressed
-                    if (pinState.isHigh()) {
-                        greenLed.low();
-                        buzz(0);
-                    } else {
-                        greenLed.high();
-                        buzz(2);
-                    }
-                    database.child("greenLed").setValue(greenLed.isHigh(), null);
-                    displayMode = "Pressure";
-                    database.child("displayMode").setValue(displayMode, null);
-                    updateDisplay();
+                case 28:
+                    pressButtonB(!pinState.isHigh());
                     break;
-                case 27: // button C pressed
-                    if (pinState.isHigh()) {
-                        blueLed.low();
-                        buzz(0);
-                    } else {
-                        blueLed.high();
-                        buzz(3);
-                    }
-                    database.child("blueLed").setValue(blueLed.isHigh(), null);
+                case 27:
+                    pressButtonC(!pinState.isHigh());
                     break;
             }
         };
@@ -291,8 +303,8 @@ public class RainbowHat {
 
         JPanel contentPane = new JPanel(new BorderLayout(25, 25));
         frame.setContentPane(contentPane);
-        ImageIcon icon = new ImageIcon(RainbowHat.class.getResource("images/rainbow-hat.png"));
-        contentPane.add(new JLabel(icon), BorderLayout.NORTH);
+        RainbowHatBoardView boardView = new RainbowHatBoardView(this);
+        contentPane.add(boardView, BorderLayout.NORTH);
 
         JPanel mainPanel = new JPanel();
         contentPane.add(mainPanel, BorderLayout.CENTER);
