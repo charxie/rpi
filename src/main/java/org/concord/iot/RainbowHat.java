@@ -9,11 +9,12 @@ import com.pi4j.io.gpio.event.GpioPinListenerDigital;
 import com.pi4j.io.i2c.I2CBus;
 import com.pi4j.wiringpi.Gpio;
 import com.pi4j.wiringpi.SoftPwm;
+import org.concord.iot.drivers.AlphanumericDisplay;
+import org.concord.iot.drivers.Apa102;
+import org.concord.iot.drivers.Bmp280;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -47,7 +48,7 @@ public class RainbowHat {
     private boolean allowTemperatureTransmission;
     private boolean allowBarometricPressureTransmission;
 
-    private RainbowHatBoardView boardView;
+    RainbowHatBoardView boardView;
 
     public RainbowHat() {
         init();
@@ -162,6 +163,7 @@ public class RainbowHat {
 
     public void setRedLedState(boolean high) {
         redLed.setState(high);
+        database.child("redLed").setValue(high, null);
     }
 
     public boolean getRedLedState() {
@@ -170,6 +172,7 @@ public class RainbowHat {
 
     public void setGreenLedState(boolean high) {
         greenLed.setState(high);
+        database.child("greenLed").setValue(high, null);
     }
 
     public boolean getGreenLedState() {
@@ -178,6 +181,7 @@ public class RainbowHat {
 
     public void setBlueLedState(boolean high) {
         blueLed.setState(high);
+        database.child("blueLed").setValue(high, null);
     }
 
     public boolean getBlueLedState() {
@@ -299,9 +303,18 @@ public class RainbowHat {
                     } else {
                         buzz(0);
                     }
+                    if (boardView != null) {
+                        boardView.setRedLedPressed(state.redLed);
+                        boardView.setGreenLedPressed(state.greenLed);
+                        boardView.setBlueLedPressed(state.blueLed);
+                    }
                     for (int i = 0; i < RainbowHatState.NUMBER_OF_RGB_LEDS; i++) { // the led strip goes from the right to the left (0 is the rightmost and 6 is the leftmost).
                         ArrayList<Integer> rgb = state.rainbowRgb.get(i);
-                        apa102.setColor(i, new Color(rgb.get(0), rgb.get(1), rgb.get(2)));
+                        Color c = new Color(rgb.get(0), rgb.get(1), rgb.get(2));
+                        apa102.setColor(i, c);
+                        if (boardView != null) {
+                            boardView.setLedColor(i, c);
+                        }
                     }
 
                     displayMode = state.displayMode;
@@ -318,7 +331,7 @@ public class RainbowHat {
         }
     }
 
-    private void destroy() {
+    void destroy() {
         buttonA.removeAllListeners();
         buttonB.removeAllListeners();
         buttonC.removeAllListeners();
@@ -332,43 +345,17 @@ public class RainbowHat {
     }
 
     private void createAndShowGui() {
-
-        final JFrame frame = new JFrame("Rainbow HAT Emulator on Raspberry Pi");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setLocation(100, 100);
-        frame.addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent e) {
-                destroy();
-                System.exit(0);
-            }
-        });
-
-        JPanel contentPane = new JPanel(new BorderLayout(25, 25));
-        frame.setContentPane(contentPane);
         boardView = new RainbowHatBoardView(this);
-        contentPane.add(boardView, BorderLayout.CENTER);
-
-        JPanel buttonPanel = new JPanel();
-        contentPane.add(buttonPanel, BorderLayout.SOUTH);
-
-        JButton button = new JButton("Exit");
-        button.addActionListener(e -> {
-            destroy();
-            frame.dispose();
-            System.exit(0);
-        });
-        buttonPanel.add(button);
-
-        frame.pack();
-        frame.setVisible(true);
-
+        RainbowHatGui.createAndShowGui(this);
     }
 
     void chooseLedColor(Window parent, final int i) {
         Color c = JColorChooser.showDialog(parent, "LED1 Color", apa102.getColor(i));
         if (c != null) {
             apa102.setColor(i, c);
+            if (boardView != null) {
+                boardView.setLedColor(i, c);
+            }
             ArrayList<ArrayList<Integer>> list = new ArrayList<>();
             for (int j = 0; j < RainbowHatState.NUMBER_OF_RGB_LEDS; j++) {
                 if (i == j) {
@@ -407,6 +394,11 @@ public class RainbowHat {
             System.exit(0); // call this to exit and avoid a broken pipe error
 
         } else {
+            try {
+                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             EventQueue.invokeLater(() -> rainbowHat.createAndShowGui());
         }
 

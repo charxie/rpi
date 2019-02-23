@@ -1,8 +1,9 @@
-package org.concord.iot;
+package org.concord.iot.drivers;
 
 import com.pi4j.io.spi.SpiChannel;
 import com.pi4j.io.spi.SpiDevice;
 import com.pi4j.io.spi.SpiFactory;
+import org.concord.iot.RainbowHatState;
 
 import java.awt.*;
 import java.io.IOException;

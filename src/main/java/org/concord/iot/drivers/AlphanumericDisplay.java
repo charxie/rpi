@@ -1,4 +1,4 @@
-package org.concord.iot;
+package org.concord.iot.drivers;
 
 /*
  * #%L

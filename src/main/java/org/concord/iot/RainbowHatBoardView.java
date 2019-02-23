@@ -6,6 +6,11 @@ import java.awt.event.*;
 import java.awt.geom.Ellipse2D;
 import java.text.DecimalFormat;
 
+/**
+ * @author Charles Xie
+ *
+ */
+
 class RainbowHatBoardView extends JPanel {
 
     private RainbowHat rainbowHat;
@@ -15,6 +20,7 @@ class RainbowHatBoardView extends JPanel {
     private int yImageOffset;
     private Font labelFont = new Font(null, Font.PLAIN, 10);
     private Stroke thinStroke = new BasicStroke(1);
+    private Color buttonPressedColor = new Color(205, 205, 205, 128);
     private DecimalFormat decimalFormat = new DecimalFormat("#.00");
     private String label;
     private Point mouseMovedPoint = new Point(-1, -1);
@@ -28,10 +34,14 @@ class RainbowHatBoardView extends JPanel {
     private Ellipse2D.Double[] leds = new Ellipse2D.Double[RainbowHatState.NUMBER_OF_RGB_LEDS];
     private Rectangle temperatureSensor;
     private Rectangle barometricPressureSensor;
+    private boolean buttonAPressed;
+    private boolean buttonBPressed;
+    private boolean buttonCPressed;
 
-    private Symbol.MonochromaticLedLight redLedSymbol;
-    private Symbol.MonochromaticLedLight greenLedSymbol;
-    private Symbol.MonochromaticLedLight blueLedSymbol;
+    private Symbol.LedLight redLedSymbol;
+    private Symbol.LedLight greenLedSymbol;
+    private Symbol.LedLight blueLedSymbol;
+    private Symbol.LedLight[] ledLightSymbols = new Symbol.LedLight[RainbowHatState.NUMBER_OF_RGB_LEDS];
 
     RainbowHatBoardView(RainbowHat rainbowHat) {
 
@@ -40,29 +50,32 @@ class RainbowHatBoardView extends JPanel {
 
         this.rainbowHat = rainbowHat;
 
-        buttonA = new Rectangle(69, 266, 78, 30);
-        buttonB = new Rectangle(152, 266, 78, 30);
-        buttonC = new Rectangle(236, 266, 78, 30);
+        buttonA = new Rectangle(72, 270, 72, 22);
+        buttonB = new Rectangle(155, 270, 72, 22);
+        buttonC = new Rectangle(238, 270, 72, 22);
         redLed = new Rectangle(100, 258, 18, 8);
         greenLed = new Rectangle(182, 258, 18, 8);
         blueLed = new Rectangle(264, 258, 18, 8);
         int radius = 10;
-        leds[0] = new Ellipse2D.Double(294 - radius, 112 - radius, 2 * radius, 2 * radius);
-        leds[1] = new Ellipse2D.Double(263 - radius, 95 - radius, 2 * radius, 2 * radius);
-        leds[2] = new Ellipse2D.Double(228 - radius, 87 - radius, 2 * radius, 2 * radius);
-        leds[3] = new Ellipse2D.Double(190 - radius, 83 - radius, 2 * radius, 2 * radius);
-        leds[4] = new Ellipse2D.Double(155 - radius, 87 - radius, 2 * radius, 2 * radius);
-        leds[5] = new Ellipse2D.Double(120 - radius, 95 - radius, 2 * radius, 2 * radius);
-        leds[6] = new Ellipse2D.Double(87 - radius, 112 - radius, 2 * radius, 2 * radius);
+        leds[0] = new Ellipse2D.Double(293 - radius, 115 - radius, 2 * radius, 2 * radius);
+        leds[1] = new Ellipse2D.Double(260 - radius, 98 - radius, 2 * radius, 2 * radius);
+        leds[2] = new Ellipse2D.Double(226 - radius, 89 - radius, 2 * radius, 2 * radius);
+        leds[3] = new Ellipse2D.Double(189 - radius, 86 - radius, 2 * radius, 2 * radius);
+        leds[4] = new Ellipse2D.Double(153 - radius, 89 - radius, 2 * radius, 2 * radius);
+        leds[5] = new Ellipse2D.Double(118 - radius, 98 - radius, 2 * radius, 2 * radius);
+        leds[6] = new Ellipse2D.Double(85 - radius, 115 - radius, 2 * radius, 2 * radius);
         temperatureSensor = new Rectangle(186, 133, 10, 10);
         barometricPressureSensor = new Rectangle(228, 141, 8, 8);
 
         setPreferredSize(new Dimension(500, 400));
         image = Toolkit.getDefaultToolkit().createImage(getClass().getResource("images/rainbow-hat.png"));
 
-        redLedSymbol = new Symbol.MonochromaticLedLight(Color.RED, 8, 8, 16, 8);
-        greenLedSymbol = new Symbol.MonochromaticLedLight(Color.GREEN, 8, 8, 16, 8);
-        blueLedSymbol = new Symbol.MonochromaticLedLight(Color.BLUE, 8, 8, 16, 8);
+        redLedSymbol = new Symbol.LedLight(Color.RED, 8, 8, 16, 8);
+        greenLedSymbol = new Symbol.LedLight(Color.GREEN, 8, 8, 16, 8);
+        blueLedSymbol = new Symbol.LedLight(Color.BLUE, 8, 8, 16, 8);
+        for (int i = 0; i < ledLightSymbols.length; i++) {
+            ledLightSymbols[i] = new Symbol.LedLight(Color.BLACK, 16, 16, 12, 12);
+        }
 
         addMouseListener(new MouseAdapter() {
             @Override
@@ -125,11 +138,29 @@ class RainbowHatBoardView extends JPanel {
         g2.drawImage(image, xImageOffset, yImageOffset, this);
 
         g2.translate(xImageOffset, yImageOffset);
+
         int a = (redLed.width - redLedSymbol.wSymbol) / 2;
         int b = (redLed.height - redLedSymbol.hSymbol) / 2;
         redLedSymbol.paintIcon(this, g, redLed.x + a, redLed.y + b);
         greenLedSymbol.paintIcon(this, g, greenLed.x + a, greenLed.y + b);
         blueLedSymbol.paintIcon(this, g, blueLed.x + a, blueLed.y + b);
+        for (int i = 0; i < ledLightSymbols.length; i++) {
+            ledLightSymbols[i].paintIcon(this, g, (int) (leds[i].x + a), (int) (leds[i].y + b));
+        }
+
+        if (buttonAPressed) {
+            g2.setColor(buttonPressedColor);
+            g2.fill(buttonA);
+        }
+        if (buttonBPressed) {
+            g2.setColor(buttonPressedColor);
+            g2.fill(buttonB);
+        }
+        if (buttonCPressed) {
+            g2.setColor(buttonPressedColor);
+            g2.fill(buttonC);
+        }
+
         g2.translate(-xImageOffset, -yImageOffset);
 
         if (label != null) {
@@ -199,29 +230,36 @@ class RainbowHatBoardView extends JPanel {
         int x = e.getX();
         int y = e.getY();
         setMomentarySwitch(x - xImageOffset, y - yImageOffset, true);
+        repaint();
     }
 
     private void onMouseReleased(MouseEvent e) {
         int x = e.getX();
         int y = e.getY();
         setMomentarySwitch(x - xImageOffset, y - yImageOffset, false);
+        repaint();
     }
 
     private void setMomentarySwitch(int x, int y, boolean on) {
         if (buttonA.contains(x, y)) {
             rainbowHat.touchA(on);
+            buttonAPressed = on;
         } else if (buttonB.contains(x, y)) {
             rainbowHat.touchB(on);
+            buttonBPressed = on;
         } else if (buttonC.contains(x, y)) {
             rainbowHat.touchC(on);
+            buttonCPressed = on;
         }
     }
 
     private void onMouseEntered(MouseEvent e) {
+        repaint();
     }
 
     private void onMouseExited(MouseEvent e) {
         mouseMovedPoint.setLocation(-1, -1);
+        repaint();
     }
 
     private void onMouseMoved(MouseEvent e) {
@@ -279,7 +317,7 @@ class RainbowHatBoardView extends JPanel {
     }
 
     private void onMouseDragged(MouseEvent e) {
-
+        repaint();
     }
 
     public void setRedLedPressed(boolean on) {
@@ -294,6 +332,12 @@ class RainbowHatBoardView extends JPanel {
 
     public void setBlueLedPressed(boolean on) {
         blueLedSymbol.setPressed(on);
+        repaint();
+    }
+
+    public void setLedColor(int i, Color c) {
+        ledLightSymbols[i].setColor(c);
+        ledLightSymbols[i].setPressed(!c.equals(Color.BLACK));
         repaint();
     }
 

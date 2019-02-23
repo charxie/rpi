@@ -171,13 +171,13 @@ public abstract class Symbol implements Icon {
         }
     }
 
-    static class MonochromaticLedLight extends Symbol {
+    static class LedLight extends Symbol {
 
         private double radius;
         private int rays = 8;
         private double gap = 2;
 
-        public MonochromaticLedLight(Color color, int w, int h, double radius, int rays) {
+        public LedLight(Color color, int w, int h, double radius, int rays) {
             setColor(color);
             setIconWidth(w);
             setIconHeight(h);
@@ -190,8 +190,8 @@ public abstract class Symbol implements Icon {
             super.paintIcon(c, g, x, y);
             Graphics2D g2 = (Graphics2D) g;
             Ellipse2D.Float s = new Ellipse2D.Float(xSymbol, ySymbol, wSymbol, hSymbol);
-            g2.fill(s);
             if (pressed) {
+                g2.fill(s);
                 int x1, y1, x2, y2;
                 double angle, cos, sin;
                 for (int i = 0; i < rays; i++) {
@@ -204,6 +204,8 @@ public abstract class Symbol implements Icon {
                     y2 = (int) (s.getCenterY() + (hSymbol / 2 + gap) * sin);
                     g2.drawLine(x1, y1, x2, y2);
                 }
+            } else {
+                g2.draw(s);
             }
         }
 
