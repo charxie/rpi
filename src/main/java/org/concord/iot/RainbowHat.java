@@ -42,8 +42,8 @@ public class RainbowHat {
 
     private DatabaseReference database;
 
-    private float temperature;
-    private float barometricPressure;
+    private double temperature;
+    private double barometricPressure;
     private boolean allowTemperatureTransmission;
     private boolean allowBarometricPressureTransmission;
 
@@ -110,7 +110,7 @@ public class RainbowHat {
         }
     }
 
-    void pressButtonA(boolean on) {
+    public void touchA(boolean on) {
         if (on) {
             redLed.high();
             buzz(1);
@@ -124,7 +124,7 @@ public class RainbowHat {
         updateDisplay();
     }
 
-    void pressButtonB(boolean on) {
+    public void touchB(boolean on) {
         if (on) {
             greenLed.high();
             buzz(2);
@@ -138,7 +138,7 @@ public class RainbowHat {
         updateDisplay();
     }
 
-    void pressButtonC(boolean on) {
+    public void touchC(boolean on) {
         if (on) {
             blueLed.high();
             buzz(3);
@@ -149,6 +149,30 @@ public class RainbowHat {
         database.child("blueLed").setValue(on, null);
     }
 
+    public void setRedLedState(boolean high) {
+        redLed.setState(high);
+    }
+
+    public boolean getRedLedState() {
+        return redLed.isHigh();
+    }
+
+    public void setGreenLedState(boolean high) {
+        greenLed.setState(high);
+    }
+
+    public boolean getGreenLedState() {
+        return greenLed.isHigh();
+    }
+
+    public void setBlueLedState(boolean high) {
+        blueLed.setState(high);
+    }
+
+    public boolean getBlueLedState() {
+        return blueLed.isHigh();
+    }
+
     private void setupButtons() {
         GpioPinListenerDigital listener = event -> {
             GpioPin pin = event.getPin();
@@ -156,13 +180,13 @@ public class RainbowHat {
             System.out.println("GPIO Pin state change: " + pin + " = " + pinState);
             switch (pin.getPin().getAddress()) {
                 case 29:
-                    pressButtonA(!pinState.isHigh());
+                    touchA(!pinState.isHigh());
                     break;
                 case 28:
-                    pressButtonB(!pinState.isHigh());
+                    touchB(!pinState.isHigh());
                     break;
                 case 27:
-                    pressButtonC(!pinState.isHigh());
+                    touchC(!pinState.isHigh());
                     break;
             }
         };
@@ -176,9 +200,9 @@ public class RainbowHat {
         if (display != null) {
             String text = "----";
             if ("Temperature".equalsIgnoreCase(displayMode)) {
-                text = removeDot(Float.toString(temperature));
+                text = removeDot(Double.toString(temperature));
             } else if ("Pressure".equalsIgnoreCase(displayMode)) {
-                text = removeDot(Float.toString(barometricPressure));
+                text = removeDot(Double.toString(barometricPressure));
             }
             if (text.length() > 4) {
                 text = text.substring(0, 4);
@@ -204,8 +228,8 @@ public class RainbowHat {
             while (true) {
                 try {
                     double[] results = bmp280.sampleDeviceReads();
-                    temperature = (float) results[Bmp280.TEMP_VAL_C];
-                    barometricPressure = (float) results[Bmp280.PRES_VAL];
+                    temperature = results[Bmp280.TEMP_VAL_C];
+                    barometricPressure = results[Bmp280.PRES_VAL];
                     System.out.printf("Temperature in Celsius : %.2f C %n", temperature);
                     System.out.printf("Pressure : %.2f hPa %n", barometricPressure);
                     updateDisplay();
@@ -226,6 +250,14 @@ public class RainbowHat {
         });
         sensorThread.setPriority(Thread.MIN_PRIORITY);
         sensorThread.start();
+    }
+
+    public double getTemperature() {
+        return temperature;
+    }
+
+    public double getBarometricPressure() {
+        return barometricPressure;
     }
 
     private void synchronizeWithCloud() {
@@ -290,7 +322,7 @@ public class RainbowHat {
 
     private void createAndShowGui() {
 
-        final JFrame frame = new JFrame("Rainbow HAT");
+        final JFrame frame = new JFrame("Rainbow HAT Emulator on Raspberry Pi");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLocation(100, 100);
         frame.addWindowListener(new WindowAdapter() {
@@ -309,7 +341,7 @@ public class RainbowHat {
         JPanel buttonPanel = new JPanel();
         contentPane.add(buttonPanel, BorderLayout.SOUTH);
 
-        JButton button = new JButton("Close");
+        JButton button = new JButton("Exit");
         button.addActionListener(e -> {
             destroy();
             frame.dispose();
