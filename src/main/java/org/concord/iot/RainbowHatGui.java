@@ -128,7 +128,7 @@ class RainbowHatGui {
 
     }
 
-    public final static void showAbout(JFrame frame) {
+    private void showAbout(JFrame frame) {
         String s = "<html><h3>Rainbow HAT Emulator</h3>";
         s += "<h4><i>Learning to create the Internet of Things</i></h4>";
         s += "Charles Xie, &copy; 2019-" + Calendar.getInstance().get(Calendar.YEAR);

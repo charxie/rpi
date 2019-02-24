@@ -8,7 +8,6 @@ import java.text.DecimalFormat;
 
 /**
  * @author Charles Xie
- *
  */
 
 class RainbowHatBoardView extends JPanel {
@@ -159,6 +158,22 @@ class RainbowHatBoardView extends JPanel {
         if (buttonCPressed) {
             g2.setColor(buttonPressedColor);
             g2.fill(buttonC);
+        }
+
+        String display = rainbowHat.getAlphanumericString();
+        for (int i = 0; i < display.length(); i++) {
+            String s = Character.toString(display.charAt(i));
+            if (!"-".equals(s)) {
+                g2.translate(85 + i * 62, 170);
+                g2.scale(1.3, 1);
+                g2.shear(-0.1, 0);
+                g2.setColor(Color.GREEN);
+                g2.setFont(new Font("Courier New", Font.ITALIC | Font.BOLD, 24));
+                drawString(g2, LcdFont.format(Integer.parseInt(s)), 0, 0);
+                g2.shear(0.1, 0);
+                g2.scale(1.0 / 1.3, 1);
+                g2.translate(-85 - i * 62, -170);
+            }
         }
 
         g2.translate(-xImageOffset, -yImageOffset);

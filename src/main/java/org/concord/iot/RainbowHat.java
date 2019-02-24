@@ -47,6 +47,7 @@ public class RainbowHat {
     private double barometricPressure;
     private boolean allowTemperatureTransmission;
     private boolean allowBarometricPressureTransmission;
+    private String alphanumericString;
 
     RainbowHatBoardView boardView;
     private RainbowHatGui gui;
@@ -214,21 +215,25 @@ public class RainbowHat {
     // TODO: Demical point
     private void updateDisplay() {
         if (display != null) {
-            String text = "----";
+            alphanumericString = "----";
             if ("Temperature".equalsIgnoreCase(displayMode)) {
-                text = removeDot(Double.toString(temperature));
+                alphanumericString = removeDot(Double.toString(temperature));
             } else if ("Pressure".equalsIgnoreCase(displayMode)) {
-                text = removeDot(Double.toString(barometricPressure));
+                alphanumericString = removeDot(Double.toString(barometricPressure));
             }
-            if (text.length() > 4) {
-                text = text.substring(0, 4);
-            } else if (text.length() == 3) {
-                text = "0" + text;
-            } else if (text.length() == 2) {
-                text = "00" + text;
+            if (alphanumericString.length() > 4) {
+                alphanumericString = alphanumericString.substring(0, 4);
+            } else if (alphanumericString.length() == 3) {
+                alphanumericString = "0" + alphanumericString;
+            } else if (alphanumericString.length() == 2) {
+                alphanumericString = "00" + alphanumericString;
             }
-            display.display(text);
+            display.display(alphanumericString);
         }
+    }
+
+    String getAlphanumericString() {
+        return alphanumericString;
     }
 
     private static String removeDot(String s) {
@@ -257,6 +262,9 @@ public class RainbowHat {
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
+                }
+                if (boardView != null) {
+                    boardView.repaint();
                 }
                 try {
                     Thread.sleep(SENSOR_DATA_COLLECTION_INTERVAL);
