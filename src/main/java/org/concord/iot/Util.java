@@ -1,7 +1,10 @@
 package org.concord.iot;
 
+import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
 import java.awt.*;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemListener;
 import java.io.File;
 
 /**
@@ -58,6 +61,28 @@ public final class Util {
         g = (g << 8) & 0x0000FF00; //Shift Green 8-bits and mask out other stuff
         b = b & 0x000000FF; //Mask out anything not blue.
         return 0xFF000000 | r | g | b; //0xFF000000 for 100% Alpha. Bitwise OR everything together.
+    }
+
+    public static void setSelectedSilently(AbstractButton x, boolean b) {
+        ActionListener[] al = x.getActionListeners();
+        if (al != null && al.length > 0) {
+            for (ActionListener a : al)
+                x.removeActionListener(a);
+        }
+        ItemListener[] il = x.getItemListeners();
+        if (il != null && il.length > 0) {
+            for (ItemListener a : il)
+                x.removeItemListener(a);
+        }
+        x.setSelected(b);
+        if (al != null && al.length > 0) {
+            for (ActionListener a : al)
+                x.addActionListener(a);
+        }
+        if (il != null && il.length > 0) {
+            for (ItemListener a : il)
+                x.addItemListener(a);
+        }
     }
 
 }

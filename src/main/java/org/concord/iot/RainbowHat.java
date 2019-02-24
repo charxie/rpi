@@ -49,6 +49,7 @@ public class RainbowHat {
     private boolean allowBarometricPressureTransmission;
 
     RainbowHatBoardView boardView;
+    private RainbowHatGui gui;
 
     public RainbowHat() {
         init();
@@ -267,8 +268,26 @@ public class RainbowHat {
         sensorThread.start();
     }
 
+    public void setAllowTemperatureTransmission(boolean b) {
+        allowTemperatureTransmission = b;
+        database.child("allowTemperatureTransmission").setValue(b, null);
+    }
+
+    public boolean getAllowTemperatureTransmission() {
+        return allowTemperatureTransmission;
+    }
+
     public double getTemperature() {
         return temperature;
+    }
+
+    public void setAllowBarometricPressureTransmission(boolean b) {
+        allowBarometricPressureTransmission = b;
+        database.child("allowBarometricPressureTransmission").setValue(b, null);
+    }
+
+    public boolean getAllowBarometricPressureTransmission() {
+        return allowBarometricPressureTransmission;
     }
 
     public double getBarometricPressure() {
@@ -290,6 +309,10 @@ public class RainbowHat {
                     RainbowHatState state = dataSnapshot.getValue(RainbowHatState.class);
                     allowTemperatureTransmission = state.allowTemperatureTransmission;
                     allowBarometricPressureTransmission = state.allowBarometricPressureTransmission;
+                    if (gui != null) {
+                        gui.setUploadTemperatureCheckBox(allowTemperatureTransmission);
+                        gui.setUploadPressureCheckBox(allowBarometricPressureTransmission);
+                    }
 
                     redLed.setState(state.redLed);
                     greenLed.setState(state.greenLed);
@@ -346,7 +369,8 @@ public class RainbowHat {
 
     private void createAndShowGui() {
         boardView = new RainbowHatBoardView(this);
-        RainbowHatGui.createAndShowGui(this);
+        gui = new RainbowHatGui();
+        gui.createAndShowGui(this);
     }
 
     void chooseLedColor(Window parent, final int i) {
