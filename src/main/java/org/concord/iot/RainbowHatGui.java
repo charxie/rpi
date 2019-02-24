@@ -13,11 +13,18 @@ import java.util.Calendar;
 
 class RainbowHatGui {
 
+    private JCheckBox showGraphCheckBox;
     private JCheckBox uploadTemperatureCheckBox;
     private JCheckBox uploadPressureCheckBox;
 
     RainbowHatGui() {
 
+    }
+
+    void setShowGraphCheckBox(boolean checked) {
+        if (showGraphCheckBox != null) {
+            Util.setSelectedSilently(showGraphCheckBox, checked);
+        }
     }
 
     void setUploadTemperatureCheckBox(boolean checked) {
@@ -103,6 +110,7 @@ class RainbowHatGui {
             }
         });
         toolPanel.add(uploadTemperatureCheckBox);
+
         uploadPressureCheckBox = new JCheckBox("Pressure", rainbowHat.getAllowBarometricPressureTransmission());
         uploadPressureCheckBox.addItemListener(new ItemListener() {
             @Override
@@ -111,6 +119,15 @@ class RainbowHatGui {
             }
         });
         toolPanel.add(uploadPressureCheckBox);
+
+        showGraphCheckBox = new JCheckBox("Graph", rainbowHat.boardView.getShowGraph());
+        showGraphCheckBox.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                rainbowHat.boardView.setShowGraph(e.getStateChange() == ItemEvent.SELECTED);
+            }
+        });
+        toolPanel.add(showGraphCheckBox);
 
         // button panel
 

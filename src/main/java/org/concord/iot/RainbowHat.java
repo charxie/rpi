@@ -18,6 +18,7 @@ import java.awt.*;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 /**
@@ -51,6 +52,9 @@ public class RainbowHat {
 
     RainbowHatBoardView boardView;
     private RainbowHatGui gui;
+
+    private List<SensorDataPoint> temperatureDataStore;
+    private List<SensorDataPoint> barometricPressureDataStore;
 
     public RainbowHat() {
         init();
@@ -92,6 +96,9 @@ public class RainbowHat {
 
         setupButtons();
         startSensorDataCollection();
+
+        temperatureDataStore = new ArrayList<>();
+        barometricPressureDataStore = new ArrayList<>();
 
     }
 
@@ -289,6 +296,10 @@ public class RainbowHat {
         return temperature;
     }
 
+    public List<SensorDataPoint> getTemperatureDataStore() {
+        return temperatureDataStore;
+    }
+
     public void setAllowBarometricPressureTransmission(boolean b) {
         allowBarometricPressureTransmission = b;
         database.child("allowBarometricPressureTransmission").setValue(b, null);
@@ -300,6 +311,10 @@ public class RainbowHat {
 
     public double getBarometricPressure() {
         return barometricPressure;
+    }
+
+    public List<SensorDataPoint> getBarometricPressureDataStore() {
+        return barometricPressureDataStore;
     }
 
     private void synchronizeWithCloud() {

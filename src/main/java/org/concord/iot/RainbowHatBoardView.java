@@ -44,6 +44,9 @@ class RainbowHatBoardView extends JPanel {
     private Symbol.LedLight blueLedSymbol;
     private Symbol.LedLight[] ledLightSymbols = new Symbol.LedLight[RainbowHatState.NUMBER_OF_RGB_LEDS];
 
+    private boolean showGraph;
+    private GraphRenderer graphRenderer;
+
     RainbowHatBoardView(RainbowHat rainbowHat) {
 
         super();
@@ -117,6 +120,16 @@ class RainbowHatBoardView extends JPanel {
             }
         });
 
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                onComponentResized(e);
+            }
+        });
+
+        graphRenderer = new GraphRenderer(50, 50, 200, 200);
+        graphRenderer.setMouseMovedPoint(mouseMovedPoint);
+
     }
 
     @Override
@@ -184,8 +197,40 @@ class RainbowHatBoardView extends JPanel {
             drawString(g2, mouseMovedPoint, label);
         }
 
+        if (showGraph) {
+            graphRenderer.drawFrame(g2);
+            //if (model.getTime() > graphRenderer.getXmax()) graphRenderer.doubleXmax();
+            switch (graphRenderer.getDataType()) {
+                case 0: // temperature (Celsius)
+                    if (rainbowHat.getTemperature() > graphRenderer.getYmax()) {
+                        graphRenderer.increaseYmax();
+                    } else if (rainbowHat.getTemperature() < graphRenderer.getYmin()) {
+                        graphRenderer.decreaseYmin();
+                    }
+                    graphRenderer.drawData(g2, rainbowHat.getTemperatureDataStore(), "Temperature", false);
+                    break;
+                case 1: // barometric pressure
+                    if (rainbowHat.getBarometricPressure() > graphRenderer.getYmax()) {
+                        graphRenderer.increaseYmax();
+                    } else if (rainbowHat.getBarometricPressure() < graphRenderer.getYmin()) {
+                        graphRenderer.decreaseYmin();
+                    }
+                    graphRenderer.drawData(g2, rainbowHat.getBarometricPressureDataStore(), "Barometric Pressure", false);
+                    break;
+            }
+        }
+
         g2.dispose();
 
+    }
+
+    public void setShowGraph(boolean showGraph) {
+        this.showGraph = showGraph;
+        repaint();
+    }
+
+    public boolean getShowGraph() {
+        return showGraph;
     }
 
     private void drawString(Graphics2D g, Point p, String s) {
@@ -334,6 +379,11 @@ class RainbowHatBoardView extends JPanel {
     }
 
     private void onMouseDragged(MouseEvent e) {
+        repaint();
+    }
+
+    private void onComponentResized(ComponentEvent e) {
+        graphRenderer.setFrame(50, 50, getWidth() - 100, getHeight() - 100);
         repaint();
     }
 
