@@ -1,4 +1,6 @@
-package org.concord.iot;
+package org.concord.iot.tools;
+
+import org.concord.iot.Util;
 
 import java.awt.Color;
 import java.awt.Dimension;

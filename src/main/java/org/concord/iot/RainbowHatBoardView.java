@@ -1,5 +1,7 @@
 package org.concord.iot;
 
+import org.concord.iot.tools.LcdFont;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;

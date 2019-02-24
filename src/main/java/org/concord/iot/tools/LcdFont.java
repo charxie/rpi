@@ -1,4 +1,4 @@
-package org.concord.iot;
+package org.concord.iot.tools;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -7,7 +7,7 @@ import java.util.Map;
  * Source: https://gist.github.com/yngwie74/2025449
  */
 
-class LcdFont {
+public class LcdFont {
 
     private static final String _NONE = "   ";
     private static final String _LEFT = "  |";
