@@ -7,6 +7,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.Ellipse2D;
 import java.text.DecimalFormat;
+import java.util.List;
 
 /**
  * @author Charles Xie
@@ -71,7 +72,7 @@ class RainbowHatBoardView extends JPanel {
         temperatureSensor = new Rectangle(186, 133, 10, 10);
         barometricPressureSensor = new Rectangle(228, 141, 8, 8);
 
-        setPreferredSize(new Dimension(500, 400));
+        setPreferredSize(new Dimension(800, 500));
         image = Toolkit.getDefaultToolkit().createImage(getClass().getResource("images/rainbow-hat.png"));
 
         redLedSymbol = new Symbol.LedLight(Color.RED, 8, 8, 16, 8);
@@ -300,8 +301,75 @@ class RainbowHatBoardView extends JPanel {
     private void onMouseReleased(MouseEvent e) {
         int x = e.getX();
         int y = e.getY();
+
+        if (showGraph) {
+            if (graphRenderer.buttonContains(GraphRenderer.CLOSE_BUTTON, x, y)) {
+                showGraph = false;
+            } else if (graphRenderer.buttonContains(GraphRenderer.DATA_BUTTON, x, y)) {
+                //if (dataViewer == null)
+                //  dataViewer = new DataViewer(this);
+                //dataViewer.showDataOfType(graphRenderer.getDataType());
+            } else if (graphRenderer.buttonContains(GraphRenderer.X_EXPAND_BUTTON, x, y)) {
+                graphRenderer.doubleXmax();
+            } else if (graphRenderer.buttonContains(GraphRenderer.X_SHRINK_BUTTON, x, y)) {
+                graphRenderer.halveXmax();
+            } else if (graphRenderer.buttonContains(GraphRenderer.Y_EXPAND_BUTTON, x, y)) {
+                graphRenderer.increaseYmax();
+            } else if (graphRenderer.buttonContains(GraphRenderer.Y_SHRINK_BUTTON, x, y)) {
+                graphRenderer.decreaseYmax();
+            } else if (graphRenderer.buttonContains(GraphRenderer.Y_FIT_BUTTON, x, y)) {
+                autofitGraph(graphRenderer.getDataType());
+            } else if (graphRenderer.buttonContains(GraphRenderer.Y_SELECTION_BUTTON_LEFT_ARROW, x, y)) {
+                graphRenderer.previous();
+                autofitGraph(graphRenderer.getDataType());
+            } else if (graphRenderer.buttonContains(GraphRenderer.Y_SELECTION_BUTTON_RIGHT_ARROW, x, y)) {
+                graphRenderer.next();
+                autofitGraph(graphRenderer.getDataType());
+            }
+            repaint();
+            e.consume();
+            if (graphRenderer.windowContains(x, y)) {
+                return;
+            }
+        }
+
         setMomentarySwitch(x - xImageOffset, y - yImageOffset, false);
         repaint();
+
+    }
+
+    private void autofitGraph(byte type) {
+        double min = Double.MAX_VALUE, max = -Double.MAX_VALUE;
+        List<SensorDataPoint> data = null;
+        switch (type) {
+            case 0:
+                data = rainbowHat.getTemperatureDataStore();
+                break;
+            case 1:
+                data = rainbowHat.getBarometricPressureDataStore();
+                break;
+        }
+        if (data != null) {
+            for (SensorDataPoint s : data) {
+                double v = s.getValue();
+                if (v > max) {
+                    max = v;
+                }
+                if (v < min) {
+                    min = v;
+                }
+            }
+        }
+        if (min < max) {
+            double diff = 0.05 * (max - min);
+            if (Math.abs(min) < 0.000001 * diff) {
+                graphRenderer.setYmin(min);
+                graphRenderer.setYmax(max + diff);
+            } else {
+                graphRenderer.setYmin(min - diff);
+                graphRenderer.setYmax(max + diff);
+            }
+        }
     }
 
     private void setMomentarySwitch(int x, int y, boolean on) {
@@ -333,6 +401,15 @@ class RainbowHatBoardView extends JPanel {
         int x2 = x - xImageOffset;
         int y2 = y - yImageOffset;
         label = null;
+
+        if (showGraph) {
+            if (graphRenderer.buttonContains(x, y)) {
+                setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+                repaint();
+                e.consume();
+                return;
+            }
+        }
 
         if (buttonA.contains(x2, y2)) {
             label = "Touch button A (momentary)";
