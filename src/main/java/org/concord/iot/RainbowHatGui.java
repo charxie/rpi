@@ -81,6 +81,62 @@ class RainbowHatGui implements GraphListener {
         });
         fileMenu.add(quitMenuItem);
 
+        JMenu examplesMenu = new JMenu("Examples");
+        examplesMenu.setMnemonic(KeyEvent.VK_E);
+        menuBar.add(examplesMenu);
+
+        JMenuItem miExample = new JMenuItem("Blink Red LED");
+        miExample.addActionListener(e -> {
+            rainbowHat.redLed.blink(1000, 10000);
+        });
+        examplesMenu.add(miExample);
+
+        miExample = new JMenuItem("Blink Green LED");
+        miExample.addActionListener(e -> {
+            rainbowHat.greenLed.blink(1000, 10000);
+        });
+        examplesMenu.add(miExample);
+
+        miExample = new JMenuItem("Blink Blue LED");
+        miExample.addActionListener(e -> {
+            rainbowHat.blueLed.blink(1000, 10000);
+        });
+        examplesMenu.add(miExample);
+
+        miExample = new JMenuItem("Red, Green, Blue LEDs");
+        miExample.addActionListener(e -> {
+            new Thread(() -> {
+                for (int i = 0; i < 5; i++) {
+                    try {
+                        rainbowHat.redLed.high();
+                        Thread.sleep(500);
+                        rainbowHat.redLed.low();
+                        rainbowHat.greenLed.high();
+                        Thread.sleep(500);
+                        rainbowHat.greenLed.low();
+                        rainbowHat.blueLed.high();
+                        Thread.sleep(500);
+                        rainbowHat.blueLed.low();
+                    } catch (InterruptedException ex) {
+                    }
+                }
+            }).start();
+        });
+        examplesMenu.add(miExample);
+
+        miExample = new JMenuItem("Blink Rainbow LEDs");
+        miExample.addActionListener(e -> {
+            rainbowHat.apa102.blinkAll(Color.MAGENTA, 5, 1000);
+        });
+        examplesMenu.add(miExample);
+        examplesMenu.addSeparator();
+
+        miExample = new JMenuItem("Repeat Buzzer");
+        miExample.addActionListener(e -> {
+            rainbowHat.buzzer.blink(1000, 10000);
+        });
+        examplesMenu.add(miExample);
+
         JMenu helpMenu = new JMenu("Help");
         helpMenu.setMnemonic(KeyEvent.VK_H);
         menuBar.add(helpMenu);

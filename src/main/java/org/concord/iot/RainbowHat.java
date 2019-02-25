@@ -33,11 +33,11 @@ public class RainbowHat {
     private GpioPinDigitalInput buttonA;
     private GpioPinDigitalInput buttonB;
     private GpioPinDigitalInput buttonC;
-    private GpioPinDigitalOutput redLed;
-    private GpioPinDigitalOutput greenLed;
-    private GpioPinDigitalOutput blueLed;
-    private GpioPinDigitalOutput buzzer;
-    private Apa102 apa102;
+    GpioPinDigitalOutput redLed;
+    GpioPinDigitalOutput greenLed;
+    GpioPinDigitalOutput blueLed;
+    GpioPinDigitalOutput buzzer;
+    Apa102 apa102;
     private Bmp280 bmp280;
     private AlphanumericDisplay display;
     private String displayMode = "None";
@@ -78,7 +78,7 @@ public class RainbowHat {
         buzzer = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_23, "Buzzer", PinState.LOW);
 
         apa102 = new Apa102();
-        //apa102.setColor(2, Color.BLUE); // test
+        // apa102.setColor(2, Color.BLUE); // test
 
         display = new AlphanumericDisplay(AlphanumericDisplay.HT16K33.BLINK_OFF, AlphanumericDisplay.HT16K33.DUTY_01);
         display.displayOn();

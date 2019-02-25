@@ -78,16 +78,23 @@ public class Apa102 {
     }
 
     public void blinkAll(Color color, int times, int delay) {
-        try {
-            for (int i = 0; i < times; i++) {
-                setColorForAll(Color.BLACK);
-                Thread.sleep(delay);
-                setColorForAll(color);
-                Thread.sleep(delay);
+        Thread t = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    for (int i = 0; i < times; i++) {
+                        setColorForAll(color);
+                        Thread.sleep(delay);
+                        setColorForAll(Color.BLACK);
+                        Thread.sleep(delay);
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        });
+        t.setPriority(Thread.MIN_PRIORITY);
+        t.start();
     }
 
 }
