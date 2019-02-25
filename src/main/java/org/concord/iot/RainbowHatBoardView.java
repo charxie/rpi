@@ -284,14 +284,11 @@ class RainbowHatBoardView extends JPanel {
 
     private void setLatchingSwitch(int x, int y) {
         if (redLed.contains(x, y)) {
-            rainbowHat.setRedLedState(!rainbowHat.getRedLedState());
-            redLedSymbol.setPressed(rainbowHat.getRedLedState());
+            rainbowHat.setRedLedState(!rainbowHat.getRedLedState(), true);
         } else if (greenLed.contains(x, y)) {
-            rainbowHat.setGreenLedState(!rainbowHat.getGreenLedState());
-            greenLedSymbol.setPressed(rainbowHat.getGreenLedState());
+            rainbowHat.setGreenLedState(!rainbowHat.getGreenLedState(), true);
         } else if (blueLed.contains(x, y)) {
-            rainbowHat.setBlueLedState(!rainbowHat.getBlueLedState());
-            blueLedSymbol.setPressed(rainbowHat.getBlueLedState());
+            rainbowHat.setBlueLedState(!rainbowHat.getBlueLedState(), true);
         }
     }
 

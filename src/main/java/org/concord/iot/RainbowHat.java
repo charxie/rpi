@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * @author Charles Xie
@@ -40,7 +42,7 @@ public class RainbowHat {
     Apa102 apa102;
     private Bmp280 bmp280;
     private AlphanumericDisplay display;
-    private String displayMode = "None";
+    String displayMode = "None";
 
     private DatabaseReference database;
 
@@ -48,12 +50,13 @@ public class RainbowHat {
     private double currentTime;
     private double temperature;
     private double barometricPressure;
-    private boolean allowTemperatureTransmission;
-    private boolean allowBarometricPressureTransmission;
+    boolean allowTemperatureTransmission;
+    boolean allowBarometricPressureTransmission;
     private String alphanumericString;
 
     RainbowHatBoardView boardView;
-    private RainbowHatGui gui;
+    RainbowHatGui gui;
+    ExecutorService threadService;
 
     private List<SensorDataPoint> temperatureDataStore;
     private List<SensorDataPoint> barometricPressureDataStore;
@@ -63,6 +66,8 @@ public class RainbowHat {
     }
 
     private void init() {
+
+        threadService = Executors.newFixedThreadPool(2);
 
         synchronizeWithCloud();
 
@@ -104,7 +109,7 @@ public class RainbowHat {
 
     }
 
-    private void buzz(int k) {
+    void buzz(int k) {
         SoftPwm.softPwmStop(buzzer.getPin().getAddress());
         switch (k) {
             case 1:
@@ -172,27 +177,84 @@ public class RainbowHat {
         }
     }
 
-    public void setRedLedState(boolean high) {
+    public void blinkRedLed(final int times, final int delay) {
+        threadService.submit(() -> {
+            for (int i = 0; i < times; i++) {
+                try {
+                    setRedLedState(true, true);
+                    Thread.sleep(delay);
+                    setRedLedState(false, true);
+                    Thread.sleep(delay);
+                } catch (InterruptedException e) {
+                }
+            }
+        });
+    }
+
+    public void setRedLedState(boolean high, boolean updateRemote) {
         redLed.setState(high);
-        database.child("redLed").setValue(high, null);
+        if (boardView != null) {
+            boardView.setRedLedPressed(high);
+        }
+        if (updateRemote) {
+            database.child("redLed").setValue(high, null);
+        }
     }
 
     public boolean getRedLedState() {
         return redLed.isHigh();
     }
 
-    public void setGreenLedState(boolean high) {
+    public void blinkGreenLed(final int times, final int delay) {
+        threadService.submit(() -> {
+            for (int i = 0; i < times; i++) {
+                try {
+                    setGreenLedState(true, true);
+                    Thread.sleep(delay);
+                    setGreenLedState(false, true);
+                    Thread.sleep(delay);
+                } catch (InterruptedException e) {
+                }
+            }
+        });
+    }
+
+    public void setGreenLedState(boolean high, boolean updateRemote) {
         greenLed.setState(high);
-        database.child("greenLed").setValue(high, null);
+        if (boardView != null) {
+            boardView.setGreenLedPressed(high);
+        }
+        if (updateRemote) {
+            database.child("greenLed").setValue(high, null);
+        }
     }
 
     public boolean getGreenLedState() {
         return greenLed.isHigh();
     }
 
-    public void setBlueLedState(boolean high) {
+    public void blinkBlueLed(final int times, final int delay) {
+        threadService.submit(() -> {
+            for (int i = 0; i < times; i++) {
+                try {
+                    setBlueLedState(true, true);
+                    Thread.sleep(delay);
+                    setBlueLedState(false, true);
+                    Thread.sleep(delay);
+                } catch (InterruptedException e) {
+                }
+            }
+        });
+    }
+
+    public void setBlueLedState(boolean high, boolean updateRemote) {
         blueLed.setState(high);
-        database.child("blueLed").setValue(high, null);
+        if (boardView != null) {
+            boardView.setBlueLedPressed(high);
+        }
+        if (updateRemote) {
+            database.child("blueLed").setValue(high, null);
+        }
     }
 
     public boolean getBlueLedState() {
@@ -263,7 +325,7 @@ public class RainbowHat {
 
     private void startSensorDataCollection() {
         timeZeroMillis = System.currentTimeMillis();
-        Thread sensorThread = new Thread(() -> {
+        threadService.execute(() -> {
             while (true) {
                 try {
                     double[] results = bmp280.sampleDeviceReads();
@@ -293,8 +355,6 @@ public class RainbowHat {
                 }
             }
         });
-        sensorThread.setPriority(Thread.MIN_PRIORITY);
-        sensorThread.start();
     }
 
     public void setAllowTemperatureTransmission(boolean b) {
@@ -341,44 +401,7 @@ public class RainbowHat {
             database.addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) { // This method is called once with the initial value and again whenever data at this location is updated.
-
-                    System.out.println("Value changed: " + dataSnapshot.getValue());
-                    RainbowHatState state = dataSnapshot.getValue(RainbowHatState.class);
-                    allowTemperatureTransmission = state.allowTemperatureTransmission;
-                    allowBarometricPressureTransmission = state.allowBarometricPressureTransmission;
-                    if (gui != null) {
-                        gui.setUploadTemperatureCheckBox(allowTemperatureTransmission);
-                        gui.setUploadPressureCheckBox(allowBarometricPressureTransmission);
-                    }
-
-                    redLed.setState(state.redLed);
-                    greenLed.setState(state.greenLed);
-                    blueLed.setState(state.blueLed);
-                    if (state.redLed) {
-                        buzz(1);
-                    } else if (state.greenLed) {
-                        buzz(2);
-                    } else if (state.blueLed) {
-                        buzz(3);
-                    } else {
-                        buzz(0);
-                    }
-                    if (boardView != null) {
-                        boardView.setRedLedPressed(state.redLed);
-                        boardView.setGreenLedPressed(state.greenLed);
-                        boardView.setBlueLedPressed(state.blueLed);
-                    }
-                    for (int i = 0; i < RainbowHatState.NUMBER_OF_RGB_LEDS; i++) { // the led strip goes from the right to the left (0 is the rightmost and 6 is the leftmost).
-                        ArrayList<Integer> rgb = state.rainbowRgb.get(i);
-                        Color c = new Color(rgb.get(0), rgb.get(1), rgb.get(2));
-                        apa102.setColor(i, c);
-                        if (boardView != null) {
-                            boardView.setLedColor(i, c);
-                        }
-                    }
-
-                    displayMode = state.displayMode;
-
+                    DatabaseHandler.handle(RainbowHat.this, dataSnapshot);
                 }
 
                 @Override
@@ -402,6 +425,13 @@ public class RainbowHat {
         display.displayOff();
         // stop all GPIO activity/threads by shutting down the GPIO controller (this method will forcefully shutdown all GPIO monitoring threads and scheduled tasks)
         gpio.shutdown();
+        try {
+            if (threadService != null && !threadService.isShutdown()) {
+                threadService.shutdownNow();
+            }
+        } catch (Throwable t) {
+            t.printStackTrace();
+        }
     }
 
     private void createAndShowGui() {

@@ -85,48 +85,50 @@ class RainbowHatGui implements GraphListener {
         examplesMenu.setMnemonic(KeyEvent.VK_E);
         menuBar.add(examplesMenu);
 
-        JMenuItem miExample = new JMenuItem("Blink Red LED");
+        JMenuItem miExample = new JMenuItem("Blinking Red LED");
         miExample.addActionListener(e -> {
-            rainbowHat.redLed.blink(1000, 10000);
+            rainbowHat.blinkRedLed(5, 500);
         });
         examplesMenu.add(miExample);
 
-        miExample = new JMenuItem("Blink Green LED");
+        miExample = new JMenuItem("Blinking Green LED");
         miExample.addActionListener(e -> {
-            rainbowHat.greenLed.blink(1000, 10000);
+            rainbowHat.blinkGreenLed(5, 500);
         });
         examplesMenu.add(miExample);
 
-        miExample = new JMenuItem("Blink Blue LED");
+        miExample = new JMenuItem("Blinking Blue LED");
         miExample.addActionListener(e -> {
-            rainbowHat.blueLed.blink(1000, 10000);
+            rainbowHat.blinkBlueLed(5, 500);
         });
         examplesMenu.add(miExample);
 
-        miExample = new JMenuItem("Red, Green, Blue LEDs");
+        miExample = new JMenuItem("Dancing LEDs");
         miExample.addActionListener(e -> {
-            new Thread(() -> {
+            rainbowHat.threadService.submit(() -> {
                 for (int i = 0; i < 5; i++) {
                     try {
-                        rainbowHat.redLed.high();
+                        rainbowHat.setRedLedState(true, true);
                         Thread.sleep(500);
-                        rainbowHat.redLed.low();
-                        rainbowHat.greenLed.high();
+                        rainbowHat.setRedLedState(false, true);
+                        rainbowHat.setGreenLedState(true, true);
                         Thread.sleep(500);
-                        rainbowHat.greenLed.low();
-                        rainbowHat.blueLed.high();
+                        rainbowHat.setGreenLedState(false, true);
+                        rainbowHat.setBlueLedState(true, true);
                         Thread.sleep(500);
-                        rainbowHat.blueLed.low();
+                        rainbowHat.setBlueLedState(false, true);
                     } catch (InterruptedException ex) {
                     }
                 }
-            }).start();
+            });
         });
         examplesMenu.add(miExample);
 
         miExample = new JMenuItem("Blink Rainbow LEDs");
         miExample.addActionListener(e -> {
-            rainbowHat.apa102.blinkAll(Color.MAGENTA, 5, 1000);
+            rainbowHat.threadService.submit(() -> {
+                rainbowHat.apa102.blinkAll(Color.MAGENTA, 5, 1000);
+            });
         });
         examplesMenu.add(miExample);
         examplesMenu.addSeparator();

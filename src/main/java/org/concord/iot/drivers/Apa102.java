@@ -77,24 +77,18 @@ public class Apa102 {
         setColorForAll(Color.BLACK);
     }
 
+    /** Need to call this from a thread */
     public void blinkAll(Color color, int times, int delay) {
-        Thread t = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    for (int i = 0; i < times; i++) {
-                        setColorForAll(color);
-                        Thread.sleep(delay);
-                        setColorForAll(Color.BLACK);
-                        Thread.sleep(delay);
-                    }
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+        try {
+            for (int i = 0; i < times; i++) {
+                setColorForAll(color);
+                Thread.sleep(delay);
+                setColorForAll(Color.BLACK);
+                Thread.sleep(delay);
             }
-        });
-        t.setPriority(Thread.MIN_PRIORITY);
-        t.start();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
 }
