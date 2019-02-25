@@ -10,9 +10,13 @@ import java.io.IOException;
 
 /**
  * APA 102 protocol: Start frame + LED1 + .... + LED7 + End frame
- * The start frame must be [0x00, 0x00, 0x00, 0x00] (32 bits). The LED frames are in the BGR (not RGB) order.
- * Brightness is controlled by the first byte: 0xE0+brightness.
- * See: https://cpldcpu.wordpress.com/2014/11/30/understanding-the-apa102-superled/
+ * The start frame must be [0x00, 0x00, 0x00, 0x00] (32 bits).
+ * The LED frames are in the BGR (not RGB) order.
+ * Brightness is controlled by the first byte of a LED frame: 0b11100000 + brightness.
+ * The BGR components are set by the following three bytes.
+ * <p>
+ * See also: https://cpldcpu.wordpress.com/2014/11/30/understanding-the-apa102-superled/
+ * See also: https://hyperion-project.org/attachments/apa102_led-pdf.102/
  *
  * @author Charles Xie
  */
@@ -22,7 +26,7 @@ public class Apa102 {
     private final static byte[] START_FRAME = new byte[]{0, 0, 0, 0};
 
     private SpiDevice spi;
-    private int brightness = 1;
+    private int brightness = 1; // from 0 to 31 (0 is completely out)
     private byte[][] data; // keep the data as the state of this driver
 
     public Apa102() {
@@ -35,6 +39,14 @@ public class Apa102 {
         for (int i = 0; i < data.length; i++) {
             updateData(i, Color.BLACK);
         }
+    }
+
+    public void setBrightness(int brightness) {
+        this.brightness = brightness;
+    }
+
+    public int getBrightness() {
+        return brightness;
     }
 
     public Color getColor(int i) {
@@ -55,7 +67,7 @@ public class Apa102 {
     }
 
     private void updateData(int i, Color color) {
-        data[i][0] = (byte) color.getAlpha();
+        data[i][0] = (byte) (0b11100000 + brightness); // brightness control
         data[i][1] = (byte) color.getBlue();
         data[i][2] = (byte) color.getGreen();
         data[i][3] = (byte) color.getRed();
@@ -77,7 +89,21 @@ public class Apa102 {
         setColorForAll(Color.BLACK);
     }
 
-    /** Need to call this from a thread */
+    public void setDefaultRainbow() {
+        try {
+            spi.write(START_FRAME); // start frame
+            for (int i = 0; i <= RainbowHatState.NUMBER_OF_RGB_LEDS; i++) {
+                updateData(i, Color.getHSBColor(i * 360.f / RainbowHatState.NUMBER_OF_RGB_LEDS, 1.0f, 1.0f));
+                spi.write(data[i]);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Need to call this from a thread
+     */
     public void blinkAll(Color color, int times, int delay) {
         try {
             for (int i = 0; i < times; i++) {

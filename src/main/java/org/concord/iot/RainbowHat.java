@@ -441,6 +441,28 @@ public class RainbowHat {
         boardView.addGraphListener(gui);
     }
 
+    void setDefaultRainbow() {
+        apa102.setDefaultRainbow();
+        if (boardView != null) {
+            for (int i = 0; i < RainbowHatState.NUMBER_OF_RGB_LEDS; i++) {
+                boardView.setLedColor(i, apa102.getColor(i));
+            }
+        }
+        ArrayList<ArrayList<Integer>> list = new ArrayList<>();
+        for (int i = 0; i < RainbowHatState.NUMBER_OF_RGB_LEDS; i++) {
+            list.add(getRgb(apa102.getColor(i)));
+        }
+        database.child("rainbowRgb").setValue(list, null); // TODO: There must be a way to set only the element of the list
+    }
+
+    private static ArrayList<Integer> getRgb(Color c) {
+        ArrayList<Integer> rgb = new ArrayList<>(3);
+        rgb.add(c.getRed());
+        rgb.add(c.getGreen());
+        rgb.add(c.getBlue());
+        return rgb;
+    }
+
     void chooseLedColor(Window parent, final int i) {
         Color c = JColorChooser.showDialog(parent, "LED1 Color", apa102.getColor(i));
         if (c != null) {
@@ -450,20 +472,7 @@ public class RainbowHat {
             }
             ArrayList<ArrayList<Integer>> list = new ArrayList<>();
             for (int j = 0; j < RainbowHatState.NUMBER_OF_RGB_LEDS; j++) {
-                if (i == j) {
-                    ArrayList<Integer> rgb = new ArrayList<>(3);
-                    rgb.add(c.getRed());
-                    rgb.add(c.getGreen());
-                    rgb.add(c.getBlue());
-                    list.add(rgb);
-                } else {
-                    ArrayList<Integer> rgb = new ArrayList<>(3);
-                    Color c2 = apa102.getColor(j);
-                    rgb.add(c2.getRed());
-                    rgb.add(c2.getGreen());
-                    rgb.add(c2.getBlue());
-                    list.add(rgb);
-                }
+                list.add(i == j ? getRgb(c) : getRgb(apa102.getColor(j)));
             }
             database.child("rainbowRgb").setValue(list, null); // TODO: There must be a way to set only the element of the list
         }

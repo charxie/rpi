@@ -123,8 +123,17 @@ class RainbowHatGui implements GraphListener {
             });
         });
         examplesMenu.add(miExample);
+        examplesMenu.addSeparator();
 
-        miExample = new JMenuItem("Blink Rainbow LEDs");
+        miExample = new JMenuItem("Bainbow LEDs");
+        miExample.addActionListener(e -> {
+            rainbowHat.threadService.submit(() -> {
+                rainbowHat.setDefaultRainbow();
+            });
+        });
+        examplesMenu.add(miExample);
+
+        miExample = new JMenuItem("Blinking RGB LEDs");
         miExample.addActionListener(e -> {
             rainbowHat.threadService.submit(() -> {
                 rainbowHat.apa102.blinkAll(Color.MAGENTA, 5, 1000);
