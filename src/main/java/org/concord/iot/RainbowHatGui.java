@@ -11,7 +11,7 @@ import java.util.Calendar;
  * @author Charles Xie
  */
 
-class RainbowHatGui {
+class RainbowHatGui implements GraphListener {
 
     private JCheckBox showGraphCheckBox;
     private JCheckBox uploadTemperatureCheckBox;
@@ -163,6 +163,16 @@ class RainbowHatGui {
         s += "the MIT License.";
         s += "</html>";
         JOptionPane.showMessageDialog(frame, new JLabel(s), "About the software", JOptionPane.INFORMATION_MESSAGE, new ImageIcon(RainbowHat.class.getResource("images/frame.png")));
+    }
+
+    @Override
+    public void graphClosed(GraphEvent e) {
+        Util.setSelectedSilently(showGraphCheckBox, false);
+    }
+
+    @Override
+    public void graphOpened(GraphEvent e) {
+        Util.setSelectedSilently(showGraphCheckBox, true);
     }
 
 }

@@ -7,6 +7,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.Ellipse2D;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -47,6 +48,8 @@ class RainbowHatBoardView extends JPanel {
 
     private boolean showGraph;
     private GraphRenderer graphRenderer;
+    private DataViewer dataViewer;
+    private List<GraphListener> graphListeners;
 
     RainbowHatBoardView(RainbowHat rainbowHat) {
 
@@ -130,6 +133,7 @@ class RainbowHatBoardView extends JPanel {
 
         graphRenderer = new GraphRenderer(50, 50, 200, 200);
         graphRenderer.setMouseMovedPoint(mouseMovedPoint);
+        graphListeners = new ArrayList<>();
 
     }
 
@@ -305,10 +309,12 @@ class RainbowHatBoardView extends JPanel {
         if (showGraph) {
             if (graphRenderer.buttonContains(GraphRenderer.CLOSE_BUTTON, x, y)) {
                 showGraph = false;
+                notifyGraphListeners(GraphEvent.GRAPH_CLOSED);
             } else if (graphRenderer.buttonContains(GraphRenderer.DATA_BUTTON, x, y)) {
-                //if (dataViewer == null)
-                //  dataViewer = new DataViewer(this);
-                //dataViewer.showDataOfType(graphRenderer.getDataType());
+                if (dataViewer == null) {
+                    dataViewer = new DataViewer(rainbowHat);
+                }
+                dataViewer.showDataOfType(graphRenderer.getDataType());
             } else if (graphRenderer.buttonContains(GraphRenderer.X_EXPAND_BUTTON, x, y)) {
                 graphRenderer.doubleXmax();
             } else if (graphRenderer.buttonContains(GraphRenderer.X_SHRINK_BUTTON, x, y)) {
@@ -464,6 +470,31 @@ class RainbowHatBoardView extends JPanel {
     private void onComponentResized(ComponentEvent e) {
         graphRenderer.setFrame(50, 50, getWidth() - 100, getHeight() - 100);
         repaint();
+    }
+
+    public void addGraphListener(GraphListener l) {
+        if (!graphListeners.contains(l))
+            graphListeners.add(l);
+    }
+
+    public void removeGraphListener(GraphListener l) {
+        graphListeners.remove(l);
+    }
+
+    public void notifyGraphListeners(byte eventType) {
+        if (graphListeners.isEmpty())
+            return;
+        GraphEvent e = new GraphEvent(this);
+        for (GraphListener l : graphListeners) {
+            switch (eventType) {
+                case GraphEvent.GRAPH_CLOSED:
+                    l.graphClosed(e);
+                    break;
+                case GraphEvent.GRAPH_OPENED:
+                    l.graphOpened(e);
+                    break;
+            }
+        }
     }
 
     public void setRedLedPressed(boolean on) {

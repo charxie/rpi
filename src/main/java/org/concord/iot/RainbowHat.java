@@ -408,6 +408,7 @@ public class RainbowHat {
         boardView = new RainbowHatBoardView(this);
         gui = new RainbowHatGui();
         gui.createAndShowGui(this);
+        boardView.addGraphListener(gui);
     }
 
     void chooseLedColor(Window parent, final int i) {
