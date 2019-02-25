@@ -26,7 +26,7 @@ public class Apa102 {
     private final static byte[] START_FRAME = new byte[]{0, 0, 0, 0};
 
     private SpiDevice spi;
-    private int brightness = 1; // from 0 to 31 (0 is completely out)
+    private byte brightness = 1; // from 0 to 31 (0 is completely out)
     private byte[][] data; // keep the data as the state of this driver
 
     public Apa102() {
@@ -41,16 +41,17 @@ public class Apa102 {
         }
     }
 
-    public void setBrightness(int brightness) {
+    public void setBrightness(byte brightness) {
         this.brightness = brightness;
     }
 
-    public int getBrightness() {
+    public byte getBrightness() {
         return brightness;
     }
 
+    // the alpha value should not use data[i][0] as it is for controlling brightness in a specific way
     public Color getColor(int i) {
-        return new Color(data[i][3] & 0xFF, data[i][2] & 0xFF, data[i][1] & 0xFF, data[i][0] & 0xFF); // byte is signed
+        return new Color(data[i][3] & 0xFF, data[i][2] & 0xFF, data[i][1] & 0xFF, 255); // byte is signed
     }
 
     public void setColor(int led, Color color) {
