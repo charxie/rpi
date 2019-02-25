@@ -44,6 +44,8 @@ public class RainbowHat {
 
     private DatabaseReference database;
 
+    private long timeZeroMillis;
+    private double currentTime;
     private double temperature;
     private double barometricPressure;
     private boolean allowTemperatureTransmission;
@@ -226,7 +228,7 @@ public class RainbowHat {
             if ("Temperature".equalsIgnoreCase(displayMode)) {
                 alphanumericString = removeDot(Double.toString(temperature));
             } else if ("Pressure".equalsIgnoreCase(displayMode)) {
-                alphanumericString = removeDot(Double.toString(barometricPressure));
+                alphanumericString = Long.toString(Math.round(barometricPressure));
             }
             if (alphanumericString.length() > 4) {
                 alphanumericString = alphanumericString.substring(0, 4);
@@ -234,6 +236,10 @@ public class RainbowHat {
                 alphanumericString = "0" + alphanumericString;
             } else if (alphanumericString.length() == 2) {
                 alphanumericString = "00" + alphanumericString;
+            } else if (alphanumericString.length() == 1) {
+                alphanumericString = "000" + alphanumericString;
+            } else if (alphanumericString.length() == 0) {
+                alphanumericString = "----";
             }
             display.display(alphanumericString);
         }
@@ -251,7 +257,12 @@ public class RainbowHat {
         return s;
     }
 
+    public double getTime() {
+        return currentTime;
+    }
+
     private void startSensorDataCollection() {
+        timeZeroMillis = System.currentTimeMillis();
         Thread sensorThread = new Thread(() -> {
             while (true) {
                 try {
@@ -260,6 +271,9 @@ public class RainbowHat {
                     barometricPressure = results[Bmp280.PRES_VAL];
                     System.out.printf("Temperature in Celsius : %.2f C %n", temperature);
                     System.out.printf("Pressure : %.2f hPa %n", barometricPressure);
+                    currentTime = (double) (System.currentTimeMillis() - timeZeroMillis) / (double) SENSOR_DATA_COLLECTION_INTERVAL;
+                    temperatureDataStore.add(new SensorDataPoint(currentTime, temperature));
+                    barometricPressureDataStore.add(new SensorDataPoint(currentTime, barometricPressure));
                     updateDisplay();
                     if (allowTemperatureTransmission) {
                         database.child("temperature").setValue(temperature, null);

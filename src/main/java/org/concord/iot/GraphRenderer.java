@@ -48,7 +48,7 @@ class GraphRenderer {
     private Color fgColor = Color.black;
     private Color frameColor = new Color(205, 205, 205, 128);
     private int x, y, w, h;
-    private double xmax = 360000; // 100 hours
+    private double xmax = 100;
     private double ymin = 0;
     private double ymax = 50;
     private double yIncrement = 5;

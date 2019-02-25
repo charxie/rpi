@@ -199,7 +199,9 @@ class RainbowHatBoardView extends JPanel {
 
         if (showGraph) {
             graphRenderer.drawFrame(g2);
-            //if (model.getTime() > graphRenderer.getXmax()) graphRenderer.doubleXmax();
+            if (rainbowHat.getTime() > graphRenderer.getXmax()) {
+                graphRenderer.doubleXmax();
+            }
             switch (graphRenderer.getDataType()) {
                 case 0: // temperature (Celsius)
                     if (rainbowHat.getTemperature() > graphRenderer.getYmax()) {
