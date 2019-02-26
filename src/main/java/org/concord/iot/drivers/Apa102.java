@@ -67,6 +67,23 @@ public class Apa102 {
         }
     }
 
+    public void setData(byte[][] rgb) {
+        for (int i = 0; i < rgb.length; i++) {
+            data[i][0] = (byte) (0b11100000 + brightness); // brightness control
+            data[i][1] = rgb[i][2];
+            data[i][2] = rgb[i][1];
+            data[i][3] = rgb[i][0];
+        }
+        try {
+            spi.write(START_FRAME); // start frame
+            for (int i = 0; i < data.length; i++) {
+                spi.write(data[i]);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     private void updateData(int i, Color color) {
         data[i][0] = (byte) (0b11100000 + brightness); // brightness control
         data[i][1] = (byte) color.getBlue();

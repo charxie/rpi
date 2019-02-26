@@ -20,8 +20,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * @author Charles Xie
@@ -56,7 +56,7 @@ public class RainbowHat {
 
     RainbowHatBoardView boardView;
     RainbowHatGui gui;
-    ExecutorService threadService;
+    private ThreadPoolExecutor threadPool;
 
     private List<SensorDataPoint> temperatureDataStore;
     private List<SensorDataPoint> barometricPressureDataStore;
@@ -67,7 +67,7 @@ public class RainbowHat {
 
     private void init() {
 
-        threadService = Executors.newFixedThreadPool(2);
+        threadPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(2);
 
         synchronizeWithCloud();
 
@@ -109,23 +109,32 @@ public class RainbowHat {
 
     }
 
+    void submitTask(Runnable task) {
+        int poolSize = threadPool.getCorePoolSize();
+        if (threadPool.getActiveCount() >= poolSize) {
+            threadPool.setCorePoolSize(poolSize + 1);
+        }
+        threadPool.submit(task);
+    }
+
     void buzz(int k) {
-        SoftPwm.softPwmStop(buzzer.getPin().getAddress());
+        int a = buzzer.getPin().getAddress();
+        SoftPwm.softPwmStop(a);
         switch (k) {
             case 1:
-                SoftPwm.softPwmCreate(buzzer.getPin().getAddress(), 0, 100);
-                SoftPwm.softPwmWrite(buzzer.getPin().getAddress(), 1);
+                SoftPwm.softPwmCreate(a, 0, 100);
+                SoftPwm.softPwmWrite(a, 1);
                 break;
             case 2:
-                SoftPwm.softPwmCreate(buzzer.getPin().getAddress(), 0, 1000);
-                SoftPwm.softPwmWrite(buzzer.getPin().getAddress(), 10);
+                SoftPwm.softPwmCreate(a, 0, 1000);
+                SoftPwm.softPwmWrite(a, 10);
                 break;
             case 3:
-                SoftPwm.softPwmCreate(buzzer.getPin().getAddress(), 0, 100);
-                SoftPwm.softPwmWrite(buzzer.getPin().getAddress(), 100);
+                SoftPwm.softPwmCreate(a, 0, 100);
+                SoftPwm.softPwmWrite(a, 100);
                 break;
             default:
-                SoftPwm.softPwmWrite(buzzer.getPin().getAddress(), 0);
+                SoftPwm.softPwmWrite(a, 0);
         }
     }
 
@@ -178,7 +187,7 @@ public class RainbowHat {
     }
 
     public void blinkRedLed(final int times, final int delay) {
-        threadService.submit(() -> {
+        submitTask(() -> {
             for (int i = 0; i < times; i++) {
                 try {
                     setRedLedState(true, true);
@@ -206,7 +215,7 @@ public class RainbowHat {
     }
 
     public void blinkGreenLed(final int times, final int delay) {
-        threadService.submit(() -> {
+        submitTask(() -> {
             for (int i = 0; i < times; i++) {
                 try {
                     setGreenLedState(true, true);
@@ -234,7 +243,7 @@ public class RainbowHat {
     }
 
     public void blinkBlueLed(final int times, final int delay) {
-        threadService.submit(() -> {
+        submitTask(() -> {
             for (int i = 0; i < times; i++) {
                 try {
                     setBlueLedState(true, true);
@@ -325,7 +334,7 @@ public class RainbowHat {
 
     private void startSensorDataCollection() {
         timeZeroMillis = System.currentTimeMillis();
-        threadService.execute(() -> {
+        threadPool.execute(() -> {
             while (true) {
                 try {
                     double[] results = bmp280.sampleDeviceReads();
@@ -415,6 +424,13 @@ public class RainbowHat {
     }
 
     void destroy() {
+        try {
+            if (!threadPool.isShutdown()) {
+                threadPool.shutdownNow();
+            }
+        } catch (Throwable t) {
+            t.printStackTrace();
+        }
         buttonA.removeAllListeners();
         buttonB.removeAllListeners();
         buttonC.removeAllListeners();
@@ -425,13 +441,6 @@ public class RainbowHat {
         display.displayOff();
         // stop all GPIO activity/threads by shutting down the GPIO controller (this method will forcefully shutdown all GPIO monitoring threads and scheduled tasks)
         gpio.shutdown();
-        try {
-            if (threadService != null && !threadService.isShutdown()) {
-                threadService.shutdownNow();
-            }
-        } catch (Throwable t) {
-            t.printStackTrace();
-        }
     }
 
     private void createAndShowGui() {

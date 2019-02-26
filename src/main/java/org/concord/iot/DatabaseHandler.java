@@ -19,7 +19,6 @@ class DatabaseHandler {
             rainbowHat.gui.setUploadPressureCheckBox(rainbowHat.allowBarometricPressureTransmission);
         }
 
-        rainbowHat.buzz(0);
         if (state.redLed != rainbowHat.redLed.isHigh()) { // change only when the remote state is not the same as the local state
             rainbowHat.setRedLedState(state.redLed, false);
             if (state.redLed) {
