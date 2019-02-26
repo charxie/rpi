@@ -11,11 +11,15 @@ import java.util.Calendar;
  * @author Charles Xie
  */
 
-class RainbowHatGui implements GraphListener {
+class RainbowHatGui implements GraphListener, ThreadPoolListener {
 
+    private RainbowHat rainbowHat;
+
+    private JLabel threadPoolLabel;
     private JCheckBox showGraphCheckBox;
     private JCheckBox uploadTemperatureCheckBox;
     private JCheckBox uploadPressureCheckBox;
+
     private volatile boolean stopBlinkRedLed;
     private volatile boolean stopBlinkGreenLed;
     private volatile boolean stopBlinkBlueLed;
@@ -45,6 +49,9 @@ class RainbowHatGui implements GraphListener {
     }
 
     void createAndShowGui(final RainbowHat rainbowHat) {
+
+        this.rainbowHat = rainbowHat;
+        rainbowHat.addThreadPoolListener(this);
 
         final JFrame frame = new JFrame("Rainbow HAT Emulator on Raspberry Pi");
         frame.setIconImage(Toolkit.getDefaultToolkit().createImage(RainbowHat.class.getResource("images/frame.png")));
@@ -291,18 +298,13 @@ class RainbowHatGui implements GraphListener {
         });
         toolPanel.add(showGraphCheckBox);
 
-        // button panel
+        // status panel
 
-        JPanel buttonPanel = new JPanel();
-        contentPane.add(buttonPanel, BorderLayout.SOUTH);
+        JPanel statusPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        contentPane.add(statusPanel, BorderLayout.SOUTH);
 
-        JButton button = new JButton("Exit");
-        button.addActionListener(e -> {
-            rainbowHat.destroy();
-            frame.dispose();
-            System.exit(0);
-        });
-        buttonPanel.add(button);
+        threadPoolLabel = new JLabel("<html><font size=2>Thread pool: size = " + rainbowHat.getThreadPoolSize() + ", active = " + rainbowHat.getActiveThreadCount() + "</font></html>");
+        statusPanel.add(threadPoolLabel);
 
         frame.pack();
         frame.setVisible(true);
@@ -335,6 +337,11 @@ class RainbowHatGui implements GraphListener {
     @Override
     public void graphOpened(GraphEvent e) {
         Util.setSelectedSilently(showGraphCheckBox, true);
+    }
+
+    @Override
+    public void updated(ThreadPoolEvent e) {
+        threadPoolLabel.setText("<html><font size=2>Thread pool: size = " + rainbowHat.getThreadPoolSize() + ", active = " + rainbowHat.getActiveThreadCount() + "</font></html>");
     }
 
 }

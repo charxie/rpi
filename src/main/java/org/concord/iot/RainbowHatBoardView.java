@@ -469,16 +469,16 @@ class RainbowHatBoardView extends JPanel {
         repaint();
     }
 
-    public void addGraphListener(GraphListener l) {
+    void addGraphListener(GraphListener l) {
         if (!graphListeners.contains(l))
             graphListeners.add(l);
     }
 
-    public void removeGraphListener(GraphListener l) {
+    void removeGraphListener(GraphListener l) {
         graphListeners.remove(l);
     }
 
-    public void notifyGraphListeners(byte eventType) {
+    void notifyGraphListeners(byte eventType) {
         if (graphListeners.isEmpty())
             return;
         GraphEvent e = new GraphEvent(this);

@@ -57,6 +57,7 @@ public class RainbowHat {
     RainbowHatBoardView boardView;
     RainbowHatGui gui;
     private ThreadPoolExecutor threadPool;
+    private List<ThreadPoolListener> threadPoolListeners;
 
     private List<SensorDataPoint> temperatureDataStore;
     private List<SensorDataPoint> barometricPressureDataStore;
@@ -68,6 +69,7 @@ public class RainbowHat {
     private void init() {
 
         threadPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(2);
+        threadPoolListeners=new ArrayList<>();
 
         synchronizeWithCloud();
 
@@ -113,8 +115,35 @@ public class RainbowHat {
         int poolSize = threadPool.getCorePoolSize();
         if (threadPool.getActiveCount() >= poolSize) {
             threadPool.setCorePoolSize(poolSize + 1);
+            notifyThreadPoolListeners();
         }
         threadPool.submit(task);
+    }
+
+    int getThreadPoolSize() {
+        return threadPool.getCorePoolSize();
+    }
+
+    int getActiveThreadCount() {
+        return threadPool.getActiveCount();
+    }
+
+    void addThreadPoolListener(ThreadPoolListener l) {
+        if (!threadPoolListeners.contains(l))
+            threadPoolListeners.add(l);
+    }
+
+    void removeThreadPoolListener(ThreadPoolListener l) {
+        threadPoolListeners.remove(l);
+    }
+
+    void notifyThreadPoolListeners() {
+        if (threadPoolListeners.isEmpty())
+            return;
+        ThreadPoolEvent e = new ThreadPoolEvent(this);
+        for (ThreadPoolListener l : threadPoolListeners) {
+            l.updated(e);
+        }
     }
 
     void buzz(int k) {
