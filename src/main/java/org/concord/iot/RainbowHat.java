@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.prefs.Preferences;
 
 /**
  * This is an emulator of the Rainbow HAT for Raspberry Pi 3.
@@ -86,7 +87,8 @@ public class RainbowHat {
         blueLed = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_25, "Blue LED", PinState.LOW);
         buzzer = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_23, "Buzzer", PinState.LOW);
 
-        apa102 = new Apa102(RainbowHatState.NUMBER_OF_RGB_LEDS);
+        final Preferences pref = Preferences.userNodeForPackage(RainbowHat.class);
+        apa102 = new Apa102(pref.getInt("number_of_rgb_leds", RainbowHatState.NUMBER_OF_RGB_LEDS));
         //apa102.setDefaultRainbow(); // test
 
         try {
@@ -130,6 +132,8 @@ public class RainbowHat {
 
     public void setNumberOfRgbLeds(int numberOfRgbLeds) {
         apa102.setNumberOfPixels(numberOfRgbLeds);
+        final Preferences pref = Preferences.userNodeForPackage(RainbowHat.class);
+        pref.putInt("number_of_rgb_leds", numberOfRgbLeds);
     }
 
     public int getNumberOfRgbLeds() {

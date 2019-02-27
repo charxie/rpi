@@ -6,6 +6,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.Calendar;
+import java.util.prefs.Preferences;
 
 /**
  * @author Charles Xie
@@ -314,6 +315,30 @@ class RainbowHatGui implements GraphListener, ThreadPoolListener {
 
         threadPoolLabel = new JLabel("<html><font size=2>Thread pool: size = " + rainbowHat.getThreadPoolSize() + ", active = " + rainbowHat.getActiveThreadCount() + "</font></html>");
         statusPanel.add(threadPoolLabel);
+
+        final Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        final Preferences pref = Preferences.userNodeForPackage(RainbowHat.class);
+        Dimension boardViewSize = rainbowHat.boardView.getPreferredSize();
+        frame.setSize(Math.min(pref.getInt("window_size_width", Math.max(900, boardViewSize.width)), screenSize.width), Math.min(pref.getInt("window_size_height", 600), screenSize.height));
+        frame.setLocation(pref.getInt("window_location_x", (int) (screenSize.width - boardViewSize.width) / 2), pref.getInt("window_location_y", (int) (screenSize.height - boardViewSize.height) / 2));
+
+        frame.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentMoved(final ComponentEvent e) {
+                if (frame.getExtendedState() == 0) {
+                    pref.putInt("window_location_x", e.getComponent().getLocation().x);
+                    pref.putInt("window_location_y", e.getComponent().getLocation().y);
+                }
+            }
+
+            @Override
+            public void componentResized(final ComponentEvent e) {
+                if (frame.getExtendedState() == 0) {
+                    pref.putInt("window_size_width", e.getComponent().getSize().width);
+                    pref.putInt("window_size_height", e.getComponent().getSize().height);
+                }
+            }
+        });
 
         frame.pack();
         frame.setVisible(true);
