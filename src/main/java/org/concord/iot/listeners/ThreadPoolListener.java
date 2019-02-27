@@ -1,11 +1,11 @@
-package org.concord.iot;
+package org.concord.iot.listeners;
 
 /**
  * @author Charles Xie
  *
  */
 
-interface ThreadPoolListener {
+public interface ThreadPoolListener {
 
     public void updated(ThreadPoolEvent e);
 

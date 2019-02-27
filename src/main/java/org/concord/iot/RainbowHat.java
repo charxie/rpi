@@ -12,6 +12,8 @@ import com.pi4j.wiringpi.SoftPwm;
 import org.concord.iot.drivers.AlphanumericDisplay;
 import org.concord.iot.drivers.Apa102;
 import org.concord.iot.drivers.Bmp280;
+import org.concord.iot.listeners.ThreadPoolEvent;
+import org.concord.iot.listeners.ThreadPoolListener;
 
 import javax.swing.*;
 import java.awt.*;

@@ -3,10 +3,10 @@ package org.concord.iot.drivers;
 import com.pi4j.io.spi.SpiChannel;
 import com.pi4j.io.spi.SpiDevice;
 import com.pi4j.io.spi.SpiFactory;
-import org.concord.iot.RainbowHatState;
 
 import java.awt.*;
 import java.io.IOException;
+import java.util.Arrays;
 
 /**
  * APA 102 protocol: Start frame + LED1 + .... + LED7 + End frame
@@ -25,7 +25,7 @@ public class Apa102 {
 
     private final static byte[] START_FRAME = new byte[]{0, 0, 0, 0};
 
-    private int numberOfPixels = RainbowHatState.NUMBER_OF_RGB_LEDS;
+    private int numberOfPixels = 7;
     private SpiDevice spi;
     private byte brightness = 1; // from 0 to 31 (0 is completely out)
     private byte[][] data; // keep the data as the state of this driver
@@ -43,12 +43,30 @@ public class Apa102 {
         }
     }
 
-    public void setNumberOfPixels(int numberOfPixels) {
-        data = new byte[numberOfPixels + 1][4];
-        for (int i = this.numberOfPixels; i < data.length; i++) {
-            updateData(i, Color.BLACK);
+    public void setNumberOfPixels(int n) {
+        byte[][] a = new byte[n + 1][4];
+        for (int i = 0; i < a.length; i++) {
+            if (i < data.length) {
+                System.arraycopy(data[i], 0, a[i], 0, 4);
+            } else {
+                Arrays.fill(a[i], (byte) 0);
+            }
         }
-        this.numberOfPixels = numberOfPixels;
+        setColorForAll(Color.BLACK);
+        data = a;
+        numberOfPixels = n;
+        writeData();
+    }
+
+    private void writeData(){
+        try {
+            spi.write(START_FRAME); // start frame
+            for (int i = 0; i < data.length; i++) {
+                spi.write(data[i]);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public int getNumberOfPixels() {
@@ -71,14 +89,7 @@ public class Apa102 {
     public void setColor(int led, Color color) {
         if (led < 0 || led >= data.length) return;
         updateData(led, color);
-        try {
-            spi.write(START_FRAME); // start frame
-            for (int i = 0; i <= numberOfPixels; i++) {
-                spi.write(data[i]);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        writeData();
     }
 
     public void setData(byte[][] rgb) {
@@ -88,14 +99,7 @@ public class Apa102 {
             data[i][2] = rgb[i][1];
             data[i][3] = rgb[i][0];
         }
-        try {
-            spi.write(START_FRAME); // start frame
-            for (int i = 0; i < data.length; i++) {
-                spi.write(data[i]);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        writeData();
     }
 
     private void updateData(int i, Color color) {

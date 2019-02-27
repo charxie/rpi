@@ -1,4 +1,4 @@
-package org.concord.iot;
+package org.concord.iot.listeners;
 
 import java.util.EventObject;
 
@@ -7,7 +7,7 @@ import java.util.EventObject;
  *
  */
 
-class ThreadPoolEvent extends EventObject {
+public class ThreadPoolEvent extends EventObject {
 
     public ThreadPoolEvent(Object source) {
         super(source);
