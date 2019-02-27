@@ -41,7 +41,7 @@ class DatabaseHandler {
         for (int i = 0; i < RainbowHatState.NUMBER_OF_RGB_LEDS; i++) { // the led strip goes from the right to the left (0 is the rightmost and 6 is the leftmost).
             ArrayList<Integer> rgb = state.rainbowRgb.get(i);
             Color c = new Color(rgb.get(0), rgb.get(1), rgb.get(2));
-            rainbowHat.apa102.setColor(i, c);
+            //rainbowHat.apa102.setColor(i, c);
             if (rainbowHat.boardView != null) {
                 rainbowHat.boardView.setLedColor(i, c);
             }

@@ -84,6 +84,15 @@ class RainbowHatGui implements GraphListener, ThreadPoolListener {
 
         fileMenu.addSeparator();
 
+        JMenuItem settingsMenuItem = new JMenuItem("Settings");
+        settingsMenuItem.setToolTipText("Settings");
+        settingsMenuItem.addActionListener(e -> {
+            new SettingsDialog(frame, rainbowHat).setVisible(true);
+        });
+        fileMenu.add(settingsMenuItem);
+
+        fileMenu.addSeparator();
+
         JMenuItem quitMenuItem = new JMenuItem("Quit");
         quitMenuItem.setMnemonic(KeyEvent.VK_Q);
         quitMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, KeyEvent.CTRL_MASK, true));
@@ -199,7 +208,7 @@ class RainbowHatGui implements GraphListener, ThreadPoolListener {
         examplesMenu.add(miExample);
         examplesMenu.addSeparator();
 
-        miExample = new JMenuItem("Bainbow LEDs");
+        miExample = new JMenuItem("Default Rainbow");
         miExample.addActionListener(e -> {
             rainbowHat.submitTask(() -> {
                 rainbowHat.setDefaultRainbow();
@@ -220,7 +229,7 @@ class RainbowHatGui implements GraphListener, ThreadPoolListener {
             if (e.getStateChange() == ItemEvent.SELECTED) {
                 stopRgbLedAnimation = false;
                 rainbowHat.submitTask(() -> {
-                    byte[][] data = new byte[RainbowHatState.NUMBER_OF_RGB_LEDS][4];
+                    byte[][] data = new byte[rainbowHat.getNumberOfRgbLeds()][4];
                     while (true) {
                         for (int i = 0; i < data.length; i++) {
                             data[i][0] = (byte) (255 * Math.random());

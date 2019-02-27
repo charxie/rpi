@@ -24,6 +24,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
 /**
+ * This is an emulator of the Rainbow HAT for Raspberry Pi 3.
+ *
  * @author Charles Xie
  */
 
@@ -52,7 +54,7 @@ public class RainbowHat {
     private double barometricPressure;
     boolean allowTemperatureTransmission;
     boolean allowBarometricPressureTransmission;
-    private String alphanumericString;
+    private String alphanumericString = "----";
 
     RainbowHatBoardView boardView;
     RainbowHatGui gui;
@@ -69,7 +71,7 @@ public class RainbowHat {
     private void init() {
 
         threadPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(2);
-        threadPoolListeners=new ArrayList<>();
+        threadPoolListeners = new ArrayList<>();
 
         synchronizeWithCloud();
 
@@ -84,12 +86,17 @@ public class RainbowHat {
         blueLed = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_25, "Blue LED", PinState.LOW);
         buzzer = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_23, "Buzzer", PinState.LOW);
 
-        apa102 = new Apa102();
-        // apa102.setColor(2, Color.BLUE); // test
+        apa102 = new Apa102(RainbowHatState.NUMBER_OF_RGB_LEDS);
+        //apa102.setDefaultRainbow(); // test
 
-        display = new AlphanumericDisplay(AlphanumericDisplay.HT16K33.BLINK_OFF, AlphanumericDisplay.HT16K33.DUTY_01);
-        display.displayOn();
-        display.display("----");
+        try {
+            display = new AlphanumericDisplay(AlphanumericDisplay.HT16K33.BLINK_OFF, AlphanumericDisplay.HT16K33.DUTY_01);
+            display.displayOn();
+            display.display(alphanumericString);
+        } catch (Exception e) {
+            display = null;
+            e.printStackTrace();
+        }
 
         try {
             bmp280 = new Bmp280(Bmp280.Protocol.I2C, Bmp280.ADDR_SDO_2_VDDIO, I2CBus.BUS_1);
@@ -101,6 +108,7 @@ public class RainbowHat {
             bmp280.setStandbyTime(Bmp280.Standby_Time.MS_POINT_5, true);
         } catch (Exception e) {
             e.printStackTrace();
+            bmp280 = null;
         }
 
         setupButtons();
@@ -118,6 +126,14 @@ public class RainbowHat {
             notifyThreadPoolListeners();
         }
         threadPool.submit(task);
+    }
+
+    public void setNumberOfRgbLeds(int numberOfRgbLeds) {
+        apa102.setNumberOfPixels(numberOfRgbLeds);
+    }
+
+    public int getNumberOfRgbLeds() {
+        return apa102.getNumberOfPixels();
     }
 
     int getThreadPoolSize() {
@@ -231,6 +247,7 @@ public class RainbowHat {
 
     public void setRedLedState(boolean high, boolean updateRemote) {
         redLed.setState(high);
+        buzz(high ? 1 : 0);
         if (boardView != null) {
             boardView.setRedLedPressed(high);
         }
@@ -259,6 +276,7 @@ public class RainbowHat {
 
     public void setGreenLedState(boolean high, boolean updateRemote) {
         greenLed.setState(high);
+        buzz(high ? 2 : 0);
         if (boardView != null) {
             boardView.setGreenLedPressed(high);
         }
@@ -287,6 +305,7 @@ public class RainbowHat {
 
     public void setBlueLedState(boolean high, boolean updateRemote) {
         blueLed.setState(high);
+        buzz(high ? 3 : 0);
         if (boardView != null) {
             boardView.setBlueLedPressed(high);
         }
@@ -323,26 +342,27 @@ public class RainbowHat {
 
     // TODO: Demical point
     private void updateDisplay() {
-        if (display != null) {
-            alphanumericString = "----";
-            if ("Temperature".equalsIgnoreCase(displayMode)) {
-                alphanumericString = removeDot(Double.toString(temperature));
-            } else if ("Pressure".equalsIgnoreCase(displayMode)) {
-                alphanumericString = Long.toString(Math.round(barometricPressure));
-            }
-            if (alphanumericString.length() > 4) {
-                alphanumericString = alphanumericString.substring(0, 4);
-            } else if (alphanumericString.length() == 3) {
-                alphanumericString = "0" + alphanumericString;
-            } else if (alphanumericString.length() == 2) {
-                alphanumericString = "00" + alphanumericString;
-            } else if (alphanumericString.length() == 1) {
-                alphanumericString = "000" + alphanumericString;
-            } else if (alphanumericString.length() == 0) {
-                alphanumericString = "----";
-            }
-            display.display(alphanumericString);
+        if (display == null) {
+            return;
         }
+        alphanumericString = "----";
+        if ("Temperature".equalsIgnoreCase(displayMode)) {
+            alphanumericString = removeDot(Double.toString(temperature));
+        } else if ("Pressure".equalsIgnoreCase(displayMode)) {
+            alphanumericString = Long.toString(Math.round(barometricPressure));
+        }
+        if (alphanumericString.length() > 4) {
+            alphanumericString = alphanumericString.substring(0, 4);
+        } else if (alphanumericString.length() == 3) {
+            alphanumericString = "0" + alphanumericString;
+        } else if (alphanumericString.length() == 2) {
+            alphanumericString = "00" + alphanumericString;
+        } else if (alphanumericString.length() == 1) {
+            alphanumericString = "000" + alphanumericString;
+        } else if (alphanumericString.length() == 0) {
+            alphanumericString = "----";
+        }
+        display.display(alphanumericString);
     }
 
     String getAlphanumericString() {
@@ -363,6 +383,9 @@ public class RainbowHat {
 
     private void startSensorDataCollection() {
         timeZeroMillis = System.currentTimeMillis();
+        if (bmp280 == null) {
+            return;
+        }
         threadPool.execute(() -> {
             while (true) {
                 try {
@@ -467,7 +490,13 @@ public class RainbowHat {
         greenLed.setShutdownOptions(true, PinState.LOW, PinPullResistance.OFF);
         blueLed.setShutdownOptions(true, PinState.LOW, PinPullResistance.OFF);
         apa102.turnoff();
-        display.displayOff();
+        if (display != null) {
+            try {
+                display.displayOff();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
         // stop all GPIO activity/threads by shutting down the GPIO controller (this method will forcefully shutdown all GPIO monitoring threads and scheduled tasks)
         gpio.shutdown();
     }
@@ -487,7 +516,7 @@ public class RainbowHat {
             }
         }
         ArrayList<ArrayList<Integer>> list = new ArrayList<>();
-        for (int i = 0; i < RainbowHatState.NUMBER_OF_RGB_LEDS; i++) {
+        for (int i = 0; i < RainbowHatState.NUMBER_OF_RGB_LEDS; i++) { // only save the state of the seven LEDs on the HAT
             list.add(getRgb(apa102.getColor(i)));
         }
         database.child("rainbowRgb").setValue(list, null); // TODO: There must be a way to set only the element of the list

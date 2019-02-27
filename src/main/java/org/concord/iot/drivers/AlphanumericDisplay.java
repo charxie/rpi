@@ -62,7 +62,7 @@ public class AlphanumericDisplay {
      * @param blink      (HT16K33.BLINK_1HZ, HT16K33.BLINK_2HZ, BLINK_HALFHZ, HT16K33.BLINK_OFF)
      * @param brightness (HT16K33.DUTY_01 thru HT16K33.DUTY_16)
      */
-    public AlphanumericDisplay(HT16K33 blink, HT16K33 brightness) {
+    public AlphanumericDisplay(HT16K33 blink, HT16K33 brightness) throws Exception {
 
         if (blink != HT16K33.BLINK_1HZ &&
                 blink != HT16K33.BLINK_2HZ &&
@@ -85,21 +85,15 @@ public class AlphanumericDisplay {
         this.blink = blink;
         this.brightness = brightness;
 
-        try {
-            i2cBus = I2CFactory.getInstance(I2C_BUS);
-            adafruitFeather = i2cBus.getDevice(I2C_DEVICE);
+        i2cBus = I2CFactory.getInstance(I2C_BUS);
+        adafruitFeather = i2cBus.getDevice(I2C_DEVICE);
 
-            //turn on oscillator wakes up the HT16K33 chip
-            adafruitFeather.write((byte) (HT16K33.CMD_SYSTEM_SETUP.get() | HT16K33.OSCILLATOR_ON.get()));
-            Thread.sleep(10);
+        //turn on oscillator wakes up the HT16K33 chip
+        adafruitFeather.write((byte) (HT16K33.CMD_SYSTEM_SETUP.get() | HT16K33.OSCILLATOR_ON.get()));
+        Thread.sleep(10);
 
-            //turn on all output rows of the HT16K33 chip (even though were only using 8 of them)
-            adafruitFeather.write((byte) (HT16K33.CMD_ROW_INT_SET.get()));
-
-        } catch (UnsupportedBusNumberException | IOException | InterruptedException e) {
-            System.out.println("*** Error *** failed to connect with I2C Bus or I2C Device");
-            e.printStackTrace();
-        }
+        //turn on all output rows of the HT16K33 chip (even though were only using 8 of them)
+        adafruitFeather.write((byte) (HT16K33.CMD_ROW_INT_SET.get()));
 
         //clear the display
         displayClear();
@@ -128,14 +122,8 @@ public class AlphanumericDisplay {
     /**
      * Turn on the LED display
      */
-    public void displayOn() {
-        //set the blink rate and turn on the LED display
-        try {
-            adafruitFeather.write((byte) (HT16K33.CMD_DISPLAY_SETUP.get() | blink.get() | HT16K33.DISPLAY_ON.get()));
-        } catch (IOException e) {
-            System.out.println("*** Error *** failed to turn on LED display");
-            e.printStackTrace();
-        }
+    public void displayOn() throws IOException {
+        adafruitFeather.write((byte) (HT16K33.CMD_DISPLAY_SETUP.get() | blink.get() | HT16K33.DISPLAY_ON.get()));
     }
 
     /**
@@ -143,14 +131,9 @@ public class AlphanumericDisplay {
      * if you turn on the display again then contents of the display buffer
      * reappear .
      */
-    public void displayOff() {
+    public void displayOff() throws IOException {
         //set the blink rate and turn on the LED display
-        try {
-            adafruitFeather.write((byte) (HT16K33.CMD_DISPLAY_SETUP.get() | blink.get() | HT16K33.DISPLAY_OFF.get()));
-        } catch (IOException e) {
-            System.out.println("*** ERROR *** failed to turn off LED display");
-            e.printStackTrace();
-        }
+        adafruitFeather.write((byte) (HT16K33.CMD_DISPLAY_SETUP.get() | blink.get() | HT16K33.DISPLAY_OFF.get()));
     }
 
     /**

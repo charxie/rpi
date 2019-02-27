@@ -25,20 +25,34 @@ public class Apa102 {
 
     private final static byte[] START_FRAME = new byte[]{0, 0, 0, 0};
 
+    private int numberOfPixels = RainbowHatState.NUMBER_OF_RGB_LEDS;
     private SpiDevice spi;
     private byte brightness = 1; // from 0 to 31 (0 is completely out)
     private byte[][] data; // keep the data as the state of this driver
 
-    public Apa102() {
+    public Apa102(int numberOfPixels) {
+        this.numberOfPixels = numberOfPixels;
         try {
             spi = SpiFactory.getInstance(SpiChannel.CS0, SpiDevice.DEFAULT_SPI_SPEED, SpiDevice.DEFAULT_SPI_MODE);
         } catch (IOException e) {
             e.printStackTrace();
         }
-        data = new byte[RainbowHatState.NUMBER_OF_RGB_LEDS + 1][4];
+        data = new byte[numberOfPixels + 1][4];
         for (int i = 0; i < data.length; i++) {
             updateData(i, Color.BLACK);
         }
+    }
+
+    public void setNumberOfPixels(int numberOfPixels) {
+        data = new byte[numberOfPixels + 1][4];
+        for (int i = this.numberOfPixels; i < data.length; i++) {
+            updateData(i, Color.BLACK);
+        }
+        this.numberOfPixels = numberOfPixels;
+    }
+
+    public int getNumberOfPixels() {
+        return numberOfPixels;
     }
 
     public void setBrightness(byte brightness) {
@@ -59,7 +73,7 @@ public class Apa102 {
         updateData(led, color);
         try {
             spi.write(START_FRAME); // start frame
-            for (int i = 0; i <= RainbowHatState.NUMBER_OF_RGB_LEDS; i++) {
+            for (int i = 0; i <= numberOfPixels; i++) {
                 spi.write(data[i]);
             }
         } catch (IOException e) {
@@ -94,7 +108,7 @@ public class Apa102 {
     public void setColorForAll(Color color) {
         try {
             spi.write(START_FRAME); // start frame
-            for (int i = 0; i <= RainbowHatState.NUMBER_OF_RGB_LEDS; i++) {
+            for (int i = 0; i <= numberOfPixels; i++) {
                 updateData(i, color);
                 spi.write(data[i]);
             }
@@ -110,8 +124,8 @@ public class Apa102 {
     public void setDefaultRainbow() {
         try {
             spi.write(START_FRAME); // start frame
-            for (int i = 0; i <= RainbowHatState.NUMBER_OF_RGB_LEDS; i++) {
-                updateData(i, Color.getHSBColor(i * 360.f / RainbowHatState.NUMBER_OF_RGB_LEDS, 1.0f, 1.0f));
+            for (int i = 0; i <= numberOfPixels; i++) {
+                updateData(i, Color.getHSBColor((float) i / (float) numberOfPixels, 1.0f, 1.0f));
                 spi.write(data[i]);
             }
         } catch (IOException e) {
