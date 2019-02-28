@@ -51,7 +51,7 @@ class SettingsDialog extends JDialog {
         };
 
         // RGB LED number
-        panel.add(new JLabel("Number of RGB LEDs: "));
+        panel.add(new JLabel("Number of APA RGB LEDs: "));
         panel.add(numberOfLedsField);
 
         SpringUtilities.makeCompactGrid(panel, 1, 2, 8, 8, 8, 8);

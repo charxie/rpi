@@ -5,6 +5,10 @@ import com.google.firebase.database.DataSnapshot;
 import java.awt.*;
 import java.util.ArrayList;
 
+/**
+ * @author Charles Xie
+ */
+
 class DatabaseHandler {
 
     static void handle(RainbowHat rainbowHat, DataSnapshot dataSnapshot) {

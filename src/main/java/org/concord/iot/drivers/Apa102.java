@@ -24,11 +24,13 @@ import java.util.Arrays;
 public class Apa102 {
 
     private final static byte[] START_FRAME = new byte[]{0, 0, 0, 0};
+    private final static byte[] END_FRAME = new byte[]{1, 1, 1, 1};
 
     private int numberOfPixels = 7;
     private SpiDevice spi;
     private byte brightness = 1; // from 0 to 31 (0 is completely out)
     private byte[][] data; // keep the data as the state of this driver
+    private float shift;
 
     public Apa102(int numberOfPixels) {
         this.numberOfPixels = numberOfPixels;
@@ -58,19 +60,27 @@ public class Apa102 {
         writeData();
     }
 
-    private void writeData(){
+    public int getNumberOfPixels() {
+        return numberOfPixels;
+    }
+
+    private void writeData() {
         try {
             spi.write(START_FRAME); // start frame
             for (int i = 0; i < data.length; i++) {
                 spi.write(data[i]);
             }
+            spi.write(END_FRAME); // end frame
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public int getNumberOfPixels() {
-        return numberOfPixels;
+    private void updateData(int i, Color color) {
+        data[i][0] = (byte) (0b11100000 + brightness); // brightness control
+        data[i][1] = (byte) color.getBlue();
+        data[i][2] = (byte) color.getGreen();
+        data[i][3] = (byte) color.getRed();
     }
 
     public void setBrightness(byte brightness) {
@@ -102,23 +112,11 @@ public class Apa102 {
         writeData();
     }
 
-    private void updateData(int i, Color color) {
-        data[i][0] = (byte) (0b11100000 + brightness); // brightness control
-        data[i][1] = (byte) color.getBlue();
-        data[i][2] = (byte) color.getGreen();
-        data[i][3] = (byte) color.getRed();
-    }
-
     public void setColorForAll(Color color) {
-        try {
-            spi.write(START_FRAME); // start frame
-            for (int i = 0; i <= numberOfPixels; i++) {
-                updateData(i, color);
-                spi.write(data[i]);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
+        for (int i = 0; i < data.length; i++) {
+            updateData(i, color);
         }
+        writeData();
     }
 
     public void turnoff() {
@@ -132,7 +130,37 @@ public class Apa102 {
                 updateData(i, Color.getHSBColor((float) i / (float) numberOfPixels, 1.0f, 1.0f));
                 spi.write(data[i]);
             }
+            spi.write(END_FRAME); // end frame
         } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void resetShift() {
+        shift = 0;
+    }
+
+    public void shift(float delta) {
+        shift += delta;
+    }
+
+    public void scrollRainbow(int delay, int numberOfRainbows) {
+        try {
+            spi.write(START_FRAME); // start frame
+            for (int i = 0; i < numberOfRainbows; i++) {
+                int m = numberOfPixels / numberOfRainbows;
+                for (int j = 0; j < m; j++) {
+                    float a = shift + i * m + (float) j / (float) m;
+                    a %= 1;
+                    updateData(j, Color.getHSBColor(a, 1.0f, 1.0f));
+                    spi.write(data[j]);
+                }
+            }
+            updateData(numberOfPixels, Color.getHSBColor(1.0f, 1.0f, 1.0f));
+            spi.write(data[numberOfPixels]);
+            spi.write(END_FRAME); // end frame
+            Thread.sleep(delay);
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -140,14 +168,12 @@ public class Apa102 {
     /**
      * Need to call this from a thread
      */
-    public void blinkAll(Color color, int times, int delay) {
+    public void blinkAll(Color color, int delay) {
         try {
-            for (int i = 0; i < times; i++) {
-                setColorForAll(color);
-                Thread.sleep(delay);
-                setColorForAll(Color.BLACK);
-                Thread.sleep(delay);
-            }
+            setColorForAll(color);
+            Thread.sleep(delay);
+            setColorForAll(Color.BLACK);
+            Thread.sleep(delay);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

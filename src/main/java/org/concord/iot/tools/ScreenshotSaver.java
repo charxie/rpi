@@ -70,8 +70,8 @@ public class ScreenshotSaver extends AbstractAction {
         imagePreview = new ImagePreview(fileChooser);
         putValue(NAME, "Save As Image...");
         putValue(SHORT_DESCRIPTION, "Save a screenshot of the current view");
-        putValue(MNEMONIC_KEY, new Integer(KeyEvent.VK_M));
-        putValue(ACCELERATOR_KEY, System.getProperty("os.name").startsWith("Mac") ? KeyStroke.getKeyStroke(KeyEvent.VK_M, KeyEvent.META_MASK, true) : KeyStroke.getKeyStroke(KeyEvent.VK_M, KeyEvent.CTRL_MASK, true));
+        putValue(MNEMONIC_KEY, new Integer(KeyEvent.VK_I));
+        putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_I, KeyEvent.CTRL_MASK, true));
     }
 
     public void destroy() {

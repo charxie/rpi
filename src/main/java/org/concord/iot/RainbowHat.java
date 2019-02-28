@@ -34,6 +34,9 @@ import java.util.prefs.Preferences;
 
 public class RainbowHat {
 
+    public final static String BRAND_NAME = "IoT Workbench";
+    public final static String VERSION_NUMBER = "0.0.1";
+
     private static final int SENSOR_DATA_COLLECTION_INTERVAL = 1000; // milliseconds
 
     private GpioController gpio;

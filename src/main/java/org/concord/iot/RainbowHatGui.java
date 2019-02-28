@@ -25,13 +25,129 @@ class RainbowHatGui implements GraphListener, ThreadPoolListener {
     private JCheckBox uploadTemperatureCheckBox;
     private JCheckBox uploadPressureCheckBox;
 
-    private volatile boolean stopBlinkRedLed;
-    private volatile boolean stopBlinkGreenLed;
-    private volatile boolean stopBlinkBlueLed;
-    private volatile boolean stopLedJump;
-    private volatile boolean stopRgbLedAnimation;
+    private Task blinkRedLedTask;
+    private Task blinkGreenLedTask;
+    private Task blinkBlueLedTask;
+    private Task jumpLedTask;
+    private Task randomColorApaTask;
+    private Task blinkApaTask;
+    private Task scrollApaTask;
 
     RainbowHatGui() {
+
+    }
+
+    private void createTasks() {
+
+        blinkRedLedTask = new Task("Blinking Red LED", rainbowHat);
+        blinkRedLedTask.setRunnable(() -> {
+            while (true) {
+                try {
+                    rainbowHat.setRedLedState(true, true);
+                    Thread.sleep(500);
+                    rainbowHat.setRedLedState(false, true);
+                    Thread.sleep(500);
+                } catch (InterruptedException ex) {
+                }
+                if (blinkRedLedTask.isStopped()) {
+                    break;
+                }
+            }
+        });
+
+        blinkGreenLedTask = new Task("Blinking Green LED", rainbowHat);
+        blinkGreenLedTask.setRunnable(() -> {
+            while (true) {
+                try {
+                    rainbowHat.setGreenLedState(true, true);
+                    Thread.sleep(500);
+                    rainbowHat.setGreenLedState(false, true);
+                    Thread.sleep(500);
+                } catch (InterruptedException ex) {
+                }
+                if (blinkGreenLedTask.isStopped()) {
+                    break;
+                }
+            }
+        });
+
+        blinkBlueLedTask = new Task("Blinking Blue LED", rainbowHat);
+        blinkBlueLedTask.setRunnable(() -> {
+            while (true) {
+                try {
+                    rainbowHat.setBlueLedState(true, true);
+                    Thread.sleep(500);
+                    rainbowHat.setBlueLedState(false, true);
+                    Thread.sleep(500);
+                } catch (InterruptedException ex) {
+                }
+                if (blinkBlueLedTask.isStopped()) {
+                    break;
+                }
+            }
+        });
+
+        jumpLedTask = new Task("Jumping LEDs", rainbowHat);
+        jumpLedTask.setRunnable(() -> {
+            while (true) {
+                try {
+                    rainbowHat.setRedLedState(true, true);
+                    Thread.sleep(500);
+                    rainbowHat.setRedLedState(false, true);
+                    rainbowHat.setGreenLedState(true, true);
+                    Thread.sleep(500);
+                    rainbowHat.setGreenLedState(false, true);
+                    rainbowHat.setBlueLedState(true, true);
+                    Thread.sleep(500);
+                    rainbowHat.setBlueLedState(false, true);
+                } catch (InterruptedException ex) {
+                }
+                if (jumpLedTask.isStopped()) {
+                    break;
+                }
+            }
+        });
+
+        randomColorApaTask = new Task("Random Colors", rainbowHat);
+        randomColorApaTask.setRunnable(() -> {
+            byte[][] data = new byte[rainbowHat.getNumberOfRgbLeds()][4];
+            while (true) {
+                for (int i = 0; i < data.length; i++) {
+                    data[i][0] = (byte) (255 * Math.random());
+                    data[i][1] = (byte) (255 * Math.random());
+                    data[i][2] = (byte) (255 * Math.random());
+                }
+                rainbowHat.apa102.setData(data);
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException ex) {
+                }
+                if (randomColorApaTask.isStopped()) {
+                    break;
+                }
+            }
+        });
+
+        blinkApaTask = new Task("Blink All", rainbowHat);
+        blinkApaTask.setRunnable(() -> {
+            while (true) {
+                rainbowHat.apa102.blinkAll(Color.MAGENTA, 1000);
+                if (blinkApaTask.isStopped()) {
+                    break;
+                }
+            }
+        });
+
+        scrollApaTask = new Task("Moving Rainbows", rainbowHat);
+        scrollApaTask.setRunnable(() -> {
+            while (true) {
+                rainbowHat.apa102.scrollRainbow(10, 4);
+                rainbowHat.apa102.shift(0.01f);
+                if (scrollApaTask.isStopped()) {
+                    break;
+                }
+            }
+        });
 
     }
 
@@ -53,12 +169,25 @@ class RainbowHatGui implements GraphListener, ThreadPoolListener {
         }
     }
 
+    private JMenuItem createCheckBoxMenuItem(Task t) {
+        JMenuItem mi = new JCheckBoxMenuItem(t.getName());
+        mi.addItemListener(e -> {
+            boolean selected = e.getStateChange() == ItemEvent.SELECTED;
+            t.setStopped(!selected);
+            if (selected) {
+                t.run();
+            }
+        });
+        return mi;
+    }
+
     void createAndShowGui(final RainbowHat rainbowHat) {
 
         this.rainbowHat = rainbowHat;
         rainbowHat.addThreadPoolListener(this);
+        createTasks();
 
-        final JFrame frame = new JFrame("Rainbow HAT Emulator on Raspberry Pi");
+        final JFrame frame = new JFrame("IoT Workbench");
         frame.setIconImage(Toolkit.getDefaultToolkit().createImage(RainbowHat.class.getResource("images/frame.png")));
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLocation(100, 100);
@@ -107,162 +236,47 @@ class RainbowHatGui implements GraphListener, ThreadPoolListener {
         });
         fileMenu.add(quitMenuItem);
 
+        JMenu emulatorsMenu = new JMenu("Emulators");
+        emulatorsMenu.setMnemonic(KeyEvent.VK_M);
+        menuBar.add(emulatorsMenu);
+
+        ButtonGroup emulatorButtonGroup = new ButtonGroup();
+        JMenuItem mi = new JRadioButtonMenuItem("Rainbow HAT", true);
+        emulatorsMenu.add(mi);
+        emulatorButtonGroup.add(mi);
+
         JMenu examplesMenu = new JMenu("Examples");
         examplesMenu.setMnemonic(KeyEvent.VK_E);
         menuBar.add(examplesMenu);
 
-        JMenuItem miExample = new JCheckBoxMenuItem("Blinking Red LED");
-        miExample.addItemListener(e -> {
-            if (e.getStateChange() == ItemEvent.SELECTED) {
-                stopBlinkRedLed = false;
-                rainbowHat.submitTask(() -> {
-                    while (true) {
-                        try {
-                            rainbowHat.setRedLedState(true, true);
-                            Thread.sleep(500);
-                            rainbowHat.setRedLedState(false, true);
-                            Thread.sleep(500);
-                        } catch (InterruptedException ex) {
-                        }
-                        if (stopBlinkRedLed) {
-                            break;
-                        }
-                    }
-                });
-            } else {
-                stopBlinkRedLed = true;
-            }
-        });
-        examplesMenu.add(miExample);
+        JMenu subMenu = new JMenu("Monochromatic LED Lights");
+        examplesMenu.add(subMenu);
+        subMenu.add(createCheckBoxMenuItem(blinkRedLedTask));
+        subMenu.add(createCheckBoxMenuItem(blinkGreenLedTask));
+        subMenu.add(createCheckBoxMenuItem(blinkBlueLedTask));
+        subMenu.add(createCheckBoxMenuItem(jumpLedTask));
 
-        miExample = new JCheckBoxMenuItem("Blinking Green LED");
-        miExample.addItemListener(e -> {
-            if (e.getStateChange() == ItemEvent.SELECTED) {
-                stopBlinkGreenLed = false;
-                rainbowHat.submitTask(() -> {
-                    while (true) {
-                        try {
-                            rainbowHat.setGreenLedState(true, true);
-                            Thread.sleep(500);
-                            rainbowHat.setGreenLedState(false, true);
-                            Thread.sleep(500);
-                        } catch (InterruptedException ex) {
-                        }
-                        if (stopBlinkGreenLed) {
-                            break;
-                        }
-                    }
-                });
-            } else {
-                stopBlinkGreenLed = true;
-            }
+        subMenu = new JMenu("Trichromatic LED Lights");
+        examplesMenu.add(subMenu);
+        mi = new JMenuItem("Default Rainbow");
+        mi.addActionListener(e -> {
+            rainbowHat.setDefaultRainbow();
         });
-        examplesMenu.add(miExample);
-
-        miExample = new JCheckBoxMenuItem("Blinking Blue LED");
-        miExample.addItemListener(e -> {
-            if (e.getStateChange() == ItemEvent.SELECTED) {
-                stopBlinkBlueLed = false;
-                rainbowHat.submitTask(() -> {
-                    while (true) {
-                        try {
-                            rainbowHat.setBlueLedState(true, true);
-                            Thread.sleep(500);
-                            rainbowHat.setBlueLedState(false, true);
-                            Thread.sleep(500);
-                        } catch (InterruptedException ex) {
-                        }
-                        if (stopBlinkBlueLed) {
-                            break;
-                        }
-                    }
-                });
-            } else {
-                stopBlinkBlueLed = true;
-            }
+        subMenu.add(mi);
+        mi = new JMenuItem("Turn Off All Lights");
+        mi.addActionListener(e -> {
+            rainbowHat.apa102.setColorForAll(Color.BLACK);
         });
-        examplesMenu.add(miExample);
+        subMenu.add(mi);
+        subMenu.add(createCheckBoxMenuItem(blinkApaTask));
+        subMenu.add(createCheckBoxMenuItem(randomColorApaTask));
+        subMenu.add(createCheckBoxMenuItem(scrollApaTask));
 
-        miExample = new JCheckBoxMenuItem("LED Jump");
-        miExample.addItemListener(e -> {
-            if (e.getStateChange() == ItemEvent.SELECTED) {
-                stopLedJump = false;
-                rainbowHat.submitTask(() -> {
-                    while (true) {
-                        try {
-                            rainbowHat.setRedLedState(true, true);
-                            Thread.sleep(500);
-                            rainbowHat.setRedLedState(false, true);
-                            rainbowHat.setGreenLedState(true, true);
-                            Thread.sleep(500);
-                            rainbowHat.setGreenLedState(false, true);
-                            rainbowHat.setBlueLedState(true, true);
-                            Thread.sleep(500);
-                            rainbowHat.setBlueLedState(false, true);
-                        } catch (InterruptedException ex) {
-                        }
-                        if (stopLedJump) {
-                            break;
-                        }
-                    }
-                });
-            } else {
-                stopLedJump = true;
-            }
-        });
-        examplesMenu.add(miExample);
-        examplesMenu.addSeparator();
-
-        miExample = new JMenuItem("Default Rainbow");
-        miExample.addActionListener(e -> {
-            rainbowHat.submitTask(() -> {
-                rainbowHat.setDefaultRainbow();
-            });
-        });
-        examplesMenu.add(miExample);
-
-        miExample = new JMenuItem("Blinking RGB LEDs");
-        miExample.addActionListener(e -> {
-            rainbowHat.submitTask(() -> {
-                rainbowHat.apa102.blinkAll(Color.MAGENTA, 5, 1000);
-            });
-        });
-        examplesMenu.add(miExample);
-
-        miExample = new JCheckBoxMenuItem("Animate RGB LEDs");
-        miExample.addItemListener(e -> {
-            if (e.getStateChange() == ItemEvent.SELECTED) {
-                stopRgbLedAnimation = false;
-                rainbowHat.submitTask(() -> {
-                    byte[][] data = new byte[rainbowHat.getNumberOfRgbLeds()][4];
-                    while (true) {
-                        for (int i = 0; i < data.length; i++) {
-                            data[i][0] = (byte) (255 * Math.random());
-                            data[i][1] = (byte) (255 * Math.random());
-                            data[i][2] = (byte) (255 * Math.random());
-                        }
-                        rainbowHat.apa102.setData(data);
-                        try {
-                            Thread.sleep(500);
-                        } catch (InterruptedException ex) {
-                        }
-                        if (stopRgbLedAnimation) {
-                            break;
-                        }
-                    }
-                });
-            } else {
-                stopRgbLedAnimation = true;
-            }
-        });
-        examplesMenu.add(miExample);
-        examplesMenu.addSeparator();
-
-        miExample = new JMenuItem("Repeat Buzzer");
-        miExample.addActionListener(e -> {
+        mi = new JMenuItem("Repeat Buzzer");
+        mi.addActionListener(e -> {
             rainbowHat.buzzer.blink(1000, 10000);
         });
-        examplesMenu.add(miExample);
+        examplesMenu.add(mi);
 
         JMenu helpMenu = new JMenu("Help");
         helpMenu.setMnemonic(KeyEvent.VK_H);
@@ -350,7 +364,7 @@ class RainbowHatGui implements GraphListener, ThreadPoolListener {
     }
 
     private void showAbout(JFrame frame) {
-        String s = "<html><h3>Rainbow HAT Emulator</h3>";
+        String s = "<html><h3>" + RainbowHat.BRAND_NAME + " (V" + RainbowHat.VERSION_NUMBER + ")</h3>";
         s += "<h4><i>Learning to create the Internet of Things</i></h4>";
         s += "Charles Xie, &copy; 2019-" + Calendar.getInstance().get(Calendar.YEAR);
         s += "<hr>";
