@@ -141,10 +141,10 @@ public class Apa102 {
     }
 
     public void shift(float delta) {
-        shift += delta;
+        shift -= delta;
     }
 
-    public void scrollRainbow(int delay, int numberOfRainbows) {
+    public void scrollRainbow(int numberOfRainbows) {
         try {
             spi.write(START_FRAME); // start frame
             for (int i = 0; i < numberOfRainbows; i++) {
@@ -159,22 +159,7 @@ public class Apa102 {
             updateData(numberOfPixels, Color.getHSBColor(1.0f, 1.0f, 1.0f));
             spi.write(data[numberOfPixels]);
             spi.write(END_FRAME); // end frame
-            Thread.sleep(delay);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    /**
-     * Need to call this from a thread
-     */
-    public void blinkAll(Color color, int delay) {
-        try {
-            setColorForAll(color);
-            Thread.sleep(delay);
-            setColorForAll(Color.BLACK);
-            Thread.sleep(delay);
-        } catch (InterruptedException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
