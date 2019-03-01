@@ -20,7 +20,8 @@ class TaskFactory {
     Task blinkApaTask;
     Task movingRainbowApaTask;
     Task bouncingDotApaTask;
-    Task trainsApaTask;
+    Task movingTrainsApaTask;
+    Task rippleEffectApaTask;
 
     TaskFactory(RainbowHat rainbowHat) {
         this.rainbowHat = rainbowHat;
@@ -128,9 +129,10 @@ class TaskFactory {
 
         movingRainbowApaTask = new Task("Moving Rainbows", rainbowHat);
         movingRainbowApaTask.setRunnable(() -> {
+            rainbowHat.apa102.resetShift();
             while (true) {
                 synchronized (lock) {
-                    rainbowHat.apa102.scrollRainbow(1);
+                    rainbowHat.apa102.moveRainbow(1);
                     rainbowHat.apa102.shift(0.01f);
                     rainbowHat.setLedColorsOnBoardView();
                 }
@@ -191,17 +193,20 @@ class TaskFactory {
                     Thread.sleep(5);
                 } catch (InterruptedException ex) {
                 }
+                rainbowHat.buzz(0);
                 if (reverse) {
                     bouncingDotApaTask.addToIndex(-1);
                     if (bouncingDotApaTask.getIndex() < 0) {
                         bouncingDotApaTask.setIndex(0);
                         reverse = false;
+                        rainbowHat.buzz(1);
                     }
                 } else {
                     bouncingDotApaTask.addToIndex(1);
                     if (bouncingDotApaTask.getIndex() >= data.length) {
                         bouncingDotApaTask.setIndex(data.length - 1);
                         reverse = true;
+                        rainbowHat.buzz(1);
                     }
                 }
                 if (bouncingDotApaTask.isStopped()) {
@@ -210,17 +215,17 @@ class TaskFactory {
             }
         });
 
-        trainsApaTask = new Task("Moving Trains", rainbowHat);
-        trainsApaTask.setRunnable(() -> {
+        movingTrainsApaTask = new Task("Moving Trains", rainbowHat);
+        movingTrainsApaTask.setRunnable(() -> {
             byte[][] data = new byte[rainbowHat.getNumberOfRgbLeds()][4];
             int trainLength = 7;
             int interval = 10;
             int m = 20;
             Color c = Color.RED;
-            trainsApaTask.setIndex(0);
+            movingTrainsApaTask.setIndex(0);
             while (true) {
                 synchronized (lock) {
-                    int firstIndexOfTrain = trainsApaTask.getIndex();
+                    int firstIndexOfTrain = movingTrainsApaTask.getIndex();
                     int lastIndexOfTrain = firstIndexOfTrain - trainLength;
                     boolean onTrain;
                     int max = Math.round((float) (m * data.length) / (float) (trainLength + interval));
@@ -246,12 +251,40 @@ class TaskFactory {
                     Thread.sleep(50);
                 } catch (InterruptedException ex) {
                 }
-                trainsApaTask.addToIndex(1);
-                if (trainsApaTask.getIndex() >= m * data.length + trainLength) {
-                    trainsApaTask.setIndex(0);
+                movingTrainsApaTask.addToIndex(1);
+                if (movingTrainsApaTask.getIndex() >= m * data.length + trainLength) {
+                    movingTrainsApaTask.setIndex(0);
                     c = new Color((int) (255 * Math.random()), (int) (255 * Math.random()), (int) (255 * Math.random()));
                 }
-                if (trainsApaTask.isStopped()) {
+                if (movingTrainsApaTask.isStopped()) {
+                    break;
+                }
+            }
+        });
+
+        rippleEffectApaTask = new Task("Ripple Effect", rainbowHat);
+        rippleEffectApaTask.setRunnable(() -> {
+            byte[][] data = new byte[rainbowHat.getNumberOfRgbLeds()][4];
+            double wavelength = 20;
+            double speed = 1;
+            rippleEffectApaTask.setIndex(0);
+            while (true) {
+                synchronized (lock) {
+                    int time = rippleEffectApaTask.getIndex();
+                    for (int i = 0; i < data.length; i++) {
+                        data[i][0] = (byte) Math.min(255, 128 + 128 * Math.sin(2.0 * Math.PI * (i + (i < data.length / 2 ? speed : -speed) * time) / wavelength));
+                        data[i][1] = (byte) 0;
+                        data[i][2] = (byte) (255 - data[i][0]);
+                    }
+                    rainbowHat.apa102.setData(data);
+                    rainbowHat.setLedColorsOnBoardView();
+                }
+                try {
+                    Thread.sleep(20);
+                } catch (InterruptedException ex) {
+                }
+                rippleEffectApaTask.addToIndex(1);
+                if (rippleEffectApaTask.isStopped()) {
                     break;
                 }
             }

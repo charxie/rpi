@@ -144,7 +144,7 @@ public class Apa102 {
         shift -= delta;
     }
 
-    public void scrollRainbow(int numberOfRainbows) {
+    public void moveRainbow(int numberOfRainbows) {
         try {
             spi.write(START_FRAME); // start frame
             for (int i = 0; i < numberOfRainbows; i++) {
