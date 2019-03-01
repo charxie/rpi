@@ -1,6 +1,7 @@
 package org.concord.iot;
 
 import java.awt.*;
+import java.util.Arrays;
 
 /**
  * @author Charles Xie
@@ -19,8 +20,7 @@ class TaskFactory {
     Task blinkApaTask;
     Task movingRainbowApaTask;
     Task bouncingDotApaTask;
-
-    private int index;
+    Task trainsApaTask;
 
     TaskFactory(RainbowHat rainbowHat) {
         this.rainbowHat = rainbowHat;
@@ -132,9 +132,7 @@ class TaskFactory {
                 synchronized (lock) {
                     rainbowHat.apa102.scrollRainbow(1);
                     rainbowHat.apa102.shift(0.01f);
-                    for (int i = 0; i < RainbowHatState.NUMBER_OF_RGB_LEDS; i++) {
-                        rainbowHat.boardView.setLedColor(i, rainbowHat.apa102.getColor(i));
-                    }
+                    rainbowHat.setLedColorsOnBoardView();
                 }
                 try {
                     Thread.sleep(10);
@@ -157,11 +155,7 @@ class TaskFactory {
                         data[i][2] = (byte) (255 * Math.random());
                     }
                     rainbowHat.apa102.setData(data);
-                }
-                if (rainbowHat.boardView != null) {
-                    for (int i = 0; i < RainbowHatState.NUMBER_OF_RGB_LEDS; i++) {
-                        rainbowHat.boardView.setLedColor(i, rainbowHat.apa102.getColor(i));
-                    }
+                    rainbowHat.setLedColorsOnBoardView();
                 }
                 try {
                     Thread.sleep(500);
@@ -176,44 +170,88 @@ class TaskFactory {
         bouncingDotApaTask = new Task("Bouncing Dot", rainbowHat);
         bouncingDotApaTask.setRunnable(() -> {
             byte[][] data = new byte[rainbowHat.getNumberOfRgbLeds()][4];
-            index = 0;
-            boolean invert = false;
+            bouncingDotApaTask.setIndex(0);
+            boolean reverse = false;
             while (true) {
                 synchronized (lock) {
+                    int index = bouncingDotApaTask.getIndex();
                     for (int i = 0; i < data.length; i++) {
                         if (i == index) {
-                            data[i][0] = (byte) 255;
-                            data[i][1] = (byte) 0;
-                            data[i][2] = (byte) 0;
+                            data[index][0] = (byte) 255;
+                            data[index][1] = (byte) 0;
+                            data[index][2] = (byte) 0;
                         } else {
-                            data[i][0] = data[i][1] = data[i][2] = (byte) 0;
+                            Arrays.fill(data[i], (byte) 0);
                         }
                     }
                     rainbowHat.apa102.setData(data);
-                }
-                if (rainbowHat.boardView != null) {
-                    for (int i = 0; i < RainbowHatState.NUMBER_OF_RGB_LEDS; i++) {
-                        rainbowHat.boardView.setLedColor(i, rainbowHat.apa102.getColor(i));
-                    }
+                    rainbowHat.setLedColorsOnBoardView();
                 }
                 try {
                     Thread.sleep(5);
                 } catch (InterruptedException ex) {
                 }
-                if (invert) {
-                    index--;
-                    if (index < 0) {
-                        index = 0;
-                        invert = false;
+                if (reverse) {
+                    bouncingDotApaTask.addToIndex(-1);
+                    if (bouncingDotApaTask.getIndex() < 0) {
+                        bouncingDotApaTask.setIndex(0);
+                        reverse = false;
                     }
                 } else {
-                    index++;
-                    if (index >= data.length) {
-                        index = data.length - 1;
-                        invert = true;
+                    bouncingDotApaTask.addToIndex(1);
+                    if (bouncingDotApaTask.getIndex() >= data.length) {
+                        bouncingDotApaTask.setIndex(data.length - 1);
+                        reverse = true;
                     }
                 }
                 if (bouncingDotApaTask.isStopped()) {
+                    break;
+                }
+            }
+        });
+
+        trainsApaTask = new Task("Moving Trains", rainbowHat);
+        trainsApaTask.setRunnable(() -> {
+            byte[][] data = new byte[rainbowHat.getNumberOfRgbLeds()][4];
+            int trainLength = 7;
+            int interval = 10;
+            int m = 20;
+            Color c = Color.RED;
+            trainsApaTask.setIndex(0);
+            while (true) {
+                synchronized (lock) {
+                    int firstIndexOfTrain = trainsApaTask.getIndex();
+                    int lastIndexOfTrain = firstIndexOfTrain - trainLength;
+                    boolean onTrain;
+                    int max = Math.round((float) (m * data.length) / (float) (trainLength + interval));
+                    for (int i = 0; i < data.length; i++) {
+                        onTrain = false;
+                        Arrays.fill(data[i], (byte) 0);
+                        for (int k = 0; k < max; k++) {
+                            if (i <= firstIndexOfTrain - (trainLength + interval) * k && i > lastIndexOfTrain - (trainLength + interval) * k) {
+                                onTrain = true;
+                                break;
+                            }
+                        }
+                        if (onTrain) {
+                            data[i][0] = (byte) c.getRed();
+                            data[i][1] = (byte) c.getGreen();
+                            data[i][2] = (byte) c.getBlue();
+                        }
+                    }
+                    rainbowHat.apa102.setData(data);
+                    rainbowHat.setLedColorsOnBoardView();
+                }
+                try {
+                    Thread.sleep(50);
+                } catch (InterruptedException ex) {
+                }
+                trainsApaTask.addToIndex(1);
+                if (trainsApaTask.getIndex() >= m * data.length + trainLength) {
+                    trainsApaTask.setIndex(0);
+                    c = new Color((int) (255 * Math.random()), (int) (255 * Math.random()), (int) (255 * Math.random()));
+                }
+                if (trainsApaTask.isStopped()) {
                     break;
                 }
             }

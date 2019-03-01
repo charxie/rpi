@@ -520,13 +520,17 @@ public class RainbowHat {
         boardView.addGraphListener(gui);
     }
 
-    void setDefaultRainbow() {
-        apa102.setDefaultRainbow();
+    void setLedColorsOnBoardView() {
         if (boardView != null) {
             for (int i = 0; i < RainbowHatState.NUMBER_OF_RGB_LEDS; i++) {
                 boardView.setLedColor(i, apa102.getColor(i));
             }
         }
+    }
+
+    void setDefaultRainbow() {
+        apa102.setDefaultRainbow();
+        setLedColorsOnBoardView();
         ArrayList<ArrayList<Integer>> list = new ArrayList<>();
         for (int i = 0; i < RainbowHatState.NUMBER_OF_RGB_LEDS; i++) { // only save the state of the seven LEDs on the HAT
             list.add(getRgb(apa102.getColor(i)));

@@ -174,6 +174,10 @@ class RainbowHatGui implements GraphListener, ThreadPoolListener {
         subMenu.add(mi);
         bg.add(mi);
 
+        mi = createMenuItem(rainbowHat.taskFactory.trainsApaTask, true);
+        subMenu.add(mi);
+        bg.add(mi);
+
         mi = new JMenuItem("Repeat Buzzer");
         mi.addActionListener(e -> {
             rainbowHat.buzzer.blink(1000, 10000);
