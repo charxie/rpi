@@ -62,6 +62,7 @@ public class RainbowHat {
     boolean allowBarometricPressureTransmission;
     private String alphanumericString = "----";
 
+    TaskFactory taskFactory;
     RainbowHatBoardView boardView;
     RainbowHatGui gui;
     private ThreadPoolExecutor threadPool;
@@ -123,6 +124,8 @@ public class RainbowHat {
 
         temperatureDataStore = new ArrayList<>();
         barometricPressureDataStore = new ArrayList<>();
+
+        taskFactory = new TaskFactory(this);
 
     }
 

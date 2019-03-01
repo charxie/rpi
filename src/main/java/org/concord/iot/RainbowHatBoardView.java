@@ -517,4 +517,12 @@ class RainbowHatBoardView extends JPanel {
         repaint();
     }
 
+    public void setColorForAllLeds(Color c) {
+        for (Symbol.LedLight x : ledLightSymbols) {
+            x.setColor(c);
+            x.setPressed(!c.equals(Color.BLACK));
+        }
+        repaint();
+    }
+
 }
