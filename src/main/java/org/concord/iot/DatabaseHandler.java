@@ -53,6 +53,27 @@ class DatabaseHandler {
 
         rainbowHat.displayMode = state.displayMode;
 
+        rainbowHat.taskFactory.stopAllTasks();
+        if ("blink_all_leds".equals(state.task)) {
+            rainbowHat.taskFactory.blinkApaTask.setStopped(false);
+            rainbowHat.taskFactory.blinkApaTask.run();
+        } else if ("move_rainbow".equals(state.task)) {
+            rainbowHat.taskFactory.movingRainbowApaTask.setStopped(false);
+            rainbowHat.taskFactory.movingRainbowApaTask.run();
+        } else if ("move_trains".equals(state.task)) {
+            rainbowHat.taskFactory.movingTrainsApaTask.setStopped(false);
+            rainbowHat.taskFactory.movingTrainsApaTask.run();
+        } else if ("bounce_dot".equals(state.task)) {
+            rainbowHat.taskFactory.bouncingDotApaTask.setStopped(false);
+            rainbowHat.taskFactory.bouncingDotApaTask.run();
+        } else if ("ripple_effect".equals(state.task)) {
+            rainbowHat.taskFactory.rippleEffectApaTask.setStopped(false);
+            rainbowHat.taskFactory.rippleEffectApaTask.run();
+        } else if ("random_colors".equals(state.task)) {
+            rainbowHat.taskFactory.randomColorsApaTask.setStopped(false);
+            rainbowHat.taskFactory.randomColorsApaTask.run();
+        }
+
     }
 
 }

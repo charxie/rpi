@@ -166,7 +166,7 @@ class RainbowHatGui implements GraphListener, ThreadPoolListener {
         subMenu.add(mi);
         bg.add(mi);
 
-        mi = createMenuItem(rainbowHat.taskFactory.randomColorApaTask, true);
+        mi = createMenuItem(rainbowHat.taskFactory.randomColorsApaTask, true);
         subMenu.add(mi);
         bg.add(mi);
 

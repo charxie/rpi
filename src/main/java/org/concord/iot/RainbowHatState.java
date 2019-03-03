@@ -10,6 +10,7 @@ public class RainbowHatState {
 
     public final static int NUMBER_OF_RGB_LEDS = 7;
 
+    public String task;
     public boolean redLed;
     public boolean greenLed;
     public boolean blueLed;
@@ -31,6 +32,14 @@ public class RainbowHatState {
             rgb.add(0);
             rainbowRgb.add(rgb);
         }
+    }
+
+    public String getTask() {
+        return task;
+    }
+
+    public void setTask(String task) {
+        this.task = task;
     }
 
     public boolean getAllowTemperatureTransmission() {

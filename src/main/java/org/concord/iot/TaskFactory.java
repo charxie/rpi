@@ -16,7 +16,7 @@ class TaskFactory {
     Task blinkGreenLedTask;
     Task blinkBlueLedTask;
     Task jumpLedTask;
-    Task randomColorApaTask;
+    Task randomColorsApaTask;
     Task blinkApaTask;
     Task movingRainbowApaTask;
     Task bouncingDotApaTask;
@@ -30,6 +30,15 @@ class TaskFactory {
 
     Object getLock() {
         return lock;
+    }
+
+    void stopAllTasks() {
+        randomColorsApaTask.setStopped(true);
+        blinkApaTask.setStopped(true);
+        movingRainbowApaTask.setStopped(true);
+        bouncingDotApaTask.setStopped(true);
+        movingTrainsApaTask.setStopped(true);
+        rippleEffectApaTask.setStopped(true);
     }
 
     private void createTasks() {
@@ -146,8 +155,8 @@ class TaskFactory {
             }
         });
 
-        randomColorApaTask = new Task("Random Colors", rainbowHat);
-        randomColorApaTask.setRunnable(() -> {
+        randomColorsApaTask = new Task("Random Colors", rainbowHat);
+        randomColorsApaTask.setRunnable(() -> {
             byte[][] data = new byte[rainbowHat.getNumberOfRgbLeds()][4];
             while (true) {
                 synchronized (lock) {
@@ -163,7 +172,7 @@ class TaskFactory {
                     Thread.sleep(500);
                 } catch (InterruptedException ex) {
                 }
-                if (randomColorApaTask.isStopped()) {
+                if (randomColorsApaTask.isStopped()) {
                     break;
                 }
             }
