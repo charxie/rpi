@@ -472,8 +472,8 @@ public class RainbowHat {
             FileInputStream serviceAccount = new FileInputStream("raspberry-pi-java-firebase-adminsdk-eeeo1-f7e5dc2054.json");
             FirebaseOptions options = new FirebaseOptions.Builder().setCredentials(GoogleCredentials.fromStream(serviceAccount)).setDatabaseUrl("https://raspberry-pi-java.firebaseio.com").build();
             FirebaseApp.initializeApp(options);
-            database = FirebaseDatabase.getInstance().getReference("rainbow_hat");
-            // database.setValue(new RainbowHatState(), null);
+            database = FirebaseDatabase.getInstance().getReference("rainbow_hat_" + user.getName());
+            //database.setValue(new RainbowHatState(), null);
             database.addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) { // This method is called once with the initial value and again whenever data at this location is updated.
