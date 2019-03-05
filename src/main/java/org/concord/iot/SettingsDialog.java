@@ -28,11 +28,18 @@ class SettingsDialog extends JDialog {
         panel.setBorder(new EmptyBorder(8, 8, 8, 8));
         getContentPane().add(panel, BorderLayout.CENTER);
 
+        final JTextField userNameField = new JTextField(rainbowHat.user.getName());
         final JTextField numberOfLedsField = new JTextField(rainbowHat.getNumberOfRgbLeds() + "", 12);
 
         final ActionListener okListener = new ActionListener() {
             @Override
             public void actionPerformed(final ActionEvent e) {
+                String userName = userNameField.getText();
+                if (userName.trim().length() >= 4) {
+                    rainbowHat.user.setName(userNameField.getName());
+                } else {
+                    JOptionPane.showMessageDialog(SettingsDialog.this, "User name is not allowed to have less than four characters: " + userName, "Error", JOptionPane.ERROR_MESSAGE);
+                }
                 String s = numberOfLedsField.getText();
                 if (s != null && !s.trim().equals("")) {
                     int n = 0;
@@ -50,11 +57,15 @@ class SettingsDialog extends JDialog {
             }
         };
 
+        // User name
+        panel.add(new JLabel("User Name: "));
+        panel.add(userNameField);
+
         // RGB LED number
         panel.add(new JLabel("Number of APA RGB LEDs: "));
         panel.add(numberOfLedsField);
 
-        SpringUtilities.makeCompactGrid(panel, 1, 2, 8, 8, 8, 8);
+        SpringUtilities.makeCompactGrid(panel, 2, 2, 8, 8, 8, 8);
 
         final JPanel buttonPanel = new JPanel();
         buttonPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));

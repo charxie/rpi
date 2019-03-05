@@ -55,7 +55,7 @@ class DatabaseHandler {
 
         boolean testNow = false;
         if (testNow) {
-            rainbowHat.taskFactory.stopAllTasks();
+            rainbowHat.taskFactory.stopAllApaTasks();
             if ("blink_all_leds".equals(state.task)) {
                 rainbowHat.taskFactory.blinkApaTask.setStopped(false);
                 rainbowHat.taskFactory.blinkApaTask.run();

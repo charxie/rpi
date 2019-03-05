@@ -62,6 +62,7 @@ public class RainbowHat {
     boolean allowBarometricPressureTransmission;
     private String alphanumericString = "----";
 
+    User user;
     TaskFactory taskFactory;
     RainbowHatBoardView boardView;
     RainbowHatGui gui;
@@ -76,6 +77,8 @@ public class RainbowHat {
     }
 
     private void init() {
+
+        user = new User();
 
         threadPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(2);
         threadPoolListeners = new ArrayList<>();

@@ -7,7 +7,7 @@ package org.concord.iot;
 public class Task {
 
     private String name;
-    private volatile boolean stopped;
+    private volatile boolean stopped = true;
     private volatile int index;
     private RainbowHat hat;
     private Runnable runnable;

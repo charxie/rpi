@@ -140,7 +140,7 @@ class RainbowHatGui implements GraphListener, ThreadPoolListener {
         mi = new JRadioButtonMenuItem("Default Rainbow");
         mi.addActionListener(e -> {
             synchronized (rainbowHat.taskFactory.getLock()) {
-                rainbowHat.taskFactory.stopAllTasks();
+                rainbowHat.taskFactory.stopAllApaTasks();
                 rainbowHat.setDefaultRainbow();
             }
         });
@@ -150,7 +150,7 @@ class RainbowHatGui implements GraphListener, ThreadPoolListener {
         mi = new JRadioButtonMenuItem("Turn Off All LED Lights");
         mi.addActionListener(e -> {
             synchronized (rainbowHat.taskFactory.getLock()) {
-                rainbowHat.taskFactory.stopAllTasks();
+                rainbowHat.taskFactory.stopAllApaTasks();
                 rainbowHat.apa102.setColorForAll(Color.BLACK);
                 if (rainbowHat.boardView != null) {
                     rainbowHat.boardView.setColorForAllLeds(Color.BLACK);

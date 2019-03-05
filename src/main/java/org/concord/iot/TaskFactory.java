@@ -32,7 +32,7 @@ class TaskFactory {
         return lock;
     }
 
-    void stopAllTasks() {
+    void stopAllApaTasks() {
         randomColorsApaTask.setStopped(true);
         blinkApaTask.setStopped(true);
         movingRainbowApaTask.setStopped(true);
