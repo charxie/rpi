@@ -11,6 +11,7 @@ import com.pi4j.wiringpi.Gpio;
 import com.pi4j.wiringpi.SoftPwm;
 import org.concord.iot.drivers.AlphanumericDisplay;
 import org.concord.iot.drivers.Apa102;
+import org.concord.iot.drivers.Bme280;
 import org.concord.iot.drivers.Bmp280;
 import org.concord.iot.listeners.ThreadPoolEvent;
 import org.concord.iot.listeners.ThreadPoolListener;
@@ -49,6 +50,7 @@ public class RainbowHat {
     GpioPinDigitalOutput buzzer;
     Apa102 apa102;
     private Bmp280 bmp280;
+    private Bme280 bme280;
     private AlphanumericDisplay display;
     String displayMode = "None";
 
@@ -110,16 +112,23 @@ public class RainbowHat {
         }
 
         try {
-            bmp280 = new Bmp280(Bmp280.Protocol.I2C, Bmp280.ADDR_SDO_2_VDDIO, I2CBus.BUS_1);
-            bmp280.setIndoorNavigationMode();
-            bmp280.setMode(Bmp280.Mode.NORMAL, true);
-            bmp280.setTemperatureSampleRate(Bmp280.Temperature_Sample_Resolution.TWO, true);
-            bmp280.setPressureSampleRate(Bmp280.Pressure_Sample_Resolution.SIXTEEN, true);
-            bmp280.setIIRFilter(Bmp280.IIRFilter.SIXTEEN, true);
-            bmp280.setStandbyTime(Bmp280.Standby_Time.MS_POINT_5, true);
+//            bmp280 = new Bmp280(Bmp280.Protocol.I2C, Bmp280.ADDR_SDO_2_VDDIO, I2CBus.BUS_1);
+//            bmp280.setIndoorNavigationMode();
+//            bmp280.setMode(Bmp280.Mode.NORMAL, true);
+//            bmp280.setTemperatureSampleRate(Bmp280.Temperature_Sample_Resolution.TWO, true);
+//            bmp280.setPressureSampleRate(Bmp280.Pressure_Sample_Resolution.SIXTEEN, true);
+//            bmp280.setIIRFilter(Bmp280.IIRFilter.SIXTEEN, true);
+//            bmp280.setStandbyTime(Bmp280.Standby_Time.MS_POINT_5, true);
         } catch (Exception e) {
             e.printStackTrace();
             bmp280 = null;
+        }
+
+        try {
+            bme280 = new Bme280();
+        } catch (Exception e) {
+            e.printStackTrace();
+            bme280 = null;
         }
 
         setupButtons();
@@ -398,26 +407,29 @@ public class RainbowHat {
 
     private void startSensorDataCollection() {
         timeZeroMillis = System.currentTimeMillis();
-        if (bmp280 == null) {
-            return;
-        }
         threadPool.execute(() -> {
             while (true) {
                 try {
-                    double[] results = bmp280.sampleDeviceReads();
-                    temperature = results[Bmp280.TEMP_VAL_C];
-                    barometricPressure = results[Bmp280.PRES_VAL];
-                    System.out.printf("Temperature in Celsius : %.2f C %n", temperature);
-                    System.out.printf("Pressure : %.2f hPa %n", barometricPressure);
-                    currentTime = (double) (System.currentTimeMillis() - timeZeroMillis) / (double) SENSOR_DATA_COLLECTION_INTERVAL;
-                    temperatureDataStore.add(new SensorDataPoint(currentTime, temperature));
-                    barometricPressureDataStore.add(new SensorDataPoint(currentTime, barometricPressure));
-                    updateDisplay();
-                    if (allowTemperatureTransmission) {
-                        database.child("temperature").setValue(temperature, null);
+                    if (bmp280 != null) {
+                        double[] results = bmp280.sampleDeviceReads();
+                        temperature = results[Bmp280.TEMP_VAL_C];
+                        barometricPressure = results[Bmp280.PRES_VAL];
+                        System.out.printf("Temperature in Celsius : %.2f C %n", temperature);
+                        System.out.printf("Pressure : %.2f hPa %n", barometricPressure);
+                        currentTime = (double) (System.currentTimeMillis() - timeZeroMillis) / (double) SENSOR_DATA_COLLECTION_INTERVAL;
+                        temperatureDataStore.add(new SensorDataPoint(currentTime, temperature));
+                        barometricPressureDataStore.add(new SensorDataPoint(currentTime, barometricPressure));
+                        updateDisplay();
+                        if (allowTemperatureTransmission) {
+                            database.child("temperature").setValue(temperature, null);
+                        }
+                        if (allowBarometricPressureTransmission) {
+                            database.child("barometricPressure").setValue(barometricPressure, null);
+                        }
                     }
-                    if (allowBarometricPressureTransmission) {
-                        database.child("barometricPressure").setValue(barometricPressure, null);
+                    if (bme280 != null) {
+                        bme280.read();
+                        bme280.printf();
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
