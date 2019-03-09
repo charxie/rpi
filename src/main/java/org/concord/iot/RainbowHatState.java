@@ -19,8 +19,10 @@ public class RainbowHatState {
 
     public float temperature = 20; // Celsius
     public float barometricPressure = 1000; // hPa
+    public float relativeHumidity = 0.2f;
     public boolean allowTemperatureTransmission;
     public boolean allowBarometricPressureTransmission;
+    public boolean allowRelativeHumidityTransmission;
 
     public String displayMode = "Temperature";
 
@@ -74,6 +76,22 @@ public class RainbowHatState {
         this.barometricPressure = barometricPressure;
     }
 
+    public boolean getAllowRelativeHumidityTransmission() {
+        return allowRelativeHumidityTransmission;
+    }
+
+    public void setAllowRelativeHumidityTransmission(boolean allowRelativeHumidityTransmission) {
+        this.allowRelativeHumidityTransmission = allowRelativeHumidityTransmission;
+    }
+
+    public float getRelativeHumidity() {
+        return relativeHumidity;
+    }
+
+    public void setRelativeHumidity(float relativeHumidity) {
+        this.relativeHumidity = relativeHumidity;
+    }
+
     public ArrayList<ArrayList<Integer>> getRainbowRgb() {
         return rainbowRgb;
     }
@@ -120,11 +138,6 @@ public class RainbowHatState {
 
     public void setDisplayMode(String displayMode) {
         this.displayMode = displayMode;
-    }
-
-    @Override
-    public String toString() {
-        return "Red LED: " + redLed;
     }
 
 }

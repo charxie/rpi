@@ -226,6 +226,14 @@ class RainbowHatBoardView extends JPanel {
                     }
                     graphRenderer.drawData(g2, rainbowHat.getBarometricPressureDataStore(), "Barometric Pressure", false);
                     break;
+                case 2: // relative humidity
+                    if (rainbowHat.getRelativeHumidity() > graphRenderer.getYmax()) {
+                        graphRenderer.increaseYmax();
+                    } else if (rainbowHat.getRelativeHumidity() < graphRenderer.getYmin()) {
+                        graphRenderer.decreaseYmin();
+                    }
+                    graphRenderer.drawData(g2, rainbowHat.getRelativeHumidityDataStore(), "Relative Humidity", false);
+                    break;
             }
         }
 
@@ -352,6 +360,9 @@ class RainbowHatBoardView extends JPanel {
                 break;
             case 1:
                 data = rainbowHat.getBarometricPressureDataStore();
+                break;
+            case 2:
+                data = rainbowHat.getRelativeHumidityDataStore();
                 break;
         }
         if (data != null) {

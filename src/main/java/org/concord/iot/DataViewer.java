@@ -28,6 +28,9 @@ class DataViewer {
             case 1:
                 showData("Barometric Pressure", rainbowHat.getBarometricPressureDataStore());
                 break;
+            case 2:
+                showData("Relative Humidity", rainbowHat.getRelativeHumidityDataStore());
+                break;
         }
     }
 

@@ -122,6 +122,10 @@ class RainbowHatGui implements GraphListener, ThreadPoolListener {
         emulatorsMenu.add(mi);
         emulatorButtonGroup.add(mi);
 
+        mi = new JRadioButtonMenuItem("Sensor Hub");
+        emulatorsMenu.add(mi);
+        emulatorButtonGroup.add(mi);
+
         JMenu examplesMenu = new JMenu("Examples");
         examplesMenu.setMnemonic(KeyEvent.VK_E);
         menuBar.add(examplesMenu);

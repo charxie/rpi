@@ -167,7 +167,7 @@ public class Bme280 {
         return pressure;
     }
 
-    public double getHumidity() {
+    public double getRelativeHumidity() {
         return humidity;
     }
 

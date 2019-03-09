@@ -60,8 +60,10 @@ public class RainbowHat {
     private double currentTime;
     private double temperature;
     private double barometricPressure;
+    private double relativeHumidity;
     boolean allowTemperatureTransmission;
     boolean allowBarometricPressureTransmission;
+    boolean allowRelativeHumidityTransmission;
     private String alphanumericString = "----";
 
     User user;
@@ -73,6 +75,7 @@ public class RainbowHat {
 
     private List<SensorDataPoint> temperatureDataStore;
     private List<SensorDataPoint> barometricPressureDataStore;
+    private List<SensorDataPoint> relativeHumidityDataStore;
 
     public RainbowHat() {
         init();
@@ -93,10 +96,13 @@ public class RainbowHat {
         buttonA = gpio.provisionDigitalInputPin(RaspiPin.GPIO_29, "Button A");
         buttonB = gpio.provisionDigitalInputPin(RaspiPin.GPIO_28, "Button B");
         buttonC = gpio.provisionDigitalInputPin(RaspiPin.GPIO_27, "Button C");
-        redLed = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_22, "Red LED", PinState.LOW);
+//        redLed = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_22, "Red LED", PinState.LOW);
+//        greenLed = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_24, "Green LED", PinState.LOW);
+//        blueLed = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_25, "Blue LED", PinState.LOW);
+//        buzzer = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_23, "Buzzer", PinState.LOW);
+        redLed = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_23, "Red LED", PinState.LOW);
         greenLed = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_24, "Green LED", PinState.LOW);
         blueLed = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_25, "Blue LED", PinState.LOW);
-        buzzer = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_23, "Buzzer", PinState.LOW);
 
         final Preferences pref = Preferences.userNodeForPackage(RainbowHat.class);
         apa102 = new Apa102(pref.getInt("number_of_rgb_leds", RainbowHatState.NUMBER_OF_RGB_LEDS));
@@ -112,13 +118,13 @@ public class RainbowHat {
         }
 
         try {
-//            bmp280 = new Bmp280(Bmp280.Protocol.I2C, Bmp280.ADDR_SDO_2_VDDIO, I2CBus.BUS_1);
-//            bmp280.setIndoorNavigationMode();
-//            bmp280.setMode(Bmp280.Mode.NORMAL, true);
-//            bmp280.setTemperatureSampleRate(Bmp280.Temperature_Sample_Resolution.TWO, true);
-//            bmp280.setPressureSampleRate(Bmp280.Pressure_Sample_Resolution.SIXTEEN, true);
-//            bmp280.setIIRFilter(Bmp280.IIRFilter.SIXTEEN, true);
-//            bmp280.setStandbyTime(Bmp280.Standby_Time.MS_POINT_5, true);
+            bmp280 = new Bmp280(Bmp280.Protocol.I2C, Bmp280.ADDR_SDO_2_VDDIO, I2CBus.BUS_1);
+            bmp280.setIndoorNavigationMode();
+            bmp280.setMode(Bmp280.Mode.NORMAL, true);
+            bmp280.setTemperatureSampleRate(Bmp280.Temperature_Sample_Resolution.TWO, true);
+            bmp280.setPressureSampleRate(Bmp280.Pressure_Sample_Resolution.SIXTEEN, true);
+            bmp280.setIIRFilter(Bmp280.IIRFilter.SIXTEEN, true);
+            bmp280.setStandbyTime(Bmp280.Standby_Time.MS_POINT_5, true);
         } catch (Exception e) {
             e.printStackTrace();
             bmp280 = null;
@@ -136,6 +142,7 @@ public class RainbowHat {
 
         temperatureDataStore = new ArrayList<>();
         barometricPressureDataStore = new ArrayList<>();
+        relativeHumidityDataStore = new ArrayList<>();
 
         taskFactory = new TaskFactory(this);
 
@@ -187,6 +194,7 @@ public class RainbowHat {
     }
 
     void buzz(int k) {
+        if (buzzer == null) return;
         int a = buzzer.getPin().getAddress();
         SoftPwm.softPwmStop(a);
         switch (k) {
@@ -410,13 +418,13 @@ public class RainbowHat {
         threadPool.execute(() -> {
             while (true) {
                 try {
+                    currentTime = (double) (System.currentTimeMillis() - timeZeroMillis) / (double) SENSOR_DATA_COLLECTION_INTERVAL;
                     if (bmp280 != null) {
                         double[] results = bmp280.sampleDeviceReads();
                         temperature = results[Bmp280.TEMP_VAL_C];
                         barometricPressure = results[Bmp280.PRES_VAL];
-                        System.out.printf("Temperature in Celsius : %.2f C %n", temperature);
-                        System.out.printf("Pressure : %.2f hPa %n", barometricPressure);
-                        currentTime = (double) (System.currentTimeMillis() - timeZeroMillis) / (double) SENSOR_DATA_COLLECTION_INTERVAL;
+                        System.out.printf("BMP280: Temperature in Celsius : %.2f C %n", temperature);
+                        System.out.printf("BMP280: Pressure : %.2f hPa %n", barometricPressure);
                         temperatureDataStore.add(new SensorDataPoint(currentTime, temperature));
                         barometricPressureDataStore.add(new SensorDataPoint(currentTime, barometricPressure));
                         updateDisplay();
@@ -430,6 +438,21 @@ public class RainbowHat {
                     if (bme280 != null) {
                         bme280.read();
                         bme280.printf();
+                        temperature = bme280.getTemperature();
+                        barometricPressure = bme280.getPressure();
+                        relativeHumidity = bme280.getRelativeHumidity();
+                        relativeHumidityDataStore.add(new SensorDataPoint(currentTime, relativeHumidity));
+                        temperatureDataStore.add(new SensorDataPoint(currentTime, temperature));
+                        barometricPressureDataStore.add(new SensorDataPoint(currentTime, barometricPressure));
+                        if (allowRelativeHumidityTransmission) {
+                            database.child("relativeHumidity").setValue(relativeHumidity, null);
+                        }
+                        if (allowTemperatureTransmission) {
+                            database.child("temperature").setValue(temperature, null);
+                        }
+                        if (allowBarometricPressureTransmission) {
+                            database.child("barometricPressure").setValue(barometricPressure, null);
+                        }
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -477,6 +500,23 @@ public class RainbowHat {
 
     public List<SensorDataPoint> getBarometricPressureDataStore() {
         return barometricPressureDataStore;
+    }
+
+    public void setAllowRelativeHumidityTransmission(boolean b) {
+        allowRelativeHumidityTransmission = b;
+        database.child("allowRelativeHumidityTransmission").setValue(b, null);
+    }
+
+    public boolean getAllowRelativeHumidityTransmission() {
+        return allowRelativeHumidityTransmission;
+    }
+
+    public double getRelativeHumidity() {
+        return relativeHumidity;
+    }
+
+    public List<SensorDataPoint> getRelativeHumidityDataStore() {
+        return relativeHumidityDataStore;
     }
 
     private void synchronizeWithCloud() {
