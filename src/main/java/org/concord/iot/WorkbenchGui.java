@@ -16,16 +16,16 @@ import java.util.prefs.Preferences;
  * @author Charles Xie
  */
 
-class RainbowHatGui implements GraphListener, ThreadPoolListener {
+class WorkbenchGui implements GraphListener, ThreadPoolListener {
 
-    private RainbowHat rainbowHat;
+    private IoTWorkbench workbench;
 
     private JLabel threadPoolLabel;
     private JCheckBox showGraphCheckBox;
     private JCheckBox uploadTemperatureCheckBox;
     private JCheckBox uploadPressureCheckBox;
 
-    RainbowHatGui() {
+    WorkbenchGui() {
 
     }
 
@@ -59,19 +59,19 @@ class RainbowHatGui implements GraphListener, ThreadPoolListener {
         return mi;
     }
 
-    void createAndShowGui(final RainbowHat rainbowHat) {
+    void createAndShowGui(final IoTWorkbench ioTWorkbench) {
 
-        this.rainbowHat = rainbowHat;
-        rainbowHat.addThreadPoolListener(this);
+        this.workbench = ioTWorkbench;
+        ioTWorkbench.addThreadPoolListener(this);
 
-        final JFrame frame = new JFrame(RainbowHat.BRAND_NAME + " (" + RainbowHat.VERSION_NUMBER + ")");
-        frame.setIconImage(Toolkit.getDefaultToolkit().createImage(RainbowHat.class.getResource("images/frame.png")));
+        final JFrame frame = new JFrame(IoTWorkbench.BRAND_NAME + " (" + IoTWorkbench.VERSION_NUMBER + ")");
+        frame.setIconImage(Toolkit.getDefaultToolkit().createImage(IoTWorkbench.class.getResource("images/frame.png")));
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLocation(100, 100);
         frame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                rainbowHat.destroy();
+                ioTWorkbench.destroy();
                 System.exit(0);
             }
         });
@@ -91,14 +91,14 @@ class RainbowHatGui implements GraphListener, ThreadPoolListener {
         openMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, KeyEvent.CTRL_MASK, true));
         fileMenu.add(openMenuItem);
 
-        fileMenu.add(new ScreenshotSaver(rainbowHat.boardView, false));
+        fileMenu.add(new ScreenshotSaver(ioTWorkbench.boardView, false));
 
         fileMenu.addSeparator();
 
         JMenuItem settingsMenuItem = new JMenuItem("Settings");
         settingsMenuItem.setToolTipText("Settings");
         settingsMenuItem.addActionListener(e -> {
-            new SettingsDialog(frame, rainbowHat).setVisible(true);
+            new SettingsDialog(frame, ioTWorkbench).setVisible(true);
         });
         fileMenu.add(settingsMenuItem);
 
@@ -108,7 +108,7 @@ class RainbowHatGui implements GraphListener, ThreadPoolListener {
         quitMenuItem.setMnemonic(KeyEvent.VK_Q);
         quitMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, KeyEvent.CTRL_MASK, true));
         quitMenuItem.addActionListener(e -> {
-            rainbowHat.destroy();
+            ioTWorkbench.destroy();
             System.exit(0);
         });
         fileMenu.add(quitMenuItem);
@@ -132,10 +132,10 @@ class RainbowHatGui implements GraphListener, ThreadPoolListener {
 
         JMenu subMenu = new JMenu("Monochromatic LED Lights");
         examplesMenu.add(subMenu);
-        subMenu.add(createMenuItem(rainbowHat.taskFactory.blinkRedLedTask, false));
-        subMenu.add(createMenuItem(rainbowHat.taskFactory.blinkGreenLedTask, false));
-        subMenu.add(createMenuItem(rainbowHat.taskFactory.blinkBlueLedTask, false));
-        subMenu.add(createMenuItem(rainbowHat.taskFactory.jumpLedTask, false));
+        subMenu.add(createMenuItem(ioTWorkbench.taskFactory.blinkRedLedTask, false));
+        subMenu.add(createMenuItem(ioTWorkbench.taskFactory.blinkGreenLedTask, false));
+        subMenu.add(createMenuItem(ioTWorkbench.taskFactory.blinkBlueLedTask, false));
+        subMenu.add(createMenuItem(ioTWorkbench.taskFactory.jumpLedTask, false));
 
         subMenu = new JMenu("Trichromatic LED Lights");
         examplesMenu.add(subMenu);
@@ -143,9 +143,9 @@ class RainbowHatGui implements GraphListener, ThreadPoolListener {
         ButtonGroup bg = new ButtonGroup();
         mi = new JRadioButtonMenuItem("Default Rainbow");
         mi.addActionListener(e -> {
-            synchronized (rainbowHat.taskFactory.getLock()) {
-                rainbowHat.taskFactory.stopAllApaTasks();
-                rainbowHat.setDefaultRainbow();
+            synchronized (ioTWorkbench.taskFactory.getLock()) {
+                ioTWorkbench.taskFactory.stopAllApaTasks();
+                ioTWorkbench.setDefaultRainbow();
             }
         });
         subMenu.add(mi);
@@ -153,44 +153,44 @@ class RainbowHatGui implements GraphListener, ThreadPoolListener {
 
         mi = new JRadioButtonMenuItem("Turn Off All LED Lights");
         mi.addActionListener(e -> {
-            synchronized (rainbowHat.taskFactory.getLock()) {
-                rainbowHat.taskFactory.stopAllApaTasks();
-                rainbowHat.apa102.setColorForAll(Color.BLACK);
-                if (rainbowHat.boardView != null) {
-                    rainbowHat.boardView.setColorForAllLeds(Color.BLACK);
+            synchronized (ioTWorkbench.taskFactory.getLock()) {
+                ioTWorkbench.taskFactory.stopAllApaTasks();
+                ioTWorkbench.apa102.setColorForAll(Color.BLACK);
+                if (ioTWorkbench.boardView != null) {
+                    ioTWorkbench.boardView.setColorForAllLeds(Color.BLACK);
                 }
             }
         });
         subMenu.add(mi);
         bg.add(mi);
 
-        mi = createMenuItem(rainbowHat.taskFactory.blinkApaTask, true);
+        mi = createMenuItem(ioTWorkbench.taskFactory.blinkApaTask, true);
         subMenu.add(mi);
         bg.add(mi);
 
-        mi = createMenuItem(rainbowHat.taskFactory.movingRainbowApaTask, true);
+        mi = createMenuItem(ioTWorkbench.taskFactory.movingRainbowApaTask, true);
         subMenu.add(mi);
         bg.add(mi);
 
-        mi = createMenuItem(rainbowHat.taskFactory.randomColorsApaTask, true);
+        mi = createMenuItem(ioTWorkbench.taskFactory.randomColorsApaTask, true);
         subMenu.add(mi);
         bg.add(mi);
 
-        mi = createMenuItem(rainbowHat.taskFactory.bouncingDotApaTask, true);
+        mi = createMenuItem(ioTWorkbench.taskFactory.bouncingDotApaTask, true);
         subMenu.add(mi);
         bg.add(mi);
 
-        mi = createMenuItem(rainbowHat.taskFactory.movingTrainsApaTask, true);
+        mi = createMenuItem(ioTWorkbench.taskFactory.movingTrainsApaTask, true);
         subMenu.add(mi);
         bg.add(mi);
 
-        mi = createMenuItem(rainbowHat.taskFactory.rippleEffectApaTask, true);
+        mi = createMenuItem(ioTWorkbench.taskFactory.rippleEffectApaTask, true);
         subMenu.add(mi);
         bg.add(mi);
 
         mi = new JMenuItem("Repeat Buzzer");
         mi.addActionListener(e -> {
-            rainbowHat.buzzer.blink(1000, 10000);
+            ioTWorkbench.buzzer.blink(1000, 10000);
         });
         examplesMenu.add(mi);
 
@@ -207,7 +207,7 @@ class RainbowHatGui implements GraphListener, ThreadPoolListener {
 
         JPanel contentPane = new JPanel(new BorderLayout(5, 5));
         frame.setContentPane(contentPane);
-        contentPane.add(rainbowHat.boardView, BorderLayout.CENTER);
+        contentPane.add(ioTWorkbench.boardView, BorderLayout.CENTER);
 
         // tool bar
 
@@ -215,29 +215,29 @@ class RainbowHatGui implements GraphListener, ThreadPoolListener {
         contentPane.add(toolPanel, BorderLayout.NORTH);
 
         toolPanel.add(new JLabel("Upload: "));
-        uploadTemperatureCheckBox = new JCheckBox("Temperature", rainbowHat.getAllowTemperatureTransmission());
+        uploadTemperatureCheckBox = new JCheckBox("Temperature", ioTWorkbench.getAllowTemperatureTransmission());
         uploadTemperatureCheckBox.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(ItemEvent e) {
-                rainbowHat.setAllowTemperatureTransmission(e.getStateChange() == ItemEvent.SELECTED);
+                ioTWorkbench.setAllowTemperatureTransmission(e.getStateChange() == ItemEvent.SELECTED);
             }
         });
         toolPanel.add(uploadTemperatureCheckBox);
 
-        uploadPressureCheckBox = new JCheckBox("Pressure", rainbowHat.getAllowBarometricPressureTransmission());
+        uploadPressureCheckBox = new JCheckBox("Pressure", ioTWorkbench.getAllowBarometricPressureTransmission());
         uploadPressureCheckBox.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(ItemEvent e) {
-                rainbowHat.setAllowBarometricPressureTransmission(e.getStateChange() == ItemEvent.SELECTED);
+                ioTWorkbench.setAllowBarometricPressureTransmission(e.getStateChange() == ItemEvent.SELECTED);
             }
         });
         toolPanel.add(uploadPressureCheckBox);
 
-        showGraphCheckBox = new JCheckBox("Graph", rainbowHat.boardView.getShowGraph());
+        showGraphCheckBox = new JCheckBox("Graph", ioTWorkbench.boardView.getShowGraph());
         showGraphCheckBox.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(ItemEvent e) {
-                rainbowHat.boardView.setShowGraph(e.getStateChange() == ItemEvent.SELECTED);
+                ioTWorkbench.boardView.setShowGraph(e.getStateChange() == ItemEvent.SELECTED);
             }
         });
         toolPanel.add(showGraphCheckBox);
@@ -247,12 +247,12 @@ class RainbowHatGui implements GraphListener, ThreadPoolListener {
         JPanel statusPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         contentPane.add(statusPanel, BorderLayout.SOUTH);
 
-        threadPoolLabel = new JLabel("<html><font size=2>Thread pool: size = " + rainbowHat.getThreadPoolSize() + ", active = " + rainbowHat.getActiveThreadCount() + "</font></html>");
+        threadPoolLabel = new JLabel("<html><font size=2>Thread pool: size = " + ioTWorkbench.getThreadPoolSize() + ", active = " + ioTWorkbench.getActiveThreadCount() + "</font></html>");
         statusPanel.add(threadPoolLabel);
 
         final Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        final Preferences pref = Preferences.userNodeForPackage(RainbowHat.class);
-        Dimension boardViewSize = rainbowHat.boardView.getPreferredSize();
+        final Preferences pref = Preferences.userNodeForPackage(IoTWorkbench.class);
+        Dimension boardViewSize = ioTWorkbench.boardView.getPreferredSize();
         frame.setSize(Math.min(pref.getInt("window_size_width", Math.max(900, boardViewSize.width)), screenSize.width), Math.min(pref.getInt("window_size_height", 600), screenSize.height));
         frame.setLocation(pref.getInt("window_location_x", (int) (screenSize.width - boardViewSize.width) / 2), pref.getInt("window_location_y", (int) (screenSize.height - boardViewSize.height) / 2));
 
@@ -280,7 +280,7 @@ class RainbowHatGui implements GraphListener, ThreadPoolListener {
     }
 
     private void showAbout(JFrame frame) {
-        String s = "<html><h3>" + RainbowHat.BRAND_NAME + " (V" + RainbowHat.VERSION_NUMBER + ")</h3>";
+        String s = "<html><h3>" + IoTWorkbench.BRAND_NAME + " (V" + IoTWorkbench.VERSION_NUMBER + ")</h3>";
         s += "<h4><i>Learning to create the Internet of Things</i></h4>";
         s += "Charles Xie, &copy; 2019-" + Calendar.getInstance().get(Calendar.YEAR);
         s += "<hr>";
@@ -294,7 +294,7 @@ class RainbowHatGui implements GraphListener, ThreadPoolListener {
         s += "<br>";
         s += "the MIT License.";
         s += "</html>";
-        JOptionPane.showMessageDialog(frame, new JLabel(s), "About the software", JOptionPane.INFORMATION_MESSAGE, new ImageIcon(RainbowHat.class.getResource("images/frame.png")));
+        JOptionPane.showMessageDialog(frame, new JLabel(s), "About the software", JOptionPane.INFORMATION_MESSAGE, new ImageIcon(IoTWorkbench.class.getResource("images/frame.png")));
     }
 
     @Override
@@ -309,7 +309,7 @@ class RainbowHatGui implements GraphListener, ThreadPoolListener {
 
     @Override
     public void updated(ThreadPoolEvent e) {
-        threadPoolLabel.setText("<html><font size=2>Thread pool: size = " + rainbowHat.getThreadPoolSize() + ", active = " + rainbowHat.getActiveThreadCount() + "</font></html>");
+        threadPoolLabel.setText("<html><font size=2>Thread pool: size = " + workbench.getThreadPoolSize() + ", active = " + workbench.getActiveThreadCount() + "</font></html>");
     }
 
 }

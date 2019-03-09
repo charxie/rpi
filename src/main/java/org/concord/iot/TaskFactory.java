@@ -9,7 +9,7 @@ import java.util.Arrays;
 
 class TaskFactory {
 
-    private RainbowHat rainbowHat;
+    private IoTWorkbench workbench;
     private final Object lock = new Object();
 
     Task blinkRedLedTask;
@@ -23,8 +23,8 @@ class TaskFactory {
     Task movingTrainsApaTask;
     Task rippleEffectApaTask;
 
-    TaskFactory(RainbowHat rainbowHat) {
-        this.rainbowHat = rainbowHat;
+    TaskFactory(IoTWorkbench workbench) {
+        this.workbench = workbench;
         createTasks();
     }
 
@@ -43,13 +43,13 @@ class TaskFactory {
 
     private void createTasks() {
 
-        blinkRedLedTask = new Task("Blinking Red LED", rainbowHat);
+        blinkRedLedTask = new Task("Blinking Red LED", workbench);
         blinkRedLedTask.setRunnable(() -> {
             while (true) {
                 try {
-                    rainbowHat.setRedLedState(true, true);
+                    workbench.setRedLedState(true, true);
                     Thread.sleep(500);
-                    rainbowHat.setRedLedState(false, true);
+                    workbench.setRedLedState(false, true);
                     Thread.sleep(500);
                 } catch (InterruptedException ex) {
                 }
@@ -59,13 +59,13 @@ class TaskFactory {
             }
         });
 
-        blinkGreenLedTask = new Task("Blinking Green LED", rainbowHat);
+        blinkGreenLedTask = new Task("Blinking Green LED", workbench);
         blinkGreenLedTask.setRunnable(() -> {
             while (true) {
                 try {
-                    rainbowHat.setGreenLedState(true, true);
+                    workbench.setGreenLedState(true, true);
                     Thread.sleep(500);
-                    rainbowHat.setGreenLedState(false, true);
+                    workbench.setGreenLedState(false, true);
                     Thread.sleep(500);
                 } catch (InterruptedException ex) {
                 }
@@ -75,13 +75,13 @@ class TaskFactory {
             }
         });
 
-        blinkBlueLedTask = new Task("Blinking Blue LED", rainbowHat);
+        blinkBlueLedTask = new Task("Blinking Blue LED", workbench);
         blinkBlueLedTask.setRunnable(() -> {
             while (true) {
                 try {
-                    rainbowHat.setBlueLedState(true, true);
+                    workbench.setBlueLedState(true, true);
                     Thread.sleep(500);
-                    rainbowHat.setBlueLedState(false, true);
+                    workbench.setBlueLedState(false, true);
                     Thread.sleep(500);
                 } catch (InterruptedException ex) {
                 }
@@ -91,19 +91,19 @@ class TaskFactory {
             }
         });
 
-        jumpLedTask = new Task("Jumping LEDs", rainbowHat);
+        jumpLedTask = new Task("Jumping LEDs", workbench);
         jumpLedTask.setRunnable(() -> {
             while (true) {
                 try {
-                    rainbowHat.setRedLedState(true, true);
+                    workbench.setRedLedState(true, true);
                     Thread.sleep(500);
-                    rainbowHat.setRedLedState(false, true);
-                    rainbowHat.setGreenLedState(true, true);
+                    workbench.setRedLedState(false, true);
+                    workbench.setGreenLedState(true, true);
                     Thread.sleep(500);
-                    rainbowHat.setGreenLedState(false, true);
-                    rainbowHat.setBlueLedState(true, true);
+                    workbench.setGreenLedState(false, true);
+                    workbench.setBlueLedState(true, true);
                     Thread.sleep(500);
-                    rainbowHat.setBlueLedState(false, true);
+                    workbench.setBlueLedState(false, true);
                 } catch (InterruptedException ex) {
                 }
                 if (jumpLedTask.isStopped()) {
@@ -112,19 +112,19 @@ class TaskFactory {
             }
         });
 
-        blinkApaTask = new Task("Blink All", rainbowHat);
+        blinkApaTask = new Task("Blink All", workbench);
         blinkApaTask.setRunnable(() -> {
             while (true) {
                 Color c = new Color((int) (Math.random() * 255), (int) (Math.random() * 255), (int) (Math.random() * 255));
                 try {
-                    rainbowHat.apa102.setColorForAll(c);
-                    if (rainbowHat.boardView != null) {
-                        rainbowHat.boardView.setColorForAllLeds(c);
+                    workbench.apa102.setColorForAll(c);
+                    if (workbench.boardView != null) {
+                        workbench.boardView.setColorForAllLeds(c);
                     }
                     Thread.sleep(500);
-                    rainbowHat.apa102.setColorForAll(Color.BLACK);
-                    if (rainbowHat.boardView != null) {
-                        rainbowHat.boardView.setColorForAllLeds(Color.BLACK);
+                    workbench.apa102.setColorForAll(Color.BLACK);
+                    if (workbench.boardView != null) {
+                        workbench.boardView.setColorForAllLeds(Color.BLACK);
                     }
                     Thread.sleep(500);
                 } catch (InterruptedException e) {
@@ -136,14 +136,14 @@ class TaskFactory {
             }
         });
 
-        movingRainbowApaTask = new Task("Moving Rainbows", rainbowHat);
+        movingRainbowApaTask = new Task("Moving Rainbows", workbench);
         movingRainbowApaTask.setRunnable(() -> {
-            rainbowHat.apa102.resetShift();
+            workbench.apa102.resetShift();
             while (true) {
                 synchronized (lock) {
-                    rainbowHat.apa102.moveRainbow(1);
-                    rainbowHat.apa102.shift(0.01f);
-                    rainbowHat.setLedColorsOnBoardView();
+                    workbench.apa102.moveRainbow(1);
+                    workbench.apa102.shift(0.01f);
+                    workbench.setLedColorsOnBoardView();
                 }
                 try {
                     Thread.sleep(10);
@@ -155,9 +155,9 @@ class TaskFactory {
             }
         });
 
-        randomColorsApaTask = new Task("Random Colors", rainbowHat);
+        randomColorsApaTask = new Task("Random Colors", workbench);
         randomColorsApaTask.setRunnable(() -> {
-            byte[][] data = new byte[rainbowHat.getNumberOfRgbLeds()][4];
+            byte[][] data = new byte[workbench.getNumberOfRgbLeds()][4];
             while (true) {
                 synchronized (lock) {
                     for (int i = 0; i < data.length; i++) {
@@ -165,8 +165,8 @@ class TaskFactory {
                         data[i][1] = (byte) (255 * Math.random());
                         data[i][2] = (byte) (255 * Math.random());
                     }
-                    rainbowHat.apa102.setData(data);
-                    rainbowHat.setLedColorsOnBoardView();
+                    workbench.apa102.setData(data);
+                    workbench.setLedColorsOnBoardView();
                 }
                 try {
                     Thread.sleep(500);
@@ -178,9 +178,9 @@ class TaskFactory {
             }
         });
 
-        bouncingDotApaTask = new Task("Bouncing Dot", rainbowHat);
+        bouncingDotApaTask = new Task("Bouncing Dot", workbench);
         bouncingDotApaTask.setRunnable(() -> {
-            byte[][] data = new byte[rainbowHat.getNumberOfRgbLeds()][4];
+            byte[][] data = new byte[workbench.getNumberOfRgbLeds()][4];
             bouncingDotApaTask.setIndex(0);
             boolean reverse = false;
             while (true) {
@@ -195,27 +195,27 @@ class TaskFactory {
                             Arrays.fill(data[i], (byte) 0);
                         }
                     }
-                    rainbowHat.apa102.setData(data);
-                    rainbowHat.setLedColorsOnBoardView();
+                    workbench.apa102.setData(data);
+                    workbench.setLedColorsOnBoardView();
                 }
                 try {
                     Thread.sleep(5);
                 } catch (InterruptedException ex) {
                 }
-                rainbowHat.buzz(0);
+                workbench.buzz(0);
                 if (reverse) {
                     bouncingDotApaTask.addToIndex(-1);
                     if (bouncingDotApaTask.getIndex() < 0) {
                         bouncingDotApaTask.setIndex(0);
                         reverse = false;
-                        rainbowHat.buzz(1);
+                        workbench.buzz(1);
                     }
                 } else {
                     bouncingDotApaTask.addToIndex(1);
                     if (bouncingDotApaTask.getIndex() >= data.length) {
                         bouncingDotApaTask.setIndex(data.length - 1);
                         reverse = true;
-                        rainbowHat.buzz(1);
+                        workbench.buzz(1);
                     }
                 }
                 if (bouncingDotApaTask.isStopped()) {
@@ -224,9 +224,9 @@ class TaskFactory {
             }
         });
 
-        movingTrainsApaTask = new Task("Moving Trains", rainbowHat);
+        movingTrainsApaTask = new Task("Moving Trains", workbench);
         movingTrainsApaTask.setRunnable(() -> {
-            byte[][] data = new byte[rainbowHat.getNumberOfRgbLeds()][4];
+            byte[][] data = new byte[workbench.getNumberOfRgbLeds()][4];
             int trainLength = 7;
             int interval = 10;
             int m = 20;
@@ -253,8 +253,8 @@ class TaskFactory {
                             data[i][2] = (byte) c.getBlue();
                         }
                     }
-                    rainbowHat.apa102.setData(data);
-                    rainbowHat.setLedColorsOnBoardView();
+                    workbench.apa102.setData(data);
+                    workbench.setLedColorsOnBoardView();
                 }
                 try {
                     Thread.sleep(50);
@@ -271,9 +271,9 @@ class TaskFactory {
             }
         });
 
-        rippleEffectApaTask = new Task("Ripple Effect", rainbowHat);
+        rippleEffectApaTask = new Task("Ripple Effect", workbench);
         rippleEffectApaTask.setRunnable(() -> {
-            byte[][] data = new byte[rainbowHat.getNumberOfRgbLeds()][4];
+            byte[][] data = new byte[workbench.getNumberOfRgbLeds()][4];
             double wavelength = 20;
             double speed = 1;
             rippleEffectApaTask.setIndex(0);
@@ -285,8 +285,8 @@ class TaskFactory {
                         data[i][1] = (byte) 0;
                         data[i][2] = (byte) (255 - data[i][0]);
                     }
-                    rainbowHat.apa102.setData(data);
-                    rainbowHat.setLedColorsOnBoardView();
+                    workbench.apa102.setData(data);
+                    workbench.setLedColorsOnBoardView();
                 }
                 try {
                     Thread.sleep(20);

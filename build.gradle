@@ -18,7 +18,7 @@ dependencies {
 }
 
 apply plugin: 'application'
-mainClassName = 'org.concord.iot.RainbowHat'
+mainClassName = 'org.concord.iot.IoTWorkbench'
 
 run {
     standardInput = System.in

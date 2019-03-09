@@ -6,6 +6,10 @@ import com.pi4j.io.i2c.I2CFactory;
 
 import java.io.IOException;
 
+/**
+ * Adopted from https://github.com/ControlEverythingCommunity/BME280/blob/master/Java/BME280.java
+ */
+
 public class Bme280 {
 
     private double cTemp;

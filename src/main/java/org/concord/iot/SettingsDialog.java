@@ -17,7 +17,7 @@ class SettingsDialog extends JDialog {
 
     private static final long serialVersionUID = 1L;
 
-    public SettingsDialog(final Frame parent, final RainbowHat rainbowHat) {
+    public SettingsDialog(final Frame parent, final IoTWorkbench workbench) {
 
         super(parent, true);
         setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
@@ -28,15 +28,15 @@ class SettingsDialog extends JDialog {
         panel.setBorder(new EmptyBorder(8, 8, 8, 8));
         getContentPane().add(panel, BorderLayout.CENTER);
 
-        final JTextField userNameField = new JTextField(rainbowHat.user.getName());
-        final JTextField numberOfLedsField = new JTextField(rainbowHat.getNumberOfRgbLeds() + "", 12);
+        final JTextField userNameField = new JTextField(workbench.user.getName());
+        final JTextField numberOfLedsField = new JTextField(workbench.getNumberOfRgbLeds() + "", 12);
 
         final ActionListener okListener = new ActionListener() {
             @Override
             public void actionPerformed(final ActionEvent e) {
                 String userName = userNameField.getText();
                 if (userName.trim().length() >= 4) {
-                    rainbowHat.user.setName(userNameField.getName());
+                    workbench.user.setName(userNameField.getName());
                 } else {
                     JOptionPane.showMessageDialog(SettingsDialog.this, "User name is not allowed to have less than four characters: " + userName, "Error", JOptionPane.ERROR_MESSAGE);
                 }
@@ -49,8 +49,8 @@ class SettingsDialog extends JDialog {
                         JOptionPane.showMessageDialog(SettingsDialog.this, s + " cannot be parsed!", "Format Error", JOptionPane.ERROR_MESSAGE);
                     }
                     if (n > 0) {
-                        rainbowHat.setNumberOfRgbLeds(n);
-                        rainbowHat.boardView.repaint();
+                        workbench.setNumberOfRgbLeds(n);
+                        workbench.boardView.repaint();
                     }
                 }
                 dispose();

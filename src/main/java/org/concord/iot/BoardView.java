@@ -16,9 +16,9 @@ import java.util.List;
  * @author Charles Xie
  */
 
-class RainbowHatBoardView extends JPanel {
+class BoardView extends JPanel {
 
-    private RainbowHat rainbowHat;
+    private IoTWorkbench workbench;
 
     private Image image;
     private int xImageOffset;
@@ -36,7 +36,7 @@ class RainbowHatBoardView extends JPanel {
     private Rectangle redLed;
     private Rectangle greenLed;
     private Rectangle blueLed;
-    private Ellipse2D.Double[] leds = new Ellipse2D.Double[RainbowHatState.NUMBER_OF_RGB_LEDS];
+    private Ellipse2D.Double[] leds = new Ellipse2D.Double[WorkbenchState.NUMBER_OF_RGB_LEDS];
     private Rectangle temperatureSensor;
     private Rectangle barometricPressureSensor;
     private boolean buttonAPressed;
@@ -46,19 +46,19 @@ class RainbowHatBoardView extends JPanel {
     private Symbol.LedLight redLedSymbol;
     private Symbol.LedLight greenLedSymbol;
     private Symbol.LedLight blueLedSymbol;
-    private Symbol.LedLight[] ledLightSymbols = new Symbol.LedLight[RainbowHatState.NUMBER_OF_RGB_LEDS];
+    private Symbol.LedLight[] ledLightSymbols = new Symbol.LedLight[WorkbenchState.NUMBER_OF_RGB_LEDS];
 
     private boolean showGraph;
     private GraphRenderer graphRenderer;
     private DataViewer dataViewer;
     private List<GraphListener> graphListeners;
 
-    RainbowHatBoardView(RainbowHat rainbowHat) {
+    BoardView(IoTWorkbench workbench) {
 
         super();
         setBackground(Color.WHITE);
 
-        this.rainbowHat = rainbowHat;
+        this.workbench = workbench;
 
         buttonA = new Rectangle(72, 270, 72, 22);
         buttonB = new Rectangle(155, 270, 72, 22);
@@ -182,7 +182,7 @@ class RainbowHatBoardView extends JPanel {
             g2.fill(buttonC);
         }
 
-        String display = rainbowHat.getAlphanumericString();
+        String display = workbench.getAlphanumericString();
         for (int i = 0; i < display.length(); i++) {
             String s = Character.toString(display.charAt(i));
             if (!"-".equals(s)) {
@@ -206,33 +206,49 @@ class RainbowHatBoardView extends JPanel {
 
         if (showGraph) {
             graphRenderer.drawFrame(g2);
-            if (rainbowHat.getTime() > graphRenderer.getXmax()) {
+            if (workbench.getTime() > graphRenderer.getXmax()) {
                 graphRenderer.doubleXmax();
             }
             switch (graphRenderer.getDataType()) {
                 case 0: // temperature (Celsius)
-                    if (rainbowHat.getTemperature() > graphRenderer.getYmax()) {
+                    if (workbench.getTemperature() > graphRenderer.getYmax()) {
                         graphRenderer.increaseYmax();
-                    } else if (rainbowHat.getTemperature() < graphRenderer.getYmin()) {
+                    } else if (workbench.getTemperature() < graphRenderer.getYmin()) {
                         graphRenderer.decreaseYmin();
                     }
-                    graphRenderer.drawData(g2, rainbowHat.getTemperatureDataStore(), "Temperature", false);
+                    graphRenderer.drawData(g2, workbench.getTemperatureDataStore(), "Temperature", false);
                     break;
                 case 1: // barometric pressure
-                    if (rainbowHat.getBarometricPressure() > graphRenderer.getYmax()) {
+                    if (workbench.getBarometricPressure() > graphRenderer.getYmax()) {
                         graphRenderer.increaseYmax();
-                    } else if (rainbowHat.getBarometricPressure() < graphRenderer.getYmin()) {
+                    } else if (workbench.getBarometricPressure() < graphRenderer.getYmin()) {
                         graphRenderer.decreaseYmin();
                     }
-                    graphRenderer.drawData(g2, rainbowHat.getBarometricPressureDataStore(), "Barometric Pressure", false);
+                    graphRenderer.drawData(g2, workbench.getBarometricPressureDataStore(), "Barometric Pressure", false);
                     break;
                 case 2: // relative humidity
-                    if (rainbowHat.getRelativeHumidity() > graphRenderer.getYmax()) {
+                    if (workbench.getRelativeHumidity() > graphRenderer.getYmax()) {
                         graphRenderer.increaseYmax();
-                    } else if (rainbowHat.getRelativeHumidity() < graphRenderer.getYmin()) {
+                    } else if (workbench.getRelativeHumidity() < graphRenderer.getYmin()) {
                         graphRenderer.decreaseYmin();
                     }
-                    graphRenderer.drawData(g2, rainbowHat.getRelativeHumidityDataStore(), "Relative Humidity", false);
+                    graphRenderer.drawData(g2, workbench.getRelativeHumidityDataStore(), "Relative Humidity", false);
+                    break;
+                case 3: // visible light
+                    if (workbench.getVisibleLux() > graphRenderer.getYmax()) {
+                        graphRenderer.increaseYmax();
+                    } else if (workbench.getVisibleLux() < graphRenderer.getYmin()) {
+                        graphRenderer.decreaseYmin();
+                    }
+                    graphRenderer.drawData(g2, workbench.getVisibleLuxDataStore(), "Visible Light", false);
+                    break;
+                case 4: // infrared light
+                    if (workbench.getInfraredLux() > graphRenderer.getYmax()) {
+                        graphRenderer.increaseYmax();
+                    } else if (workbench.getInfraredLux() < graphRenderer.getYmin()) {
+                        graphRenderer.decreaseYmin();
+                    }
+                    graphRenderer.drawData(g2, workbench.getInfraredLuxDataStore(), "Infrared Light", false);
                     break;
             }
         }
@@ -281,7 +297,7 @@ class RainbowHatBoardView extends JPanel {
         boolean found = false;
         for (int i = 0; i < leds.length; i++) {
             if (leds[i].contains(x2, y2)) {
-                rainbowHat.chooseLedColor(SwingUtilities.getWindowAncestor(this), i);
+                workbench.chooseLedColor(SwingUtilities.getWindowAncestor(this), i);
                 found = true;
                 break;
             }
@@ -294,11 +310,11 @@ class RainbowHatBoardView extends JPanel {
 
     private void setLatchingSwitch(int x, int y) {
         if (redLed.contains(x, y)) {
-            rainbowHat.setRedLedState(!rainbowHat.getRedLedState(), true);
+            workbench.setRedLedState(!workbench.getRedLedState(), true);
         } else if (greenLed.contains(x, y)) {
-            rainbowHat.setGreenLedState(!rainbowHat.getGreenLedState(), true);
+            workbench.setGreenLedState(!workbench.getGreenLedState(), true);
         } else if (blueLed.contains(x, y)) {
-            rainbowHat.setBlueLedState(!rainbowHat.getBlueLedState(), true);
+            workbench.setBlueLedState(!workbench.getBlueLedState(), true);
         }
     }
 
@@ -319,7 +335,7 @@ class RainbowHatBoardView extends JPanel {
                 notifyGraphListeners(GraphEvent.GRAPH_CLOSED);
             } else if (graphRenderer.buttonContains(GraphRenderer.DATA_BUTTON, x, y)) {
                 if (dataViewer == null) {
-                    dataViewer = new DataViewer(rainbowHat);
+                    dataViewer = new DataViewer(workbench);
                 }
                 dataViewer.showDataOfType(graphRenderer.getDataType());
             } else if (graphRenderer.buttonContains(GraphRenderer.X_EXPAND_BUTTON, x, y)) {
@@ -356,13 +372,19 @@ class RainbowHatBoardView extends JPanel {
         List<SensorDataPoint> data = null;
         switch (type) {
             case 0:
-                data = rainbowHat.getTemperatureDataStore();
+                data = workbench.getTemperatureDataStore();
                 break;
             case 1:
-                data = rainbowHat.getBarometricPressureDataStore();
+                data = workbench.getBarometricPressureDataStore();
                 break;
             case 2:
-                data = rainbowHat.getRelativeHumidityDataStore();
+                data = workbench.getRelativeHumidityDataStore();
+                break;
+            case 3:
+                data = workbench.getVisibleLuxDataStore();
+                break;
+            case 4:
+                data = workbench.getInfraredLuxDataStore();
                 break;
         }
         if (data != null) {
@@ -390,13 +412,13 @@ class RainbowHatBoardView extends JPanel {
 
     private void setMomentarySwitch(int x, int y, boolean on) {
         if (buttonA.contains(x, y)) {
-            rainbowHat.touchA(on);
+            workbench.touchA(on);
             buttonAPressed = on;
         } else if (buttonB.contains(x, y)) {
-            rainbowHat.touchB(on);
+            workbench.touchB(on);
             buttonBPressed = on;
         } else if (buttonC.contains(x, y)) {
-            rainbowHat.touchC(on);
+            workbench.touchC(on);
             buttonCPressed = on;
         }
     }
@@ -448,10 +470,10 @@ class RainbowHatBoardView extends JPanel {
         }
 
         if (label == null && temperatureSensor.contains(x2, y2)) {
-            label = "Temperature sensor (" + decimalFormat.format(rainbowHat.getTemperature()) + "\u00B0C)";
+            label = "Temperature sensor (" + decimalFormat.format(workbench.getTemperature()) + "\u00B0C)";
         }
         if (label == null && barometricPressureSensor.contains(x2, y2)) {
-            label = "Barometric pressure sensor (" + decimalFormat.format(rainbowHat.getBarometricPressure()) + "hPa)";
+            label = "Barometric pressure sensor (" + decimalFormat.format(workbench.getBarometricPressure()) + "hPa)";
         }
 
         if (label == null) {

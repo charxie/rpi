@@ -6,10 +6,14 @@ import com.pi4j.io.i2c.I2CFactory;
 
 import java.io.IOException;
 
+/**
+ * Adopted from https://github.com/ControlEverythingCommunity/TSL2561/blob/master/Java/TSL2561.java
+ */
+
 public class Tsl2561 {
 
-    private double full;
-    private double infrared;
+    private double fullLux;
+    private double infraredLux;
     private I2CDevice device;
 
     public Tsl2561() throws IOException, I2CFactory.UnsupportedBusNumberException {
@@ -33,27 +37,27 @@ public class Tsl2561 {
         device.read(0x0C | 0x80, data, 0, 4);
 
         // Convert the data
-        full = ((data[1] & 0xFF) * 256 + (data[0] & 0xFF));
-        infrared = ((data[3] & 0xFF) * 256 + (data[2] & 0xFF));
+        fullLux = ((data[1] & 0xFF) * 256 + (data[0] & 0xFF));
+        infraredLux = ((data[3] & 0xFF) * 256 + (data[2] & 0xFF));
 
     }
 
     public void printf() {
-        System.out.printf("Full Spectrum(IR + Visible) : %.2f lux %n", full);
-        System.out.printf("Infrared Value : %.2f lux %n", infrared);
-        System.out.printf("Visible Value : %.2f lux %n", full - infrared);
+        System.out.printf("TSL2561: Full Spectrum(IR + Visible) : %.2f lux %n", fullLux);
+        System.out.printf("TSL2561: Infrared Value : %.2f lux %n", infraredLux);
+        System.out.printf("TSL2561: Visible Value : %.2f lux %n", fullLux - infraredLux);
     }
 
-    public double getFull() {
-        return full;
+    public double getFullLux() {
+        return fullLux;
     }
 
-    public double getVisible() {
-        return full - infrared;
+    public double getVisibleLux() {
+        return fullLux - infraredLux;
     }
 
-    public double getInfrared() {
-        return infrared;
+    public double getInfraredLux() {
+        return infraredLux;
     }
 
 }

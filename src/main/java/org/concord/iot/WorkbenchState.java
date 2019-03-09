@@ -6,7 +6,7 @@ import java.util.ArrayList;
  * @author Charles Xie
  */
 
-public class RainbowHatState {
+public class WorkbenchState {
 
     public final static int NUMBER_OF_RGB_LEDS = 7;
 
@@ -19,14 +19,18 @@ public class RainbowHatState {
 
     public float temperature = 20; // Celsius
     public float barometricPressure = 1000; // hPa
-    public float relativeHumidity = 0.2f;
+    public float relativeHumidity = 20; // percent
+    public float visibleLux = 200; // lux
+    public float infraredLux = 100; // lux
     public boolean allowTemperatureTransmission;
     public boolean allowBarometricPressureTransmission;
     public boolean allowRelativeHumidityTransmission;
+    public boolean allowVisibleLuxTransmission;
+    public boolean allowInfraredLuxTransmission;
 
     public String displayMode = "Temperature";
 
-    public RainbowHatState() {
+    public WorkbenchState() {
         for (int i = 0; i < NUMBER_OF_RGB_LEDS; i++) {
             ArrayList<Integer> rgb = new ArrayList<>(3);
             rgb.add(0);
@@ -90,6 +94,38 @@ public class RainbowHatState {
 
     public void setRelativeHumidity(float relativeHumidity) {
         this.relativeHumidity = relativeHumidity;
+    }
+
+    public boolean getAllowVisibleLuxTransmission() {
+        return allowVisibleLuxTransmission;
+    }
+
+    public void setAllowVisibleLuxTransmission(boolean allowVisibleLuxTransmission) {
+        this.allowVisibleLuxTransmission = allowVisibleLuxTransmission;
+    }
+
+    public float getVisibleLux() {
+        return visibleLux;
+    }
+
+    public void setVisibleLux(float visibleLux) {
+        this.visibleLux = visibleLux;
+    }
+
+    public boolean getAllowInfraredLuxTransmission() {
+        return allowInfraredLuxTransmission;
+    }
+
+    public void setAllowInfraredLuxTransmission(boolean allowInfraredLuxTransmission) {
+        this.allowInfraredLuxTransmission = allowInfraredLuxTransmission;
+    }
+
+    public float getInfraredLux() {
+        return infraredLux;
+    }
+
+    public void setInfraredLux(float infraredLux) {
+        this.infraredLux = infraredLux;
     }
 
     public ArrayList<ArrayList<Integer>> getRainbowRgb() {

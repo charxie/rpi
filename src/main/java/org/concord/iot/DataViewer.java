@@ -14,22 +14,28 @@ import javax.swing.table.DefaultTableModel;
 
 class DataViewer {
 
-    private RainbowHat rainbowHat;
+    private IoTWorkbench workbench;
 
-    DataViewer(RainbowHat rainbowHat) {
-        this.rainbowHat = rainbowHat;
+    DataViewer(IoTWorkbench workbench) {
+        this.workbench = workbench;
     }
 
     void showDataOfType(byte type) {
         switch (type) {
             case 0:
-                showData("Temperature", rainbowHat.getTemperatureDataStore());
+                showData("Temperature", workbench.getTemperatureDataStore());
                 break;
             case 1:
-                showData("Barometric Pressure", rainbowHat.getBarometricPressureDataStore());
+                showData("Barometric Pressure", workbench.getBarometricPressureDataStore());
                 break;
             case 2:
-                showData("Relative Humidity", rainbowHat.getRelativeHumidityDataStore());
+                showData("Relative Humidity", workbench.getRelativeHumidityDataStore());
+                break;
+            case 3:
+                showData("Visible Light", workbench.getVisibleLuxDataStore());
+                break;
+            case 4:
+                showData("Infrared Light", workbench.getInfraredLuxDataStore());
                 break;
         }
     }
@@ -37,7 +43,7 @@ class DataViewer {
     private void showData(String name, List<SensorDataPoint> data) {
         int n = data.size();
         if (n < 1) {
-            JOptionPane.showMessageDialog(JOptionPane.getFrameForComponent(rainbowHat.boardView), "No data has been collected.", "No data", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(JOptionPane.getFrameForComponent(workbench.boardView), "No data has been collected.", "No data", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
         String[] header = new String[]{"Time", name};
@@ -51,7 +57,7 @@ class DataViewer {
     }
 
     private void showDataWindow(String title, Object[][] column, String[] header) {
-        final JDialog dataWindow = new JDialog(JOptionPane.getFrameForComponent(rainbowHat.boardView), title, true);
+        final JDialog dataWindow = new JDialog(JOptionPane.getFrameForComponent(workbench.boardView), title, true);
         dataWindow.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         final JTable table = new JTable(column, header);
         table.setModel(new DefaultTableModel(column, header) {
@@ -69,7 +75,7 @@ class DataViewer {
                 ActionEvent ae = new ActionEvent(table, ActionEvent.ACTION_PERFORMED, "copy");
                 if (ae != null) {
                     table.getActionMap().get(ae.getActionCommand()).actionPerformed(ae);
-                    JOptionPane.showMessageDialog(JOptionPane.getFrameForComponent(rainbowHat.boardView), "The data is now ready for pasting.", "Copy Data", JOptionPane.INFORMATION_MESSAGE);
+                    JOptionPane.showMessageDialog(JOptionPane.getFrameForComponent(workbench.boardView), "The data is now ready for pasting.", "Copy Data", JOptionPane.INFORMATION_MESSAGE);
                     table.clearSelection();
                 }
             }
@@ -84,7 +90,7 @@ class DataViewer {
         });
         p.add(button);
         dataWindow.pack();
-        dataWindow.setLocationRelativeTo(rainbowHat.boardView);
+        dataWindow.setLocationRelativeTo(workbench.boardView);
         dataWindow.setVisible(true);
     }
 

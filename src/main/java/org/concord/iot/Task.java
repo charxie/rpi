@@ -9,12 +9,12 @@ public class Task {
     private String name;
     private volatile boolean stopped = true;
     private volatile int index;
-    private RainbowHat hat;
+    private IoTWorkbench workbench;
     private Runnable runnable;
 
-    public Task(String name, RainbowHat hat) {
+    public Task(String name, IoTWorkbench workbench) {
         this.name = name;
-        this.hat = hat;
+        this.workbench = workbench;
     }
 
     public String getName() {
@@ -46,7 +46,7 @@ public class Task {
     }
 
     public void run() {
-        hat.submitTask(runnable);
+        workbench.submitTask(runnable);
     }
 
 }

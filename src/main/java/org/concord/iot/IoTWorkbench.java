@@ -9,10 +9,7 @@ import com.pi4j.io.gpio.event.GpioPinListenerDigital;
 import com.pi4j.io.i2c.I2CBus;
 import com.pi4j.wiringpi.Gpio;
 import com.pi4j.wiringpi.SoftPwm;
-import org.concord.iot.drivers.AlphanumericDisplay;
-import org.concord.iot.drivers.Apa102;
-import org.concord.iot.drivers.Bme280;
-import org.concord.iot.drivers.Bmp280;
+import org.concord.iot.drivers.*;
 import org.concord.iot.listeners.ThreadPoolEvent;
 import org.concord.iot.listeners.ThreadPoolListener;
 
@@ -28,12 +25,10 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.prefs.Preferences;
 
 /**
- * This is an emulator of the Rainbow HAT for Raspberry Pi 3.
- *
  * @author Charles Xie
  */
 
-public class RainbowHat {
+public class IoTWorkbench {
 
     public final static String BRAND_NAME = "IoT Workbench";
     public final static String VERSION_NUMBER = "0.0.1";
@@ -51,6 +46,7 @@ public class RainbowHat {
     Apa102 apa102;
     private Bmp280 bmp280;
     private Bme280 bme280;
+    private Tsl2561 tsl2561;
     private AlphanumericDisplay display;
     String displayMode = "None";
 
@@ -61,23 +57,29 @@ public class RainbowHat {
     private double temperature;
     private double barometricPressure;
     private double relativeHumidity;
+    private double visibleLux;
+    private double infraredLux;
     boolean allowTemperatureTransmission;
     boolean allowBarometricPressureTransmission;
     boolean allowRelativeHumidityTransmission;
+    boolean allowVisibleLuxTransmission;
+    boolean allowInfraredLuxTransmission;
     private String alphanumericString = "----";
 
     User user;
     TaskFactory taskFactory;
-    RainbowHatBoardView boardView;
-    RainbowHatGui gui;
+    BoardView boardView;
+    WorkbenchGui gui;
     private ThreadPoolExecutor threadPool;
     private List<ThreadPoolListener> threadPoolListeners;
 
     private List<SensorDataPoint> temperatureDataStore;
     private List<SensorDataPoint> barometricPressureDataStore;
     private List<SensorDataPoint> relativeHumidityDataStore;
+    private List<SensorDataPoint> visibleLuxDataStore;
+    private List<SensorDataPoint> infraredLuxDataStore;
 
-    public RainbowHat() {
+    public IoTWorkbench() {
         init();
     }
 
@@ -104,8 +106,8 @@ public class RainbowHat {
         greenLed = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_24, "Green LED", PinState.LOW);
         blueLed = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_25, "Blue LED", PinState.LOW);
 
-        final Preferences pref = Preferences.userNodeForPackage(RainbowHat.class);
-        apa102 = new Apa102(pref.getInt("number_of_rgb_leds", RainbowHatState.NUMBER_OF_RGB_LEDS));
+        final Preferences pref = Preferences.userNodeForPackage(IoTWorkbench.class);
+        apa102 = new Apa102(pref.getInt("number_of_rgb_leds", WorkbenchState.NUMBER_OF_RGB_LEDS));
         //apa102.setDefaultRainbow(); // test
 
         try {
@@ -137,12 +139,21 @@ public class RainbowHat {
             bme280 = null;
         }
 
+        try {
+            tsl2561 = new Tsl2561();
+        } catch (Exception e) {
+            e.printStackTrace();
+            tsl2561 = null;
+        }
+
         setupButtons();
         startSensorDataCollection();
 
         temperatureDataStore = new ArrayList<>();
         barometricPressureDataStore = new ArrayList<>();
         relativeHumidityDataStore = new ArrayList<>();
+        visibleLuxDataStore = new ArrayList<>();
+        infraredLuxDataStore = new ArrayList<>();
 
         taskFactory = new TaskFactory(this);
 
@@ -159,7 +170,7 @@ public class RainbowHat {
 
     public void setNumberOfRgbLeds(int numberOfRgbLeds) {
         apa102.setNumberOfPixels(numberOfRgbLeds);
-        final Preferences pref = Preferences.userNodeForPackage(RainbowHat.class);
+        final Preferences pref = Preferences.userNodeForPackage(IoTWorkbench.class);
         pref.putInt("number_of_rgb_leds", numberOfRgbLeds);
     }
 
@@ -454,6 +465,21 @@ public class RainbowHat {
                             database.child("barometricPressure").setValue(barometricPressure, null);
                         }
                     }
+                    if (tsl2561 != null) {
+                        tsl2561.read();
+                        tsl2561.printf();
+                        visibleLux = tsl2561.getVisibleLux();
+                        infraredLux = tsl2561.getInfraredLux();
+                        System.out.println("***" + currentTime + "=" + visibleLux);
+                        visibleLuxDataStore.add(new SensorDataPoint(currentTime, visibleLux));
+                        infraredLuxDataStore.add(new SensorDataPoint(currentTime, infraredLux));
+                        if (allowVisibleLuxTransmission) {
+                            database.child("visibleLux").setValue(visibleLux, null);
+                        }
+                        if (allowInfraredLuxTransmission) {
+                            database.child("infraredLux").setValue(infraredLux, null);
+                        }
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -519,17 +545,51 @@ public class RainbowHat {
         return relativeHumidityDataStore;
     }
 
+    public void setAllowVisibleLuxTransmission(boolean b) {
+        allowVisibleLuxTransmission = b;
+        database.child("allowVisibleLightTransmission").setValue(b, null);
+    }
+
+    public boolean getAllowVisibleLuxTransmission() {
+        return allowVisibleLuxTransmission;
+    }
+
+    public double getVisibleLux() {
+        return visibleLux;
+    }
+
+    public List<SensorDataPoint> getVisibleLuxDataStore() {
+        return visibleLuxDataStore;
+    }
+
+    public void setAllowInfaredLuxTransmission(boolean b) {
+        allowInfraredLuxTransmission = b;
+        database.child("allowInfraredLightTransmission").setValue(b, null);
+    }
+
+    public boolean getAllowInfraredLuxTransmission() {
+        return allowInfraredLuxTransmission;
+    }
+
+    public double getInfraredLux() {
+        return infraredLux;
+    }
+
+    public List<SensorDataPoint> getInfraredLuxDataStore() {
+        return infraredLuxDataStore;
+    }
+
     private void synchronizeWithCloud() {
         try {
             FileInputStream serviceAccount = new FileInputStream("raspberry-pi-java-firebase-adminsdk-eeeo1-f7e5dc2054.json");
             FirebaseOptions options = new FirebaseOptions.Builder().setCredentials(GoogleCredentials.fromStream(serviceAccount)).setDatabaseUrl("https://raspberry-pi-java.firebaseio.com").build();
             FirebaseApp.initializeApp(options);
-            database = FirebaseDatabase.getInstance().getReference("rainbow_hat_" + user.getName());
-            //database.setValue(new RainbowHatState(), null);
+            database = FirebaseDatabase.getInstance().getReference("iot_workbench_" + user.getName());
+            // database.setValue(new WorkbenchState(), null);
             database.addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) { // This method is called once with the initial value and again whenever data at this location is updated.
-                    DatabaseHandler.handle(RainbowHat.this, dataSnapshot);
+                    DatabaseHandler.handle(IoTWorkbench.this, dataSnapshot);
                 }
 
                 @Override
@@ -569,15 +629,15 @@ public class RainbowHat {
     }
 
     private void createAndShowGui() {
-        boardView = new RainbowHatBoardView(this);
-        gui = new RainbowHatGui();
+        boardView = new BoardView(this);
+        gui = new WorkbenchGui();
         gui.createAndShowGui(this);
         boardView.addGraphListener(gui);
     }
 
     void setLedColorsOnBoardView() {
         if (boardView != null) {
-            for (int i = 0; i < RainbowHatState.NUMBER_OF_RGB_LEDS; i++) {
+            for (int i = 0; i < WorkbenchState.NUMBER_OF_RGB_LEDS; i++) {
                 boardView.setLedColor(i, apa102.getColor(i));
             }
         }
@@ -587,7 +647,7 @@ public class RainbowHat {
         apa102.setDefaultRainbow();
         setLedColorsOnBoardView();
         ArrayList<ArrayList<Integer>> list = new ArrayList<>();
-        for (int i = 0; i < RainbowHatState.NUMBER_OF_RGB_LEDS; i++) { // only save the state of the seven LEDs on the HAT
+        for (int i = 0; i < WorkbenchState.NUMBER_OF_RGB_LEDS; i++) { // only save the state of the seven LEDs on the HAT
             list.add(getRgb(apa102.getColor(i)));
         }
         database.child("rainbowRgb").setValue(list, null); // TODO: There must be a way to set only the element of the list
@@ -609,7 +669,7 @@ public class RainbowHat {
                 boardView.setLedColor(i, c);
             }
             ArrayList<ArrayList<Integer>> list = new ArrayList<>();
-            for (int j = 0; j < RainbowHatState.NUMBER_OF_RGB_LEDS; j++) {
+            for (int j = 0; j < WorkbenchState.NUMBER_OF_RGB_LEDS; j++) {
                 list.add(i == j ? getRgb(c) : getRgb(apa102.getColor(j)));
             }
             database.child("rainbowRgb").setValue(list, null); // TODO: There must be a way to set only the element of the list
@@ -618,7 +678,7 @@ public class RainbowHat {
 
     public static void main(final String[] args) {
 
-        final RainbowHat rainbowHat = new RainbowHat();
+        final IoTWorkbench ioTWorkbench = new IoTWorkbench();
 
         if (GraphicsEnvironment.isHeadless()) {
 
@@ -629,7 +689,7 @@ public class RainbowHat {
                 System.out.println("You typed: " + line);
             }
             scanner.close();
-            rainbowHat.destroy();
+            ioTWorkbench.destroy();
             System.exit(0); // call this to exit and avoid a broken pipe error
 
         } else {
@@ -638,7 +698,7 @@ public class RainbowHat {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            EventQueue.invokeLater(() -> rainbowHat.createAndShowGui());
+            EventQueue.invokeLater(() -> ioTWorkbench.createAndShowGui());
         }
 
     }

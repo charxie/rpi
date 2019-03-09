@@ -32,7 +32,7 @@ class GraphRenderer {
     final static byte TIME_UNIT_MINUTE = 1;
     final static byte TIME_UNIT_SECOND = 2;
 
-    final static String[] DATA_TYPES = new String[]{"Temperature (" + '\u2103' + ")", "Barometric pressure (hPa)", "Relative humidity (%)"};
+    final static String[] DATA_TYPES = new String[]{"Temperature (" + '\u2103' + ")", "Barometric pressure (hPa)", "Relative humidity (%)", "Visible light (lux)", "Infrared light (lux)"};
 
     private byte dataType = 0;
     private byte timeUnit = TIME_UNIT_SECOND;
