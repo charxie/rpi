@@ -116,6 +116,7 @@ class WorkbenchGui implements GraphListener, ThreadPoolListener {
         final JMenuItem relativeHumiditySensorMenuItem = new JCheckBoxMenuItem("Allow Transmission of Relative Humidity Data");
         final JMenuItem visibleLightSensorMenuItem = new JCheckBoxMenuItem("Allow Transmission of Visible Light Data");
         final JMenuItem infraredLightSensorMenuItem = new JCheckBoxMenuItem("Allow Transmission of Infrared Light Data");
+        final JMenuItem distanceSensorMenuItem = new JCheckBoxMenuItem("Allow Transmission of Distance Data");
         sensorsMenu.getPopupMenu().addPopupMenuListener(new PopupMenuListener() {
             @Override
             public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
@@ -125,6 +126,7 @@ class WorkbenchGui implements GraphListener, ThreadPoolListener {
                 Util.setSelectedSilently(relativeHumiditySensorMenuItem, workbench.getAllowRelativeHumidityTransmission());
                 Util.setSelectedSilently(visibleLightSensorMenuItem, workbench.getAllowVisibleLuxTransmission());
                 Util.setSelectedSilently(infraredLightSensorMenuItem, workbench.getAllowInfraredLuxTransmission());
+                Util.setSelectedSilently(distanceSensorMenuItem, workbench.getAllowDistanceTransmission());
             }
 
             @Override
@@ -172,6 +174,12 @@ class WorkbenchGui implements GraphListener, ThreadPoolListener {
             workbench.setAllowInfraredLuxTransmission(e.getStateChange() == ItemEvent.SELECTED);
         });
         sensorsMenu.add(infraredLightSensorMenuItem);
+
+        distanceSensorMenuItem.setToolTipText("Permit the distance data to be uploaded");
+        distanceSensorMenuItem.addItemListener(e -> {
+            workbench.setAllowDistanceTransmission(e.getStateChange() == ItemEvent.SELECTED);
+        });
+        sensorsMenu.add(distanceSensorMenuItem);
 
         JMenu examplesMenu = new JMenu("Examples");
         examplesMenu.setMnemonic(KeyEvent.VK_E);

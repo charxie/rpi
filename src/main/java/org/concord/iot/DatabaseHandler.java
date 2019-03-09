@@ -21,6 +21,7 @@ class DatabaseHandler {
         workbench.allowRelativeHumidityTransmission = state.allowRelativeHumidityTransmission;
         workbench.allowVisibleLuxTransmission = state.allowVisibleLuxTransmission;
         workbench.allowInfraredLuxTransmission = state.allowInfraredLuxTransmission;
+        workbench.allowDistanceTransmission = state.allowDistanceTransmission;
 
         if (state.redLed != workbench.redLed.isHigh()) { // change only when the remote state is not the same as the local state
             workbench.setRedLedState(state.redLed, false);

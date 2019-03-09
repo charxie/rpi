@@ -43,10 +43,12 @@ public class IoTWorkbench {
     GpioPinDigitalOutput greenLed;
     GpioPinDigitalOutput blueLed;
     GpioPinDigitalOutput buzzer;
-    Apa102 apa102;
-    private Bmp280 bmp280;
-    private Bme280 bme280;
-    private Tsl2561 tsl2561;
+    APA102 apa102;
+    private BMP280 bmp280;
+    private BME280 bme280;
+    private TSL2561 tsl2561;
+    private VL53L0X vl53l0x;
+    private VCNL4010 vcnl4010;
     private AlphanumericDisplay display;
     String displayMode = "None";
 
@@ -59,11 +61,13 @@ public class IoTWorkbench {
     private double relativeHumidity;
     private double visibleLux;
     private double infraredLux;
+    private int distance;
     boolean allowTemperatureTransmission;
     boolean allowBarometricPressureTransmission;
     boolean allowRelativeHumidityTransmission;
     boolean allowVisibleLuxTransmission;
     boolean allowInfraredLuxTransmission;
+    boolean allowDistanceTransmission;
     private String alphanumericString = "----";
 
     User user;
@@ -78,6 +82,7 @@ public class IoTWorkbench {
     private List<SensorDataPoint> relativeHumidityDataStore;
     private List<SensorDataPoint> visibleLuxDataStore;
     private List<SensorDataPoint> infraredLuxDataStore;
+    private List<SensorDataPoint> distanceDataStore;
 
     public IoTWorkbench() {
         init();
@@ -107,7 +112,7 @@ public class IoTWorkbench {
         blueLed = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_25, "Blue LED", PinState.LOW);
 
         final Preferences pref = Preferences.userNodeForPackage(IoTWorkbench.class);
-        apa102 = new Apa102(pref.getInt("number_of_rgb_leds", WorkbenchState.NUMBER_OF_RGB_LEDS));
+        apa102 = new APA102(pref.getInt("number_of_rgb_leds", WorkbenchState.NUMBER_OF_RGB_LEDS));
         //apa102.setDefaultRainbow(); // test
 
         try {
@@ -120,30 +125,44 @@ public class IoTWorkbench {
         }
 
         try {
-            bmp280 = new Bmp280(Bmp280.Protocol.I2C, Bmp280.ADDR_SDO_2_VDDIO, I2CBus.BUS_1);
+            bmp280 = new BMP280(BMP280.Protocol.I2C, BMP280.ADDR_SDO_2_VDDIO, I2CBus.BUS_1);
             bmp280.setIndoorNavigationMode();
-            bmp280.setMode(Bmp280.Mode.NORMAL, true);
-            bmp280.setTemperatureSampleRate(Bmp280.Temperature_Sample_Resolution.TWO, true);
-            bmp280.setPressureSampleRate(Bmp280.Pressure_Sample_Resolution.SIXTEEN, true);
-            bmp280.setIIRFilter(Bmp280.IIRFilter.SIXTEEN, true);
-            bmp280.setStandbyTime(Bmp280.Standby_Time.MS_POINT_5, true);
+            bmp280.setMode(BMP280.Mode.NORMAL, true);
+            bmp280.setTemperatureSampleRate(BMP280.Temperature_Sample_Resolution.TWO, true);
+            bmp280.setPressureSampleRate(BMP280.Pressure_Sample_Resolution.SIXTEEN, true);
+            bmp280.setIIRFilter(BMP280.IIRFilter.SIXTEEN, true);
+            bmp280.setStandbyTime(BMP280.Standby_Time.MS_POINT_5, true);
         } catch (Exception e) {
             e.printStackTrace();
             bmp280 = null;
         }
 
         try {
-            bme280 = new Bme280();
+            bme280 = new BME280();
         } catch (Exception e) {
             e.printStackTrace();
             bme280 = null;
         }
 
         try {
-            tsl2561 = new Tsl2561();
+            tsl2561 = new TSL2561();
         } catch (Exception e) {
             e.printStackTrace();
             tsl2561 = null;
+        }
+
+        try {
+            vl53l0x = new VL53L0X();
+        } catch (Exception e) {
+            e.printStackTrace();
+            vl53l0x = null;
+        }
+
+        try {
+            vcnl4010 = new VCNL4010();
+        } catch (Exception e) {
+            e.printStackTrace();
+            vcnl4010 = null;
         }
 
         setupButtons();
@@ -154,6 +173,7 @@ public class IoTWorkbench {
         relativeHumidityDataStore = new ArrayList<>();
         visibleLuxDataStore = new ArrayList<>();
         infraredLuxDataStore = new ArrayList<>();
+        distanceDataStore = new ArrayList<>();
 
         taskFactory = new TaskFactory(this);
 
@@ -432,8 +452,8 @@ public class IoTWorkbench {
                     currentTime = (double) (System.currentTimeMillis() - timeZeroMillis) / (double) SENSOR_DATA_COLLECTION_INTERVAL;
                     if (bmp280 != null) {
                         double[] results = bmp280.sampleDeviceReads();
-                        temperature = results[Bmp280.TEMP_VAL_C];
-                        barometricPressure = results[Bmp280.PRES_VAL];
+                        temperature = results[BMP280.TEMP_VAL_C];
+                        barometricPressure = results[BMP280.PRES_VAL];
                         System.out.printf("BMP280: Temperature in Celsius : %.2f C %n", temperature);
                         System.out.printf("BMP280: Pressure : %.2f hPa %n", barometricPressure);
                         temperatureDataStore.add(new SensorDataPoint(currentTime, temperature));
@@ -470,7 +490,6 @@ public class IoTWorkbench {
                         tsl2561.printf();
                         visibleLux = tsl2561.getVisibleLux();
                         infraredLux = tsl2561.getInfraredLux();
-                        System.out.println("***" + currentTime + "=" + visibleLux);
                         visibleLuxDataStore.add(new SensorDataPoint(currentTime, visibleLux));
                         infraredLuxDataStore.add(new SensorDataPoint(currentTime, infraredLux));
                         if (allowVisibleLuxTransmission) {
@@ -479,6 +498,18 @@ public class IoTWorkbench {
                         if (allowInfraredLuxTransmission) {
                             database.child("infraredLux").setValue(infraredLux, null);
                         }
+                    }
+                    if (vl53l0x != null) {
+                        distance = vl53l0x.range();
+                        System.out.printf("VL53L0X: Distance : %d mm %n", distance);
+                        distanceDataStore.add(new SensorDataPoint(currentTime, distance));
+                        if (allowDistanceTransmission) {
+                            database.child("distance").setValue(distance, null);
+                        }
+                    }
+                    if (vcnl4010 != null) {
+                        vcnl4010.read();
+                        vcnl4010.printf();
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -577,6 +608,23 @@ public class IoTWorkbench {
 
     public List<SensorDataPoint> getInfraredLuxDataStore() {
         return infraredLuxDataStore;
+    }
+
+    public void setAllowDistanceTransmission(boolean b) {
+        allowDistanceTransmission = b;
+        database.child("allowDistanceTransmission").setValue(b, null);
+    }
+
+    public boolean getAllowDistanceTransmission() {
+        return allowDistanceTransmission;
+    }
+
+    public int getDistance() {
+        return distance;
+    }
+
+    public List<SensorDataPoint> getDistanceDataStore() {
+        return distanceDataStore;
     }
 
     private void synchronizeWithCloud() {

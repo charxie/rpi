@@ -10,13 +10,13 @@ import java.io.IOException;
  * Adopted from https://github.com/ControlEverythingCommunity/TSL2561/blob/master/Java/TSL2561.java
  */
 
-public class Tsl2561 {
+public class TSL2561 {
 
     private double fullLux;
     private double infraredLux;
     private I2CDevice device;
 
-    public Tsl2561() throws IOException, I2CFactory.UnsupportedBusNumberException {
+    public TSL2561() throws IOException, I2CFactory.UnsupportedBusNumberException {
         I2CBus Bus = I2CFactory.getInstance(I2CBus.BUS_1);
         device = Bus.getDevice(0x39); // TSL2561 I2C address is 0x39(57)
     }

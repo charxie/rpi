@@ -21,7 +21,7 @@ import java.util.Arrays;
  * @author Charles Xie
  */
 
-public class Apa102 {
+public class APA102 {
 
     private final static byte[] START_FRAME = new byte[]{0, 0, 0, 0};
     private final static byte[] END_FRAME = new byte[]{1, 1, 1, 1};
@@ -32,7 +32,7 @@ public class Apa102 {
     private byte[][] data; // keep the data as the state of this driver
     private float shift;
 
-    public Apa102(int numberOfPixels) {
+    public APA102(int numberOfPixels) {
         this.numberOfPixels = numberOfPixels;
         try {
             spi = SpiFactory.getInstance(SpiChannel.CS0, SpiDevice.DEFAULT_SPI_SPEED, SpiDevice.DEFAULT_SPI_MODE);

@@ -37,6 +37,9 @@ class DataViewer {
             case 4:
                 showData("Infrared Light", workbench.getInfraredLuxDataStore());
                 break;
+            case 5:
+                showData("Distance", workbench.getDistanceDataStore());
+                break;
         }
     }
 

@@ -14,7 +14,7 @@ import com.pi4j.io.spi.SpiFactory;
  * jamespateras@gmail.com
  */
 
-public class Bmp280 {
+public class BMP280 {
 
     /* The 7-bit device address is 111011x. The 6 MSB bits are fixed. The last bit is changeable by
      * SDO value and can be changed during operation. Connecting SDO to GND results in slave address
@@ -448,7 +448,7 @@ public class Bmp280 {
 
     /* ----------- Start of Runtime Methods ----------- */
 
-    public Bmp280(Protocol protocol, int deviceID, int i2cBusID) throws Exception {
+    public BMP280(Protocol protocol, int deviceID, int i2cBusID) throws Exception {
         this.protocol = protocol;
 
         if (protocol == Protocol.I2C) {

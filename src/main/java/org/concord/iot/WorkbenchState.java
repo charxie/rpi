@@ -22,11 +22,13 @@ public class WorkbenchState {
     public float relativeHumidity = 20; // percent
     public float visibleLux = 200; // lux
     public float infraredLux = 100; // lux
+    public int distance = 10; // mm
     public boolean allowTemperatureTransmission;
     public boolean allowBarometricPressureTransmission;
     public boolean allowRelativeHumidityTransmission;
     public boolean allowVisibleLuxTransmission;
     public boolean allowInfraredLuxTransmission;
+    public boolean allowDistanceTransmission;
 
     public String displayMode = "Temperature";
 
@@ -126,6 +128,22 @@ public class WorkbenchState {
 
     public void setInfraredLux(float infraredLux) {
         this.infraredLux = infraredLux;
+    }
+
+    public boolean getAllowDistanceTransmission() {
+        return allowDistanceTransmission;
+    }
+
+    public void setAllowDistanceTransmission(boolean allowDistanceTransmission) {
+        this.allowDistanceTransmission = allowDistanceTransmission;
+    }
+
+    public int getDistance() {
+        return distance;
+    }
+
+    public void setDistance(int distance) {
+        this.distance = distance;
     }
 
     public ArrayList<ArrayList<Integer>> getRainbowRgb() {

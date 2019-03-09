@@ -250,6 +250,14 @@ class BoardView extends JPanel {
                     }
                     graphRenderer.drawData(g2, workbench.getInfraredLuxDataStore(), "Infrared Light", false);
                     break;
+                case 5: // time-of-flight distance
+                    if (workbench.getDistance() > graphRenderer.getYmax()) {
+                        graphRenderer.increaseYmax();
+                    } else if (workbench.getDistance() < graphRenderer.getYmin()) {
+                        graphRenderer.decreaseYmin();
+                    }
+                    graphRenderer.drawData(g2, workbench.getDistanceDataStore(), "Distance", false);
+                    break;
             }
         }
 
@@ -385,6 +393,9 @@ class BoardView extends JPanel {
                 break;
             case 4:
                 data = workbench.getInfraredLuxDataStore();
+                break;
+            case 5:
+                data = workbench.getDistanceDataStore();
                 break;
         }
         if (data != null) {

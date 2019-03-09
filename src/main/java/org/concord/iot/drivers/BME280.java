@@ -10,7 +10,7 @@ import java.io.IOException;
  * Adopted from https://github.com/ControlEverythingCommunity/BME280/blob/master/Java/BME280.java
  */
 
-public class Bme280 {
+public class BME280 {
 
     private double cTemp;
     private double fTemp;
@@ -18,7 +18,7 @@ public class Bme280 {
     private double humidity;
     private I2CDevice device;
 
-    public Bme280() throws IOException, I2CFactory.UnsupportedBusNumberException {
+    public BME280() throws IOException, I2CFactory.UnsupportedBusNumberException {
         I2CBus bus = I2CFactory.getInstance(I2CBus.BUS_1); // Create I2C bus
         device = bus.getDevice(0x77); // BME280 I2C address is 0x77, returned by "sudo i2cdetect -y 1"
     }
