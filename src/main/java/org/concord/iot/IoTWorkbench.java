@@ -547,7 +547,7 @@ public class IoTWorkbench {
 
     public void setAllowVisibleLuxTransmission(boolean b) {
         allowVisibleLuxTransmission = b;
-        database.child("allowVisibleLightTransmission").setValue(b, null);
+        database.child("allowVisibleLuxTransmission").setValue(b, null);
     }
 
     public boolean getAllowVisibleLuxTransmission() {
@@ -562,9 +562,9 @@ public class IoTWorkbench {
         return visibleLuxDataStore;
     }
 
-    public void setAllowInfaredLuxTransmission(boolean b) {
+    public void setAllowInfraredLuxTransmission(boolean b) {
         allowInfraredLuxTransmission = b;
-        database.child("allowInfraredLightTransmission").setValue(b, null);
+        database.child("allowInfraredLuxTransmission").setValue(b, null);
     }
 
     public boolean getAllowInfraredLuxTransmission() {

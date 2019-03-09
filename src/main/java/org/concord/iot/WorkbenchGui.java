@@ -7,6 +7,8 @@ import org.concord.iot.listeners.ThreadPoolListener;
 import org.concord.iot.tools.ScreenshotSaver;
 
 import javax.swing.*;
+import javax.swing.event.PopupMenuEvent;
+import javax.swing.event.PopupMenuListener;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.Calendar;
@@ -19,32 +21,10 @@ import java.util.prefs.Preferences;
 class WorkbenchGui implements GraphListener, ThreadPoolListener {
 
     private IoTWorkbench workbench;
-
     private JLabel threadPoolLabel;
-    private JCheckBox showGraphCheckBox;
-    private JCheckBox uploadTemperatureCheckBox;
-    private JCheckBox uploadPressureCheckBox;
 
     WorkbenchGui() {
 
-    }
-
-    void setShowGraphCheckBox(boolean checked) {
-        if (showGraphCheckBox != null) {
-            Util.setSelectedSilently(showGraphCheckBox, checked);
-        }
-    }
-
-    void setUploadTemperatureCheckBox(boolean checked) {
-        if (uploadTemperatureCheckBox != null) {
-            Util.setSelectedSilently(uploadTemperatureCheckBox, checked);
-        }
-    }
-
-    void setUploadPressureCheckBox(boolean checked) {
-        if (uploadPressureCheckBox != null) {
-            Util.setSelectedSilently(uploadPressureCheckBox, checked);
-        }
     }
 
     private JMenuItem createMenuItem(Task t, boolean radio) {
@@ -59,10 +39,10 @@ class WorkbenchGui implements GraphListener, ThreadPoolListener {
         return mi;
     }
 
-    void createAndShowGui(final IoTWorkbench ioTWorkbench) {
+    void createAndShowGui(final IoTWorkbench workbench) {
 
-        this.workbench = ioTWorkbench;
-        ioTWorkbench.addThreadPoolListener(this);
+        this.workbench = workbench;
+        workbench.addThreadPoolListener(this);
 
         final JFrame frame = new JFrame(IoTWorkbench.BRAND_NAME + " (" + IoTWorkbench.VERSION_NUMBER + ")");
         frame.setIconImage(Toolkit.getDefaultToolkit().createImage(IoTWorkbench.class.getResource("images/frame.png")));
@@ -71,7 +51,7 @@ class WorkbenchGui implements GraphListener, ThreadPoolListener {
         frame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                ioTWorkbench.destroy();
+                workbench.destroy();
                 System.exit(0);
             }
         });
@@ -91,14 +71,14 @@ class WorkbenchGui implements GraphListener, ThreadPoolListener {
         openMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, KeyEvent.CTRL_MASK, true));
         fileMenu.add(openMenuItem);
 
-        fileMenu.add(new ScreenshotSaver(ioTWorkbench.boardView, false));
+        fileMenu.add(new ScreenshotSaver(workbench.boardView, false));
 
         fileMenu.addSeparator();
 
         JMenuItem settingsMenuItem = new JMenuItem("Settings");
         settingsMenuItem.setToolTipText("Settings");
         settingsMenuItem.addActionListener(e -> {
-            new SettingsDialog(frame, ioTWorkbench).setVisible(true);
+            new SettingsDialog(frame, workbench).setVisible(true);
         });
         fileMenu.add(settingsMenuItem);
 
@@ -108,7 +88,7 @@ class WorkbenchGui implements GraphListener, ThreadPoolListener {
         quitMenuItem.setMnemonic(KeyEvent.VK_Q);
         quitMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, KeyEvent.CTRL_MASK, true));
         quitMenuItem.addActionListener(e -> {
-            ioTWorkbench.destroy();
+            workbench.destroy();
             System.exit(0);
         });
         fileMenu.add(quitMenuItem);
@@ -126,16 +106,83 @@ class WorkbenchGui implements GraphListener, ThreadPoolListener {
         emulatorsMenu.add(mi);
         emulatorButtonGroup.add(mi);
 
+        JMenu sensorsMenu = new JMenu("Sensors");
+        sensorsMenu.setMnemonic(KeyEvent.VK_H);
+        menuBar.add(sensorsMenu);
+
+        final JMenuItem graphMenuItem = new JCheckBoxMenuItem("Show Graph");
+        final JMenuItem temperatureSensorMenuItem = new JCheckBoxMenuItem("Allow Transmission of Temperature Data");
+        final JMenuItem barometricPressureSensorMenuItem = new JCheckBoxMenuItem("Allow Transmission of Barometric Pressure Data");
+        final JMenuItem relativeHumiditySensorMenuItem = new JCheckBoxMenuItem("Allow Transmission of Relative Humidity Data");
+        final JMenuItem visibleLightSensorMenuItem = new JCheckBoxMenuItem("Allow Transmission of Visible Light Data");
+        final JMenuItem infraredLightSensorMenuItem = new JCheckBoxMenuItem("Allow Transmission of Infrared Light Data");
+        sensorsMenu.getPopupMenu().addPopupMenuListener(new PopupMenuListener() {
+            @Override
+            public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
+                Util.setSelectedSilently(graphMenuItem, workbench.boardView.getShowGraph());
+                Util.setSelectedSilently(temperatureSensorMenuItem, workbench.getAllowTemperatureTransmission());
+                Util.setSelectedSilently(barometricPressureSensorMenuItem, workbench.getAllowBarometricPressureTransmission());
+                Util.setSelectedSilently(relativeHumiditySensorMenuItem, workbench.getAllowRelativeHumidityTransmission());
+                Util.setSelectedSilently(visibleLightSensorMenuItem, workbench.getAllowVisibleLuxTransmission());
+                Util.setSelectedSilently(infraredLightSensorMenuItem, workbench.getAllowInfraredLuxTransmission());
+            }
+
+            @Override
+            public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
+            }
+
+            @Override
+            public void popupMenuCanceled(PopupMenuEvent e) {
+            }
+        });
+
+        graphMenuItem.setToolTipText("Show graph");
+        graphMenuItem.addItemListener(e -> {
+            workbench.boardView.setShowGraph(e.getStateChange() == ItemEvent.SELECTED);
+        });
+        sensorsMenu.add(graphMenuItem);
+        sensorsMenu.addSeparator();
+
+        temperatureSensorMenuItem.setToolTipText("Permit the temperature data to be uploaded");
+        temperatureSensorMenuItem.addItemListener(e -> {
+            workbench.setAllowTemperatureTransmission(e.getStateChange() == ItemEvent.SELECTED);
+        });
+        sensorsMenu.add(temperatureSensorMenuItem);
+
+        barometricPressureSensorMenuItem.setToolTipText("Permit the barometric pressure data to be uploaded");
+        barometricPressureSensorMenuItem.addItemListener(e -> {
+            workbench.setAllowBarometricPressureTransmission(e.getStateChange() == ItemEvent.SELECTED);
+        });
+        sensorsMenu.add(barometricPressureSensorMenuItem);
+
+        relativeHumiditySensorMenuItem.setToolTipText("Permit the barometric pressure data to be uploaded");
+        relativeHumiditySensorMenuItem.addItemListener(e -> {
+            workbench.setAllowRelativeHumidityTransmission(e.getStateChange() == ItemEvent.SELECTED);
+        });
+        sensorsMenu.add(relativeHumiditySensorMenuItem);
+
+        visibleLightSensorMenuItem.setToolTipText("Permit the visible light data to be uploaded");
+        visibleLightSensorMenuItem.addItemListener(e -> {
+            workbench.setAllowVisibleLuxTransmission(e.getStateChange() == ItemEvent.SELECTED);
+        });
+        sensorsMenu.add(visibleLightSensorMenuItem);
+
+        infraredLightSensorMenuItem.setToolTipText("Permit the infrared light data to be uploaded");
+        infraredLightSensorMenuItem.addItemListener(e -> {
+            workbench.setAllowInfraredLuxTransmission(e.getStateChange() == ItemEvent.SELECTED);
+        });
+        sensorsMenu.add(infraredLightSensorMenuItem);
+
         JMenu examplesMenu = new JMenu("Examples");
         examplesMenu.setMnemonic(KeyEvent.VK_E);
         menuBar.add(examplesMenu);
 
         JMenu subMenu = new JMenu("Monochromatic LED Lights");
         examplesMenu.add(subMenu);
-        subMenu.add(createMenuItem(ioTWorkbench.taskFactory.blinkRedLedTask, false));
-        subMenu.add(createMenuItem(ioTWorkbench.taskFactory.blinkGreenLedTask, false));
-        subMenu.add(createMenuItem(ioTWorkbench.taskFactory.blinkBlueLedTask, false));
-        subMenu.add(createMenuItem(ioTWorkbench.taskFactory.jumpLedTask, false));
+        subMenu.add(createMenuItem(workbench.taskFactory.blinkRedLedTask, false));
+        subMenu.add(createMenuItem(workbench.taskFactory.blinkGreenLedTask, false));
+        subMenu.add(createMenuItem(workbench.taskFactory.blinkBlueLedTask, false));
+        subMenu.add(createMenuItem(workbench.taskFactory.jumpLedTask, false));
 
         subMenu = new JMenu("Trichromatic LED Lights");
         examplesMenu.add(subMenu);
@@ -143,9 +190,9 @@ class WorkbenchGui implements GraphListener, ThreadPoolListener {
         ButtonGroup bg = new ButtonGroup();
         mi = new JRadioButtonMenuItem("Default Rainbow");
         mi.addActionListener(e -> {
-            synchronized (ioTWorkbench.taskFactory.getLock()) {
-                ioTWorkbench.taskFactory.stopAllApaTasks();
-                ioTWorkbench.setDefaultRainbow();
+            synchronized (workbench.taskFactory.getLock()) {
+                workbench.taskFactory.stopAllApaTasks();
+                workbench.setDefaultRainbow();
             }
         });
         subMenu.add(mi);
@@ -153,44 +200,44 @@ class WorkbenchGui implements GraphListener, ThreadPoolListener {
 
         mi = new JRadioButtonMenuItem("Turn Off All LED Lights");
         mi.addActionListener(e -> {
-            synchronized (ioTWorkbench.taskFactory.getLock()) {
-                ioTWorkbench.taskFactory.stopAllApaTasks();
-                ioTWorkbench.apa102.setColorForAll(Color.BLACK);
-                if (ioTWorkbench.boardView != null) {
-                    ioTWorkbench.boardView.setColorForAllLeds(Color.BLACK);
+            synchronized (workbench.taskFactory.getLock()) {
+                workbench.taskFactory.stopAllApaTasks();
+                workbench.apa102.setColorForAll(Color.BLACK);
+                if (workbench.boardView != null) {
+                    workbench.boardView.setColorForAllLeds(Color.BLACK);
                 }
             }
         });
         subMenu.add(mi);
         bg.add(mi);
 
-        mi = createMenuItem(ioTWorkbench.taskFactory.blinkApaTask, true);
+        mi = createMenuItem(workbench.taskFactory.blinkApaTask, true);
         subMenu.add(mi);
         bg.add(mi);
 
-        mi = createMenuItem(ioTWorkbench.taskFactory.movingRainbowApaTask, true);
+        mi = createMenuItem(workbench.taskFactory.movingRainbowApaTask, true);
         subMenu.add(mi);
         bg.add(mi);
 
-        mi = createMenuItem(ioTWorkbench.taskFactory.randomColorsApaTask, true);
+        mi = createMenuItem(workbench.taskFactory.randomColorsApaTask, true);
         subMenu.add(mi);
         bg.add(mi);
 
-        mi = createMenuItem(ioTWorkbench.taskFactory.bouncingDotApaTask, true);
+        mi = createMenuItem(workbench.taskFactory.bouncingDotApaTask, true);
         subMenu.add(mi);
         bg.add(mi);
 
-        mi = createMenuItem(ioTWorkbench.taskFactory.movingTrainsApaTask, true);
+        mi = createMenuItem(workbench.taskFactory.movingTrainsApaTask, true);
         subMenu.add(mi);
         bg.add(mi);
 
-        mi = createMenuItem(ioTWorkbench.taskFactory.rippleEffectApaTask, true);
+        mi = createMenuItem(workbench.taskFactory.rippleEffectApaTask, true);
         subMenu.add(mi);
         bg.add(mi);
 
         mi = new JMenuItem("Repeat Buzzer");
         mi.addActionListener(e -> {
-            ioTWorkbench.buzzer.blink(1000, 10000);
+            workbench.buzzer.blink(1000, 10000);
         });
         examplesMenu.add(mi);
 
@@ -207,52 +254,24 @@ class WorkbenchGui implements GraphListener, ThreadPoolListener {
 
         JPanel contentPane = new JPanel(new BorderLayout(5, 5));
         frame.setContentPane(contentPane);
-        contentPane.add(ioTWorkbench.boardView, BorderLayout.CENTER);
+        contentPane.add(workbench.boardView, BorderLayout.CENTER);
 
         // tool bar
 
-        JPanel toolPanel = new JPanel();
-        contentPane.add(toolPanel, BorderLayout.NORTH);
-
-        toolPanel.add(new JLabel("Upload: "));
-        uploadTemperatureCheckBox = new JCheckBox("Temperature", ioTWorkbench.getAllowTemperatureTransmission());
-        uploadTemperatureCheckBox.addItemListener(new ItemListener() {
-            @Override
-            public void itemStateChanged(ItemEvent e) {
-                ioTWorkbench.setAllowTemperatureTransmission(e.getStateChange() == ItemEvent.SELECTED);
-            }
-        });
-        toolPanel.add(uploadTemperatureCheckBox);
-
-        uploadPressureCheckBox = new JCheckBox("Pressure", ioTWorkbench.getAllowBarometricPressureTransmission());
-        uploadPressureCheckBox.addItemListener(new ItemListener() {
-            @Override
-            public void itemStateChanged(ItemEvent e) {
-                ioTWorkbench.setAllowBarometricPressureTransmission(e.getStateChange() == ItemEvent.SELECTED);
-            }
-        });
-        toolPanel.add(uploadPressureCheckBox);
-
-        showGraphCheckBox = new JCheckBox("Graph", ioTWorkbench.boardView.getShowGraph());
-        showGraphCheckBox.addItemListener(new ItemListener() {
-            @Override
-            public void itemStateChanged(ItemEvent e) {
-                ioTWorkbench.boardView.setShowGraph(e.getStateChange() == ItemEvent.SELECTED);
-            }
-        });
-        toolPanel.add(showGraphCheckBox);
+        //JPanel toolPanel = new JPanel();
+        //contentPane.add(toolPanel, BorderLayout.NORTH);
 
         // status panel
 
         JPanel statusPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         contentPane.add(statusPanel, BorderLayout.SOUTH);
 
-        threadPoolLabel = new JLabel("<html><font size=2>Thread pool: size = " + ioTWorkbench.getThreadPoolSize() + ", active = " + ioTWorkbench.getActiveThreadCount() + "</font></html>");
+        threadPoolLabel = new JLabel("<html><font size=2>Thread pool: size = " + workbench.getThreadPoolSize() + ", active = " + workbench.getActiveThreadCount() + "</font></html>");
         statusPanel.add(threadPoolLabel);
 
         final Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         final Preferences pref = Preferences.userNodeForPackage(IoTWorkbench.class);
-        Dimension boardViewSize = ioTWorkbench.boardView.getPreferredSize();
+        Dimension boardViewSize = workbench.boardView.getPreferredSize();
         frame.setSize(Math.min(pref.getInt("window_size_width", Math.max(900, boardViewSize.width)), screenSize.width), Math.min(pref.getInt("window_size_height", 600), screenSize.height));
         frame.setLocation(pref.getInt("window_location_x", (int) (screenSize.width - boardViewSize.width) / 2), pref.getInt("window_location_y", (int) (screenSize.height - boardViewSize.height) / 2));
 
@@ -299,12 +318,10 @@ class WorkbenchGui implements GraphListener, ThreadPoolListener {
 
     @Override
     public void graphClosed(GraphEvent e) {
-        Util.setSelectedSilently(showGraphCheckBox, false);
     }
 
     @Override
     public void graphOpened(GraphEvent e) {
-        Util.setSelectedSilently(showGraphCheckBox, true);
     }
 
     @Override

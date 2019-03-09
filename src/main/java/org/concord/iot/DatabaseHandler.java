@@ -18,10 +18,9 @@ class DatabaseHandler {
         WorkbenchState state = dataSnapshot.getValue(WorkbenchState.class);
         workbench.allowTemperatureTransmission = state.allowTemperatureTransmission;
         workbench.allowBarometricPressureTransmission = state.allowBarometricPressureTransmission;
-        if (workbench.gui != null) {
-            workbench.gui.setUploadTemperatureCheckBox(workbench.allowTemperatureTransmission);
-            workbench.gui.setUploadPressureCheckBox(workbench.allowBarometricPressureTransmission);
-        }
+        workbench.allowRelativeHumidityTransmission = state.allowRelativeHumidityTransmission;
+        workbench.allowVisibleLuxTransmission = state.allowVisibleLuxTransmission;
+        workbench.allowInfraredLuxTransmission = state.allowInfraredLuxTransmission;
 
         if (state.redLed != workbench.redLed.isHigh()) { // change only when the remote state is not the same as the local state
             workbench.setRedLedState(state.redLed, false);
