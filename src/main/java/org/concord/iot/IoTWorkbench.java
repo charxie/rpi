@@ -491,7 +491,7 @@ public class IoTWorkbench {
         return currentTime;
     }
 
-    private void startSensorDataCollection() {
+    public void startSensorDataCollection() {
         timeZeroMillis = System.currentTimeMillis();
         threadPool.execute(() -> {
             while (true) {

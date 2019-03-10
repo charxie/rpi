@@ -72,9 +72,8 @@ class WorkbenchGui implements GraphListener, ThreadPoolListener {
         openMenuItem.setMnemonic(KeyEvent.VK_O);
         openMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, KeyEvent.CTRL_MASK, true));
         fileMenu.add(openMenuItem);
-
         fileMenu.add(new ScreenshotSaver(workbench.boardView, false));
-
+        fileMenu.add(new ScreenshotSaver(frame.getRootPane(), false, "Screenshot", "Take a screenshot"));
         fileMenu.addSeparator();
 
         JMenuItem settingsMenuItem = new JMenuItem("Settings");
@@ -180,6 +179,12 @@ class WorkbenchGui implements GraphListener, ThreadPoolListener {
             workbench.boardView.repaint();
         });
         sensorsMenu.add(clearDataStoresMenuItem);
+
+        JMenuItem startDataCollectionMenuItem = new JMenuItem("Start Data Collection");
+        startDataCollectionMenuItem.setEnabled(false);
+        startDataCollectionMenuItem.addActionListener(e -> {
+        });
+        sensorsMenu.add(startDataCollectionMenuItem);
 
         graphMenuItem.setToolTipText("Show graph");
         graphMenuItem.addItemListener(e -> {

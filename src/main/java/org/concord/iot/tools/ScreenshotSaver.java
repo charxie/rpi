@@ -2,9 +2,7 @@ package org.concord.iot.tools;
 
 import org.concord.iot.Util;
 
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Graphics2D;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
@@ -14,12 +12,7 @@ import java.io.FileOutputStream;
 import java.io.OutputStream;
 
 import javax.imageio.ImageIO;
-import javax.swing.AbstractAction;
-import javax.swing.BorderFactory;
-import javax.swing.JComponent;
-import javax.swing.JFileChooser;
-import javax.swing.JOptionPane;
-import javax.swing.KeyStroke;
+import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.filechooser.FileFilter;
 
@@ -29,7 +22,7 @@ import javax.swing.filechooser.FileFilter;
 
 public class ScreenshotSaver extends AbstractAction {
 
-    private JComponent component;
+    private Component component;
     private boolean borderless;
     private Border savedBorder;
     private ImagePreview imagePreview;
@@ -62,16 +55,23 @@ public class ScreenshotSaver extends AbstractAction {
     /*
      * @param c the component to be output @param noframe true if no frame is needed for the output image. If false, a black line frame will be added to the output image.
      */
-    public ScreenshotSaver(JComponent c, boolean noframe) {
+    public ScreenshotSaver(Component c, boolean noframe) {
+        this(c, noframe, "Save As Image...", "Save the current view as an image");
+        putValue(MNEMONIC_KEY, new Integer(KeyEvent.VK_I));
+        putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_I, KeyEvent.CTRL_MASK, true));
+    }
+
+    /*
+     * @param c the component to be output @param noframe true if no frame is needed for the output image. If false, a black line frame will be added to the output image.
+     */
+    public ScreenshotSaver(Component c, boolean noframe, String name, String tooltip) {
         super();
         component = c;
         borderless = noframe;
         fileChooser = new FileChooser();
         imagePreview = new ImagePreview(fileChooser);
-        putValue(NAME, "Save As Image...");
-        putValue(SHORT_DESCRIPTION, "Save a screenshot of the current view");
-        putValue(MNEMONIC_KEY, new Integer(KeyEvent.VK_I));
-        putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_I, KeyEvent.CTRL_MASK, true));
+        putValue(NAME, name);
+        putValue(SHORT_DESCRIPTION, tooltip);
     }
 
     public void destroy() {
@@ -121,12 +121,16 @@ public class ScreenshotSaver extends AbstractAction {
                 }
             }
             if (!borderless) {
-                savedBorder = component.getBorder();
-                component.setBorder(BorderFactory.createLineBorder(Color.black));
+                if (component instanceof JComponent) {
+                    savedBorder = ((JComponent) component).getBorder();
+                    ((JComponent) component).setBorder(BorderFactory.createLineBorder(Color.black));
+                }
             }
             write(temp.getPath());
             if (savedBorder != null) {
-                component.setBorder(savedBorder);
+                if (component instanceof JComponent) {
+                    ((JComponent) component).setBorder(savedBorder);
+                }
                 savedBorder = null;
             }
             fileChooser.rememberFile(file.getPath());

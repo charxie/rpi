@@ -502,10 +502,10 @@ class GraphRenderer {
         g.drawString(s, r.x + (r.width - stringWidth) / 2, r.y - 12);
     }
 
-    void drawData(Graphics2D g, List<SensorDataPoint> data, String label, boolean highlight) {
+    void drawData(Graphics2D g, List<SensorDataPoint> data, String label, boolean highlight, Color myColor) {
 
         g.setStroke(curveStroke);
-        g.setColor(highlight ? Color.yellow : fgColor);
+        g.setColor(highlight ? Color.yellow : (myColor == null ? fgColor : myColor));
 
         int n = data.size();
         if (n > 0) {

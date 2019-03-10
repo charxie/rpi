@@ -269,7 +269,7 @@ class BoardView extends JPanel {
                     } else if (workbench.getTemperature() < graphRenderer.getYmin()) {
                         graphRenderer.decreaseYmin();
                     }
-                    graphRenderer.drawData(g2, workbench.getTemperatureDataStore(), "Temperature", false);
+                    graphRenderer.drawData(g2, workbench.getTemperatureDataStore(), "Temperature", false, null);
                     break;
                 case 1: // barometric pressure
                     if (workbench.getBarometricPressure() > graphRenderer.getYmax()) {
@@ -277,7 +277,7 @@ class BoardView extends JPanel {
                     } else if (workbench.getBarometricPressure() < graphRenderer.getYmin()) {
                         graphRenderer.decreaseYmin();
                     }
-                    graphRenderer.drawData(g2, workbench.getBarometricPressureDataStore(), "Barometric Pressure", false);
+                    graphRenderer.drawData(g2, workbench.getBarometricPressureDataStore(), "Barometric Pressure", false, null);
                     break;
                 case 2: // relative humidity
                     if (workbench.getRelativeHumidity() > graphRenderer.getYmax()) {
@@ -285,7 +285,7 @@ class BoardView extends JPanel {
                     } else if (workbench.getRelativeHumidity() < graphRenderer.getYmin()) {
                         graphRenderer.decreaseYmin();
                     }
-                    graphRenderer.drawData(g2, workbench.getRelativeHumidityDataStore(), "Relative Humidity", false);
+                    graphRenderer.drawData(g2, workbench.getRelativeHumidityDataStore(), "Relative Humidity", false, null);
                     break;
                 case 3: // visible and infrared light
                     if (workbench.getVisibleLux() > graphRenderer.getYmax() || workbench.getInfraredLux() > graphRenderer.getYmax()) {
@@ -293,8 +293,8 @@ class BoardView extends JPanel {
                     } else if (workbench.getVisibleLux() < graphRenderer.getYmin() || workbench.getInfraredLux() < graphRenderer.getYmin()) {
                         graphRenderer.decreaseYmin();
                     }
-                    graphRenderer.drawData(g2, workbench.getVisibleLuxDataStore(), "Visible Light", false);
-                    graphRenderer.drawData(g2, workbench.getInfraredLuxDataStore(), "Infrared Light", false);
+                    graphRenderer.drawData(g2, workbench.getVisibleLuxDataStore(), "Visible Light", false, Color.BLACK);
+                    graphRenderer.drawData(g2, workbench.getInfraredLuxDataStore(), "Infrared Light", false, Color.RED);
                     break;
                 case 4: // time-of-flight distance
                     if (workbench.getDistance() > graphRenderer.getYmax()) {
@@ -302,7 +302,7 @@ class BoardView extends JPanel {
                     } else if (workbench.getDistance() < graphRenderer.getYmin()) {
                         graphRenderer.decreaseYmin();
                     }
-                    graphRenderer.drawData(g2, workbench.getDistanceDataStore(), "Distance", false);
+                    graphRenderer.drawData(g2, workbench.getDistanceDataStore(), "Distance", false, null);
                     break;
                 case 5: // acceleration
                     if (workbench.getAx() > graphRenderer.getYmax() || workbench.getAy() > graphRenderer.getYmax() || workbench.getAz() > graphRenderer.getYmax()) {
@@ -310,9 +310,9 @@ class BoardView extends JPanel {
                     } else if (workbench.getAx() < graphRenderer.getYmin() || workbench.getAy() < graphRenderer.getYmin() || workbench.getAz() < graphRenderer.getYmin()) {
                         graphRenderer.decreaseYmin();
                     }
-                    graphRenderer.drawData(g2, workbench.getAxDataStore(), "Ax", false);
-                    graphRenderer.drawData(g2, workbench.getAyDataStore(), "Ay", false);
-                    graphRenderer.drawData(g2, workbench.getAzDataStore(), "Az", false);
+                    graphRenderer.drawData(g2, workbench.getAxDataStore(), "Ax", false, Color.RED);
+                    graphRenderer.drawData(g2, workbench.getAyDataStore(), "Ay", false, Color.GREEN);
+                    graphRenderer.drawData(g2, workbench.getAzDataStore(), "Az", false, Color.BLUE);
                     break;
             }
         }
