@@ -32,17 +32,50 @@ class DataViewer {
                 showData("Relative Humidity", workbench.getRelativeHumidityDataStore());
                 break;
             case 3:
-                showData("Visible Light", workbench.getVisibleLuxDataStore());
+                showData("Light", "Visible", workbench.getVisibleLuxDataStore(), "Infrared", workbench.getInfraredLuxDataStore());
                 break;
             case 4:
-                showData("Infrared Light", workbench.getInfraredLuxDataStore());
-                break;
-            case 5:
                 showData("Distance", workbench.getDistanceDataStore());
                 break;
-            case 6:
+            case 5:
+                showData("Acceleration", "Ax", workbench.getAxDataStore(), "Ay", workbench.getAyDataStore(), "Az", workbench.getAzDataStore());
                 break;
         }
+    }
+
+    private void showData(String name, String s1, List<SensorDataPoint> data1, String s2, List<SensorDataPoint> data2, String s3, List<SensorDataPoint> data3) {
+        int n = data1.size();
+        if (n < 1) {
+            JOptionPane.showMessageDialog(JOptionPane.getFrameForComponent(workbench.boardView), "No data has been collected.", "No data", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        String[] header = new String[]{"Time", s1, s2, s3};
+        Object[][] column = new Object[n][4];
+        for (int i = 0; i < n; i++) {
+            SensorDataPoint d = data1.get(i);
+            column[i][0] = d.getTime();
+            column[i][1] = d.getValue();
+            column[i][2] = data2.get(i).getValue();
+            column[i][3] = data3.get(i).getValue();
+        }
+        showDataWindow(name, column, header);
+    }
+
+    private void showData(String name, String s1, List<SensorDataPoint> data1, String s2, List<SensorDataPoint> data2) {
+        int n = data1.size();
+        if (n < 1) {
+            JOptionPane.showMessageDialog(JOptionPane.getFrameForComponent(workbench.boardView), "No data has been collected.", "No data", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        String[] header = new String[]{"Time", s1, s2};
+        Object[][] column = new Object[n][3];
+        for (int i = 0; i < n; i++) {
+            SensorDataPoint d = data1.get(i);
+            column[i][0] = d.getTime();
+            column[i][1] = d.getValue();
+            column[i][2] = data2.get(i).getValue();
+        }
+        showDataWindow(name, column, header);
     }
 
     private void showData(String name, List<SensorDataPoint> data) {

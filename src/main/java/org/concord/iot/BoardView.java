@@ -234,23 +234,16 @@ class BoardView extends JPanel {
                     }
                     graphRenderer.drawData(g2, workbench.getRelativeHumidityDataStore(), "Relative Humidity", false);
                     break;
-                case 3: // visible light
-                    if (workbench.getVisibleLux() > graphRenderer.getYmax()) {
+                case 3: // visible and infrared light
+                    if (workbench.getVisibleLux() > graphRenderer.getYmax() || workbench.getInfraredLux() > graphRenderer.getYmax()) {
                         graphRenderer.increaseYmax();
-                    } else if (workbench.getVisibleLux() < graphRenderer.getYmin()) {
+                    } else if (workbench.getVisibleLux() < graphRenderer.getYmin() || workbench.getInfraredLux() < graphRenderer.getYmin()) {
                         graphRenderer.decreaseYmin();
                     }
                     graphRenderer.drawData(g2, workbench.getVisibleLuxDataStore(), "Visible Light", false);
-                    break;
-                case 4: // infrared light
-                    if (workbench.getInfraredLux() > graphRenderer.getYmax()) {
-                        graphRenderer.increaseYmax();
-                    } else if (workbench.getInfraredLux() < graphRenderer.getYmin()) {
-                        graphRenderer.decreaseYmin();
-                    }
                     graphRenderer.drawData(g2, workbench.getInfraredLuxDataStore(), "Infrared Light", false);
                     break;
-                case 5: // time-of-flight distance
+                case 4: // time-of-flight distance
                     if (workbench.getDistance() > graphRenderer.getYmax()) {
                         graphRenderer.increaseYmax();
                     } else if (workbench.getDistance() < graphRenderer.getYmin()) {
@@ -258,7 +251,7 @@ class BoardView extends JPanel {
                     }
                     graphRenderer.drawData(g2, workbench.getDistanceDataStore(), "Distance", false);
                     break;
-                case 6: // acceleration
+                case 5: // acceleration
                     if (workbench.getAx() > graphRenderer.getYmax() || workbench.getAy() > graphRenderer.getYmax() || workbench.getAz() > graphRenderer.getYmax()) {
                         graphRenderer.increaseYmax();
                     } else if (workbench.getAx() < graphRenderer.getYmin() || workbench.getAy() < graphRenderer.getYmin() || workbench.getAz() < graphRenderer.getYmin()) {
@@ -424,18 +417,20 @@ class BoardView extends JPanel {
                 minmax = getMinMax(workbench.getVisibleLuxDataStore());
                 min = minmax[0];
                 max = minmax[1];
+                minmax = getMinMax(workbench.getInfraredLuxDataStore());
+                if (minmax[0] < min) {
+                    min = minmax[0];
+                }
+                if (minmax[1] > max) {
+                    max = minmax[1];
+                }
                 break;
             case 4:
-                minmax = getMinMax(workbench.getInfraredLuxDataStore());
-                min = minmax[0];
-                max = minmax[1];
-                break;
-            case 5:
                 minmax = getMinMax(workbench.getDistanceDataStore());
                 min = minmax[0];
                 max = minmax[1];
                 break;
-            case 6:
+            case 5:
                 minmax = getMinMax(workbench.getAxDataStore());
                 min = minmax[0];
                 max = minmax[1];
