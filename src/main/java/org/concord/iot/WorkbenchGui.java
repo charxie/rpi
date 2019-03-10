@@ -138,6 +138,13 @@ class WorkbenchGui implements GraphListener, ThreadPoolListener {
             }
         });
 
+        JMenuItem clearDataStoresMenuItem = new JMenuItem("Clear Data Stores");
+        clearDataStoresMenuItem.addActionListener(e -> {
+            workbench.clearDataStores();
+            workbench.boardView.repaint();
+        });
+        sensorsMenu.add(clearDataStoresMenuItem);
+
         graphMenuItem.setToolTipText("Show graph");
         graphMenuItem.addItemListener(e -> {
             workbench.boardView.setShowGraph(e.getStateChange() == ItemEvent.SELECTED);

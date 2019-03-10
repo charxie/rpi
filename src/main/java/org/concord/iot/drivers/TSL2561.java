@@ -21,7 +21,7 @@ public class TSL2561 {
         device = Bus.getDevice(0x39); // TSL2561 I2C address is 0x39(57)
     }
 
-    public void read() throws IOException, InterruptedException {
+    public void read() throws IOException {
 
         // Select control register
         // Power ON mode
@@ -29,7 +29,6 @@ public class TSL2561 {
         // Select timing register
         // Nominal integration time = 402ms
         device.write(0x01 | 0x80, (byte) 0x02);
-        Thread.sleep(500);
 
         // Read 4 bytes of data
         // ch0 lsb, ch0 msb, ch1 lsb, ch1 msb

@@ -49,6 +49,7 @@ public class IoTWorkbench {
     private TSL2561 tsl2561;
     private VL53L0X vl53l0x;
     private VCNL4010 vcnl4010;
+    private LIS3DH lis3dh;
     private AlphanumericDisplay display;
     String displayMode = "None";
 
@@ -106,7 +107,7 @@ public class IoTWorkbench {
 //        redLed = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_22, "Red LED", PinState.LOW);
 //        greenLed = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_24, "Green LED", PinState.LOW);
 //        blueLed = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_25, "Blue LED", PinState.LOW);
-//        buzzer = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_23, "Buzzer", PinState.LOW);
+        buzzer = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_00, "Buzzer", PinState.LOW);
         redLed = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_23, "Red LED", PinState.LOW);
         greenLed = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_24, "Green LED", PinState.LOW);
         blueLed = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_25, "Blue LED", PinState.LOW);
@@ -165,6 +166,13 @@ public class IoTWorkbench {
             vcnl4010 = null;
         }
 
+        try {
+            lis3dh = new LIS3DH();
+        } catch (Exception e) {
+            e.printStackTrace();
+            lis3dh = null;
+        }
+
         setupButtons();
         startSensorDataCollection();
 
@@ -177,6 +185,16 @@ public class IoTWorkbench {
 
         taskFactory = new TaskFactory(this);
 
+    }
+
+    void clearDataStores() {
+        temperatureDataStore.clear();
+        barometricPressureDataStore.clear();
+        relativeHumidityDataStore.clear();
+        visibleLuxDataStore.clear();
+        infraredLuxDataStore.clear();
+        distanceDataStore.clear();
+        timeZeroMillis = System.currentTimeMillis();
     }
 
     void submitTask(Runnable task) {
@@ -225,24 +243,25 @@ public class IoTWorkbench {
     }
 
     void buzz(int k) {
-        if (buzzer == null) return;
-        int a = buzzer.getPin().getAddress();
-        SoftPwm.softPwmStop(a);
-        switch (k) {
-            case 1:
-                SoftPwm.softPwmCreate(a, 0, 100);
-                SoftPwm.softPwmWrite(a, 1);
-                break;
-            case 2:
-                SoftPwm.softPwmCreate(a, 0, 1000);
-                SoftPwm.softPwmWrite(a, 10);
-                break;
-            case 3:
-                SoftPwm.softPwmCreate(a, 0, 100);
-                SoftPwm.softPwmWrite(a, 100);
-                break;
-            default:
-                SoftPwm.softPwmWrite(a, 0);
+        if (buzzer != null) {
+            int a = buzzer.getPin().getAddress();
+            SoftPwm.softPwmStop(a);
+            switch (k) {
+                case 1:
+                    SoftPwm.softPwmCreate(a, 0, 100);
+                    SoftPwm.softPwmWrite(a, 1);
+                    break;
+                case 2:
+                    SoftPwm.softPwmCreate(a, 0, 1000);
+                    SoftPwm.softPwmWrite(a, 10);
+                    break;
+                case 3:
+                    SoftPwm.softPwmCreate(a, 0, 100);
+                    SoftPwm.softPwmWrite(a, 100);
+                    break;
+                default:
+                    SoftPwm.softPwmWrite(a, 0);
+            }
         }
     }
 
@@ -510,6 +529,10 @@ public class IoTWorkbench {
                     if (vcnl4010 != null) {
                         vcnl4010.read();
                         vcnl4010.printf();
+                    }
+                    if (lis3dh != null) {
+                        lis3dh.read();
+                        lis3dh.printf();
                     }
                 } catch (Exception e) {
                     e.printStackTrace();

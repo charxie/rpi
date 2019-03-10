@@ -21,7 +21,7 @@ public class VCNL4010 {
         device = bus.getDevice(0x13); // VCNL4010 I2C address is 0x13(19)
     }
 
-    public void read() throws IOException, InterruptedException {
+    public void read() throws IOException {
 
         // Select command register
         // Enables ALS and proximity measurement, LP oscillator
@@ -32,7 +32,6 @@ public class VCNL4010 {
         // Select ALS register
         // Continuos conversion mode, ALS rate 2 samples / s
         device.write(0x84, (byte) 0x9D);
-        Thread.sleep(800);
 
         // Read 4 bytes of data
         // luminance msb, luminance lsb, proximity msb, proximity lsb
