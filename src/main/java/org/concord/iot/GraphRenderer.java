@@ -25,8 +25,9 @@ class GraphRenderer {
     final static byte Y_EXPAND_BUTTON = 4;
     final static byte Y_SHRINK_BUTTON = 5;
     final static byte Y_FIT_BUTTON = 6;
-    final static byte Y_SELECTION_BUTTON_LEFT_ARROW = 7;
-    final static byte Y_SELECTION_BUTTON_RIGHT_ARROW = 8;
+    final static byte CLEAR_BUTTON = 7;
+    final static byte Y_SELECTION_BUTTON_LEFT_ARROW = 8;
+    final static byte Y_SELECTION_BUTTON_RIGHT_ARROW = 9;
 
     final static byte TIME_UNIT_HOUR = 0;
     final static byte TIME_UNIT_MINUTE = 1;
@@ -58,6 +59,7 @@ class GraphRenderer {
     private Rectangle yExpandButton, yShrinkButton;
     private Rectangle ySelectButton;
     private Rectangle yFitButton;
+    private Rectangle clearButton;
     private Polygon[] arrowButtons;
     private Point mouseMovedPoint;
 
@@ -70,6 +72,7 @@ class GraphRenderer {
         yShrinkButton = new Rectangle(0, 0, 20, 20);
         ySelectButton = new Rectangle(0, 0, 20, 20);
         yFitButton = new Rectangle(0, 0, 20, 20);
+        clearButton = new Rectangle(0, 0, 20, 20);
         arrowButtons = new Polygon[]{new Polygon(), new Polygon()};
         setFrame(x, y, w, h);
     }
@@ -165,6 +168,8 @@ class GraphRenderer {
         yShrinkButton.setLocation(position, y);
         position -= size;
         yFitButton.setLocation(position, y);
+        position -= size;
+        clearButton.setLocation(position, y);
     }
 
     boolean windowContains(int rx, int ry) {
@@ -172,7 +177,7 @@ class GraphRenderer {
     }
 
     boolean buttonContains(int rx, int ry) {
-        return closeButton.contains(rx, ry) || dataButton.contains(rx, ry) || xExpandButton.contains(rx, ry) || xShrinkButton.contains(rx, ry) || yExpandButton.contains(rx, ry) || yShrinkButton.contains(rx, ry) || yFitButton.contains(rx, ry) || ySelectButton.contains(rx, ry);
+        return closeButton.contains(rx, ry) || dataButton.contains(rx, ry) || xExpandButton.contains(rx, ry) || xShrinkButton.contains(rx, ry) || yExpandButton.contains(rx, ry) || yShrinkButton.contains(rx, ry) || yFitButton.contains(rx, ry) || clearButton.contains(rx, ry) || ySelectButton.contains(rx, ry);
     }
 
     boolean buttonContains(byte button, int rx, int ry) {
@@ -191,6 +196,8 @@ class GraphRenderer {
                 return yShrinkButton.contains(rx, ry);
             case Y_FIT_BUTTON:
                 return yFitButton.contains(rx, ry);
+            case CLEAR_BUTTON:
+                return clearButton.contains(rx, ry);
             case Y_SELECTION_BUTTON_LEFT_ARROW:
                 return new Rectangle(ySelectButton.x, ySelectButton.y, ySelectButton.width / 2, ySelectButton.height).contains(rx, ry);
             case Y_SELECTION_BUTTON_RIGHT_ARROW:
@@ -371,6 +378,19 @@ class GraphRenderer {
         g.drawLine(x2, y2 + 1, x2 + 4, y2 - 3);
         g.drawLine(x2, y2 + 1, x2 - 4, y2 - 3);
 
+        g.setColor(fgColor);
+        g.fillRect(clearButton.x + 2, clearButton.y + 2, clearButton.width, clearButton.height);
+        g.setColor(Color.lightGray);
+        g.fill(clearButton);
+        g.setColor(fgColor);
+        g.draw(clearButton);
+        x2 = clearButton.x + 4;
+        y2 = clearButton.y + 4;
+        g.drawLine(x2, y2, x2 + clearButton.width - 8, y2);
+        g.drawLine(x2, y2 + clearButton.height - 8, x2 + clearButton.width - 8, y2 + clearButton.height - 8);
+        g.drawLine(x2, y2, x2, y2 + clearButton.height - 8);
+        g.drawLine(x2 + clearButton.width - 8, y2, x2 + clearButton.width - 8, y2 + clearButton.height - 8);
+
         // draw axes
         g.drawLine(x, y, x, y + h);
         g.drawLine(x, y + h, x + w, y + h);
@@ -464,6 +484,9 @@ class GraphRenderer {
         } else if (yFitButton.contains(mouseMovedPoint)) {
             s = "Fit y axis to data";
             r = yFitButton;
+        } else if (clearButton.contains(mouseMovedPoint)) {
+            s = "Clear data";
+            r = clearButton;
         } else if (ySelectButton.contains(mouseMovedPoint)) {
             s = "Select data type";
             r = ySelectButton;

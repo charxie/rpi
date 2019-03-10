@@ -356,6 +356,8 @@ class BoardView extends JPanel {
                 graphRenderer.decreaseYmax();
             } else if (graphRenderer.buttonContains(GraphRenderer.Y_FIT_BUTTON, x, y)) {
                 autofitGraph(graphRenderer.getDataType());
+            } else if (graphRenderer.buttonContains(GraphRenderer.CLEAR_BUTTON, x, y)) {
+                workbench.clearDataStores();
             } else if (graphRenderer.buttonContains(GraphRenderer.Y_SELECTION_BUTTON_LEFT_ARROW, x, y)) {
                 graphRenderer.previous();
                 autofitGraph(graphRenderer.getDataType());

@@ -44,14 +44,15 @@ public class IoTWorkbench {
     GpioPinDigitalOutput blueLed;
     GpioPinDigitalOutput buzzer;
     APA102 apa102;
-    private BMP280 bmp280;
-    private BME280 bme280;
-    private TSL2561 tsl2561;
-    private VL53L0X vl53l0x;
-    private VCNL4010 vcnl4010;
-    private LIS3DH lis3dh;
-    private AlphanumericDisplay display;
+    AlphanumericDisplay display;
     String displayMode = "None";
+
+    private BMP280 bmp280; // temperarture and barometric pressure
+    private BME280 bme280; // temperature, barometric pressure, and relative humidity
+    private TSL2561 tsl2561; // visible and infrared light sensor
+    private VL53L0X vl53l0x; // distance sensor based on time of flight
+    private VCNL4010 vcnl4010; // luminance and proximity
+    private LIS3DH lis3dh; // three-axis acceleration
 
     private DatabaseReference database;
 
