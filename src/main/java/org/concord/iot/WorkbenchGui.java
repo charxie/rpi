@@ -148,6 +148,8 @@ class WorkbenchGui implements GraphListener, ThreadPoolListener {
         graphMenuItem.setToolTipText("Show graph");
         graphMenuItem.addItemListener(e -> {
             workbench.boardView.setShowGraph(e.getStateChange() == ItemEvent.SELECTED);
+            final Preferences pref = Preferences.userNodeForPackage(IoTWorkbench.class);
+            pref.putBoolean("show_graph", workbench.boardView.getShowGraph());
         });
         sensorsMenu.add(graphMenuItem);
         sensorsMenu.addSeparator();

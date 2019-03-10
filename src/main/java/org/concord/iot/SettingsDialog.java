@@ -29,43 +29,64 @@ class SettingsDialog extends JDialog {
         getContentPane().add(panel, BorderLayout.CENTER);
 
         final JTextField userNameField = new JTextField(workbench.user.getName());
+        final JTextField sensorDataCollectionIntervalField = new JTextField(workbench.getSensorDataCollectionInterval() + "", 12);
         final JTextField numberOfLedsField = new JTextField(workbench.getNumberOfRgbLeds() + "", 12);
 
-        final ActionListener okListener = new ActionListener() {
-            @Override
-            public void actionPerformed(final ActionEvent e) {
-                String userName = userNameField.getText();
-                if (userName.trim().length() >= 4) {
-                    workbench.user.setName(userNameField.getName());
-                } else {
-                    JOptionPane.showMessageDialog(SettingsDialog.this, "User name is not allowed to have less than four characters: " + userName, "Error", JOptionPane.ERROR_MESSAGE);
-                }
-                String s = numberOfLedsField.getText();
-                if (s != null && !s.trim().equals("")) {
-                    int n = 0;
-                    try {
-                        n = Integer.parseInt(s);
-                    } catch (NumberFormatException ex) {
-                        JOptionPane.showMessageDialog(SettingsDialog.this, s + " cannot be parsed!", "Format Error", JOptionPane.ERROR_MESSAGE);
-                    }
-                    if (n > 0) {
-                        workbench.setNumberOfRgbLeds(n);
-                        workbench.boardView.repaint();
-                    }
-                }
-                dispose();
+        final ActionListener okListener = e -> {
+            String userName = userNameField.getText().trim();
+            if (userName.length() >= 4) {
+                workbench.user.setName(userName);
+            } else {
+                JOptionPane.showMessageDialog(SettingsDialog.this, "User name is not allowed to have less than four characters: " + userName, "Error", JOptionPane.ERROR_MESSAGE);
             }
+            String s = numberOfLedsField.getText();
+            if (s != null && !s.trim().equals("")) {
+                int n = 0;
+                try {
+                    n = Integer.parseInt(s);
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(SettingsDialog.this, s + " cannot be parsed!", "Format Error", JOptionPane.ERROR_MESSAGE);
+                }
+                if (n > 0) {
+                    workbench.setNumberOfRgbLeds(n);
+                    workbench.boardView.repaint();
+                } else {
+                    JOptionPane.showMessageDialog(SettingsDialog.this, "Must be positive: " + s, "Illegal Input", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+            s = sensorDataCollectionIntervalField.getText();
+            if (s != null && !s.trim().equals("")) {
+                int n = 0;
+                try {
+                    n = Integer.parseInt(s);
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(SettingsDialog.this, s + " cannot be parsed!", "Format Error", JOptionPane.ERROR_MESSAGE);
+                }
+                if (n > 0) {
+                    workbench.setSensorDataCollectionInterval(n);
+                } else {
+                    JOptionPane.showMessageDialog(SettingsDialog.this, "Must be positive: " + s, "Illegal Input", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+            dispose();
         };
 
         // User name
         panel.add(new JLabel("User Name: "));
         panel.add(userNameField);
+        panel.add(new JLabel());
+
+        // sensor data collection interval (milliseconds)
+        panel.add(new JLabel("Sensor Data Collection Interval: "));
+        panel.add(sensorDataCollectionIntervalField);
+        panel.add(new JLabel("Milliseconds"));
 
         // RGB LED number
         panel.add(new JLabel("Number of APA RGB LEDs: "));
         panel.add(numberOfLedsField);
+        panel.add(new JLabel());
 
-        SpringUtilities.makeCompactGrid(panel, 2, 2, 8, 8, 8, 8);
+        SpringUtilities.makeCompactGrid(panel, 3, 3, 8, 8, 8, 8);
 
         final JPanel buttonPanel = new JPanel();
         buttonPanel.setLayout(new FlowLayout(FlowLayout.RIGHT));
@@ -78,11 +99,8 @@ class SettingsDialog extends JDialog {
         getRootPane().setDefaultButton(okButton);
 
         final JButton cancelButton = new JButton("Cancel");
-        cancelButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(final ActionEvent e) {
-                dispose();
-            }
+        cancelButton.addActionListener(e -> {
+            dispose();
         });
         cancelButton.setActionCommand("Cancel");
         buttonPanel.add(cancelButton);

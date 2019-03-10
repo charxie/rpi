@@ -32,8 +32,10 @@ public class IoTWorkbench {
 
     public final static String BRAND_NAME = "IoT Workbench";
     public final static String VERSION_NUMBER = "0.0.1";
+    public final static byte RAINBOW_HAT = 0;
+    public final static byte SENSOR_HUB = 1;
 
-    private static final int SENSOR_DATA_COLLECTION_INTERVAL = 1000; // milliseconds
+    private byte boardType = SENSOR_HUB;
 
     private GpioController gpio;
     private GpioPinDigitalInput buttonA;
@@ -56,6 +58,7 @@ public class IoTWorkbench {
 
     private DatabaseReference database;
 
+    private int sensorDataCollectionInterval = 1000; // milliseconds
     private long timeZeroMillis;
     private double currentTime;
     private double temperature;
@@ -109,74 +112,76 @@ public class IoTWorkbench {
         buttonA = gpio.provisionDigitalInputPin(RaspiPin.GPIO_29, "Button A");
         buttonB = gpio.provisionDigitalInputPin(RaspiPin.GPIO_28, "Button B");
         buttonC = gpio.provisionDigitalInputPin(RaspiPin.GPIO_27, "Button C");
-//        redLed = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_22, "Red LED", PinState.LOW);
-//        greenLed = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_24, "Green LED", PinState.LOW);
-//        blueLed = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_25, "Blue LED", PinState.LOW);
-        buzzer = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_00, "Buzzer", PinState.LOW);
-        redLed = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_23, "Red LED", PinState.LOW);
-        greenLed = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_24, "Green LED", PinState.LOW);
-        blueLed = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_25, "Blue LED", PinState.LOW);
+        switch (boardType) {
+            case RAINBOW_HAT:
+                buzzer = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_23, "Buzzer", PinState.LOW);
+                redLed = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_22, "Red LED", PinState.LOW);
+                greenLed = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_24, "Green LED", PinState.LOW);
+                blueLed = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_25, "Blue LED", PinState.LOW);
+                try {
+                    display = new AlphanumericDisplay(AlphanumericDisplay.HT16K33.BLINK_OFF, AlphanumericDisplay.HT16K33.DUTY_01);
+                    display.displayOn();
+                    display.display(alphanumericString);
+                } catch (Exception e) {
+                    display = null;
+                    e.printStackTrace();
+                }
+                try {
+                    bmp280 = new BMP280(BMP280.Protocol.I2C, BMP280.ADDR_SDO_2_VDDIO, I2CBus.BUS_1);
+                    bmp280.setIndoorNavigationMode();
+                    bmp280.setMode(BMP280.Mode.NORMAL, true);
+                    bmp280.setTemperatureSampleRate(BMP280.Temperature_Sample_Resolution.TWO, true);
+                    bmp280.setPressureSampleRate(BMP280.Pressure_Sample_Resolution.SIXTEEN, true);
+                    bmp280.setIIRFilter(BMP280.IIRFilter.SIXTEEN, true);
+                    bmp280.setStandbyTime(BMP280.Standby_Time.MS_POINT_5, true);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    bmp280 = null;
+                }
+                break;
+            case SENSOR_HUB:
+                buzzer = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_00, "Buzzer", PinState.LOW);
+                redLed = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_23, "Red LED", PinState.LOW);
+                greenLed = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_24, "Green LED", PinState.LOW);
+                blueLed = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_25, "Blue LED", PinState.LOW);
+                try { // temperature, pressure, and humidity
+                    bme280 = new BME280();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    bme280 = null;
+                }
+                try { // visible and infrared light
+                    tsl2561 = new TSL2561();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    tsl2561 = null;
+                }
+                try { // distance
+                    vl53l0x = new VL53L0X();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    vl53l0x = null;
+                }
+                try { // luminance and proximity
+                    vcnl4010 = new VCNL4010();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    vcnl4010 = null;
+                }
+                try { // three-axis acceleration
+                    lis3dh = new LIS3DH();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    lis3dh = null;
+                }
+                break;
+        }
 
         final Preferences pref = Preferences.userNodeForPackage(IoTWorkbench.class);
+        sensorDataCollectionInterval = pref.getInt("sensor_data_collection_interval", 1000);
+
         apa102 = new APA102(pref.getInt("number_of_rgb_leds", WorkbenchState.NUMBER_OF_RGB_LEDS));
         //apa102.setDefaultRainbow(); // test
-
-        try {
-            display = new AlphanumericDisplay(AlphanumericDisplay.HT16K33.BLINK_OFF, AlphanumericDisplay.HT16K33.DUTY_01);
-            display.displayOn();
-            display.display(alphanumericString);
-        } catch (Exception e) {
-            display = null;
-            e.printStackTrace();
-        }
-
-        try {
-            bmp280 = new BMP280(BMP280.Protocol.I2C, BMP280.ADDR_SDO_2_VDDIO, I2CBus.BUS_1);
-            bmp280.setIndoorNavigationMode();
-            bmp280.setMode(BMP280.Mode.NORMAL, true);
-            bmp280.setTemperatureSampleRate(BMP280.Temperature_Sample_Resolution.TWO, true);
-            bmp280.setPressureSampleRate(BMP280.Pressure_Sample_Resolution.SIXTEEN, true);
-            bmp280.setIIRFilter(BMP280.IIRFilter.SIXTEEN, true);
-            bmp280.setStandbyTime(BMP280.Standby_Time.MS_POINT_5, true);
-        } catch (Exception e) {
-            e.printStackTrace();
-            bmp280 = null;
-        }
-
-        try {
-            bme280 = new BME280();
-        } catch (Exception e) {
-            e.printStackTrace();
-            bme280 = null;
-        }
-
-        try {
-            tsl2561 = new TSL2561();
-        } catch (Exception e) {
-            e.printStackTrace();
-            tsl2561 = null;
-        }
-
-        try {
-            vl53l0x = new VL53L0X();
-        } catch (Exception e) {
-            e.printStackTrace();
-            vl53l0x = null;
-        }
-
-        try {
-            vcnl4010 = new VCNL4010();
-        } catch (Exception e) {
-            e.printStackTrace();
-            vcnl4010 = null;
-        }
-
-        try {
-            lis3dh = new LIS3DH();
-        } catch (Exception e) {
-            e.printStackTrace();
-            lis3dh = null;
-        }
 
         setupButtons();
         startSensorDataCollection();
@@ -202,6 +207,9 @@ public class IoTWorkbench {
         visibleLuxDataStore.clear();
         infraredLuxDataStore.clear();
         distanceDataStore.clear();
+        axDataStore.clear();
+        ayDataStore.clear();
+        azDataStore.clear();
         timeZeroMillis = System.currentTimeMillis();
     }
 
@@ -476,7 +484,7 @@ public class IoTWorkbench {
         threadPool.execute(() -> {
             while (true) {
                 try {
-                    currentTime = (double) (System.currentTimeMillis() - timeZeroMillis) / (double) SENSOR_DATA_COLLECTION_INTERVAL;
+                    currentTime = (double) (System.currentTimeMillis() - timeZeroMillis) / (double) sensorDataCollectionInterval;
                     if (bmp280 != null) {
                         double[] results = bmp280.sampleDeviceReads();
                         temperature = results[BMP280.TEMP_VAL_C];
@@ -555,11 +563,21 @@ public class IoTWorkbench {
                     boardView.repaint();
                 }
                 try {
-                    Thread.sleep(SENSOR_DATA_COLLECTION_INTERVAL);
+                    Thread.sleep(sensorDataCollectionInterval);
                 } catch (InterruptedException e) {
                 }
             }
         });
+    }
+
+    public void setSensorDataCollectionInterval(int sensorDataCollectionInterval) {
+        this.sensorDataCollectionInterval = sensorDataCollectionInterval;
+        final Preferences pref = Preferences.userNodeForPackage(IoTWorkbench.class);
+        pref.putInt("sensor_data_collection_interval", sensorDataCollectionInterval);
+    }
+
+    public int getSensorDataCollectionInterval() {
+        return sensorDataCollectionInterval;
     }
 
     public void setAllowTemperatureTransmission(boolean b) {
@@ -742,6 +760,8 @@ public class IoTWorkbench {
         gui = new WorkbenchGui();
         gui.createAndShowGui(this);
         boardView.addGraphListener(gui);
+        final Preferences pref = Preferences.userNodeForPackage(IoTWorkbench.class);
+        boardView.setShowGraph(pref.getBoolean("show_graph", false));
     }
 
     void setLedColorsOnBoardView() {
