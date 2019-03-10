@@ -61,6 +61,8 @@ class WorkbenchGui implements GraphListener, ThreadPoolListener {
         JMenuBar menuBar = new JMenuBar();
         frame.setJMenuBar(menuBar);
 
+        // file menu
+
         JMenu fileMenu = new JMenu("File");
         fileMenu.setMnemonic(KeyEvent.VK_F);
         menuBar.add(fileMenu);
@@ -93,23 +95,57 @@ class WorkbenchGui implements GraphListener, ThreadPoolListener {
         });
         fileMenu.add(quitMenuItem);
 
-        JMenu emulatorsMenu = new JMenu("Emulators");
-        emulatorsMenu.setMnemonic(KeyEvent.VK_M);
-        menuBar.add(emulatorsMenu);
+        // board menu
 
-        ButtonGroup emulatorButtonGroup = new ButtonGroup();
-        JMenuItem mi = new JRadioButtonMenuItem("Rainbow HAT", true);
-        emulatorsMenu.add(mi);
-        emulatorButtonGroup.add(mi);
+        JMenu boardsMenu = new JMenu("Boards");
+        boardsMenu.setMnemonic(KeyEvent.VK_M);
+        menuBar.add(boardsMenu);
+        final JMenuItem miRainbowHAT = new JRadioButtonMenuItem("Rainbow HAT");
+        final JMenuItem miSensorHub = new JRadioButtonMenuItem("Sensor Hub");
+        boardsMenu.getPopupMenu().addPopupMenuListener(new PopupMenuListener() {
+            @Override
+            public void popupMenuWillBecomeVisible(PopupMenuEvent e) {
+                switch (workbench.getBoardType()) {
+                    case IoTWorkbench.RAINBOW_HAT:
+                        Util.setSelectedSilently(miRainbowHAT, true);
+                        break;
+                    case IoTWorkbench.SENSOR_HUB:
+                        Util.setSelectedSilently(miSensorHub, true);
+                        break;
+                }
+            }
 
-        mi = new JRadioButtonMenuItem("Sensor Hub");
-        emulatorsMenu.add(mi);
-        emulatorButtonGroup.add(mi);
+            @Override
+            public void popupMenuWillBecomeInvisible(PopupMenuEvent e) {
+            }
+
+            @Override
+            public void popupMenuCanceled(PopupMenuEvent e) {
+            }
+        });
+
+        ButtonGroup boardsButtonGroup = new ButtonGroup();
+        miRainbowHAT.addItemListener(e -> {
+            workbench.setBoardType(IoTWorkbench.RAINBOW_HAT);
+            workbench.boardView.repaint();
+            final Preferences pref = Preferences.userNodeForPackage(IoTWorkbench.class);
+            pref.putInt("board_type", IoTWorkbench.RAINBOW_HAT);
+        });
+        boardsMenu.add(miRainbowHAT);
+        boardsButtonGroup.add(miRainbowHAT);
+
+        miSensorHub.addItemListener(e -> {
+            workbench.setBoardType(IoTWorkbench.SENSOR_HUB);
+            workbench.boardView.repaint();
+            final Preferences pref = Preferences.userNodeForPackage(IoTWorkbench.class);
+            pref.putInt("board_type", IoTWorkbench.SENSOR_HUB);
+        });
+        boardsMenu.add(miSensorHub);
+        boardsButtonGroup.add(miSensorHub);
 
         JMenu sensorsMenu = new JMenu("Sensors");
         sensorsMenu.setMnemonic(KeyEvent.VK_H);
         menuBar.add(sensorsMenu);
-
         final JMenuItem graphMenuItem = new JCheckBoxMenuItem("Show Graph");
         final JMenuItem temperatureSensorMenuItem = new JCheckBoxMenuItem("Allow Transmission of Temperature Data");
         final JMenuItem barometricPressureSensorMenuItem = new JCheckBoxMenuItem("Allow Transmission of Barometric Pressure Data");
@@ -205,7 +241,7 @@ class WorkbenchGui implements GraphListener, ThreadPoolListener {
         examplesMenu.add(subMenu);
 
         ButtonGroup bg = new ButtonGroup();
-        mi = new JRadioButtonMenuItem("Default Rainbow");
+        JMenuItem mi = new JRadioButtonMenuItem("Default Rainbow");
         mi.addActionListener(e -> {
             synchronized (workbench.taskFactory.getLock()) {
                 workbench.taskFactory.stopAllApaTasks();

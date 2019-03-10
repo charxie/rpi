@@ -178,6 +178,7 @@ public class IoTWorkbench {
         }
 
         final Preferences pref = Preferences.userNodeForPackage(IoTWorkbench.class);
+        boardType = (byte) pref.getInt("board_type", RAINBOW_HAT);
         sensorDataCollectionInterval = pref.getInt("sensor_data_collection_interval", 1000);
 
         apa102 = new APA102(pref.getInt("number_of_rgb_leds", WorkbenchState.NUMBER_OF_RGB_LEDS));
@@ -198,6 +199,17 @@ public class IoTWorkbench {
 
         taskFactory = new TaskFactory(this);
 
+    }
+
+    public byte getBoardType() {
+        return boardType;
+    }
+
+    public void setBoardType(byte boardType) {
+        this.boardType = boardType;
+        if (boardView != null) {
+            boardView.setBoardType(boardType);
+        }
     }
 
     void clearDataStores() {

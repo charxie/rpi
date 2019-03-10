@@ -78,7 +78,7 @@ class BoardView extends JPanel {
         barometricPressureSensor = new Rectangle(228, 141, 8, 8);
 
         setPreferredSize(new Dimension(800, 500));
-        image = Toolkit.getDefaultToolkit().createImage(getClass().getResource("images/rainbow-hat.png"));
+        setBoardType(workbench.getBoardType());
 
         redLedSymbol = new Symbol.LedLight(Color.RED, 8, 8, 16, 8);
         greenLedSymbol = new Symbol.LedLight(Color.GREEN, 8, 8, 16, 8);
@@ -137,6 +137,16 @@ class BoardView extends JPanel {
         graphRenderer.setMouseMovedPoint(mouseMovedPoint);
         graphListeners = new ArrayList<>();
 
+    }
+
+    public void setBoardType(byte boardType) {
+        switch (boardType) {
+            case IoTWorkbench.RAINBOW_HAT:
+                image = Toolkit.getDefaultToolkit().createImage(getClass().getResource("images/rainbow_hat.png"));
+                break;
+            default:
+                image = Toolkit.getDefaultToolkit().createImage(getClass().getResource("images/raspberry_pi_3.png"));
+        }
     }
 
     @Override
