@@ -64,6 +64,7 @@ public class IoTWorkbench {
     private double visibleLux;
     private double infraredLux;
     private int distance;
+    private int ax, ay, az;
     boolean allowTemperatureTransmission;
     boolean allowBarometricPressureTransmission;
     boolean allowRelativeHumidityTransmission;
@@ -85,6 +86,9 @@ public class IoTWorkbench {
     private List<SensorDataPoint> visibleLuxDataStore;
     private List<SensorDataPoint> infraredLuxDataStore;
     private List<SensorDataPoint> distanceDataStore;
+    private List<SensorDataPoint> axDataStore;
+    private List<SensorDataPoint> ayDataStore;
+    private List<SensorDataPoint> azDataStore;
 
     public IoTWorkbench() {
         init();
@@ -183,6 +187,9 @@ public class IoTWorkbench {
         visibleLuxDataStore = new ArrayList<>();
         infraredLuxDataStore = new ArrayList<>();
         distanceDataStore = new ArrayList<>();
+        axDataStore = new ArrayList<>();
+        ayDataStore = new ArrayList<>();
+        azDataStore = new ArrayList<>();
 
         taskFactory = new TaskFactory(this);
 
@@ -534,6 +541,12 @@ public class IoTWorkbench {
                     if (lis3dh != null) {
                         lis3dh.read();
                         lis3dh.printf();
+                        ax = lis3dh.getAx();
+                        ay = lis3dh.getAy();
+                        az = lis3dh.getAz();
+                        axDataStore.add(new SensorDataPoint(currentTime, ax));
+                        ayDataStore.add(new SensorDataPoint(currentTime, ay));
+                        azDataStore.add(new SensorDataPoint(currentTime, az));
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -649,6 +662,30 @@ public class IoTWorkbench {
 
     public List<SensorDataPoint> getDistanceDataStore() {
         return distanceDataStore;
+    }
+
+    public int getAx() {
+        return ax;
+    }
+
+    public List<SensorDataPoint> getAxDataStore() {
+        return axDataStore;
+    }
+
+    public int getAy() {
+        return ay;
+    }
+
+    public List<SensorDataPoint> getAyDataStore() {
+        return ayDataStore;
+    }
+
+    public int getAz() {
+        return az;
+    }
+
+    public List<SensorDataPoint> getAzDataStore() {
+        return azDataStore;
     }
 
     private void synchronizeWithCloud() {

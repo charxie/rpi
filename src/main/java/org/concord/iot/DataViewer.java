@@ -40,6 +40,8 @@ class DataViewer {
             case 5:
                 showData("Distance", workbench.getDistanceDataStore());
                 break;
+            case 6:
+                break;
         }
     }
 

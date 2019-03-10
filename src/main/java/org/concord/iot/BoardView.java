@@ -258,6 +258,16 @@ class BoardView extends JPanel {
                     }
                     graphRenderer.drawData(g2, workbench.getDistanceDataStore(), "Distance", false);
                     break;
+                case 6: // acceleration
+                    if (workbench.getAx() > graphRenderer.getYmax() || workbench.getAy() > graphRenderer.getYmax() || workbench.getAz() > graphRenderer.getYmax()) {
+                        graphRenderer.increaseYmax();
+                    } else if (workbench.getAx() < graphRenderer.getYmin() || workbench.getAy() < graphRenderer.getYmin() || workbench.getAz() < graphRenderer.getYmin()) {
+                        graphRenderer.decreaseYmin();
+                    }
+                    graphRenderer.drawData(g2, workbench.getAxDataStore(), "Ax", false);
+                    graphRenderer.drawData(g2, workbench.getAyDataStore(), "Ay", false);
+                    graphRenderer.drawData(g2, workbench.getAzDataStore(), "Az", false);
+                    break;
             }
         }
 
@@ -377,39 +387,73 @@ class BoardView extends JPanel {
 
     }
 
-    private void autofitGraph(byte type) {
+    private double[] getMinMax(List<SensorDataPoint> data) {
         double min = Double.MAX_VALUE, max = -Double.MAX_VALUE;
-        List<SensorDataPoint> data = null;
+        for (SensorDataPoint s : data) {
+            double v = s.getValue();
+            if (v > max) {
+                max = v;
+            }
+            if (v < min) {
+                min = v;
+            }
+        }
+        return new double[]{min, max};
+    }
+
+    private void autofitGraph(byte type) {
+        double min = 1;
+        double max = 0;
         switch (type) {
             case 0:
-                data = workbench.getTemperatureDataStore();
+                double[] minmax = getMinMax(workbench.getTemperatureDataStore());
+                min = minmax[0];
+                max = minmax[1];
                 break;
             case 1:
-                data = workbench.getBarometricPressureDataStore();
+                minmax = getMinMax(workbench.getBarometricPressureDataStore());
+                min = minmax[0];
+                max = minmax[1];
                 break;
             case 2:
-                data = workbench.getRelativeHumidityDataStore();
+                minmax = getMinMax(workbench.getRelativeHumidityDataStore());
+                min = minmax[0];
+                max = minmax[1];
                 break;
             case 3:
-                data = workbench.getVisibleLuxDataStore();
+                minmax = getMinMax(workbench.getVisibleLuxDataStore());
+                min = minmax[0];
+                max = minmax[1];
                 break;
             case 4:
-                data = workbench.getInfraredLuxDataStore();
+                minmax = getMinMax(workbench.getInfraredLuxDataStore());
+                min = minmax[0];
+                max = minmax[1];
                 break;
             case 5:
-                data = workbench.getDistanceDataStore();
+                minmax = getMinMax(workbench.getDistanceDataStore());
+                min = minmax[0];
+                max = minmax[1];
                 break;
-        }
-        if (data != null) {
-            for (SensorDataPoint s : data) {
-                double v = s.getValue();
-                if (v > max) {
-                    max = v;
+            case 6:
+                minmax = getMinMax(workbench.getAxDataStore());
+                min = minmax[0];
+                max = minmax[1];
+                minmax = getMinMax(workbench.getAyDataStore());
+                if (minmax[0] < min) {
+                    min = minmax[0];
                 }
-                if (v < min) {
-                    min = v;
+                if (minmax[1] > max) {
+                    max = minmax[1];
                 }
-            }
+                minmax = getMinMax(workbench.getAzDataStore());
+                if (minmax[0] < min) {
+                    min = minmax[0];
+                }
+                if (minmax[1] > max) {
+                    max = minmax[1];
+                }
+                break;
         }
         if (min < max) {
             double diff = 0.05 * (max - min);
