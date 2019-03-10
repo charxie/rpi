@@ -778,7 +778,7 @@ public class IoTWorkbench {
 
     void setLedColorsOnBoardView() {
         if (boardView != null) {
-            for (int i = 0; i < WorkbenchState.NUMBER_OF_RGB_LEDS; i++) {
+            for (int i = 0; i < boardView.getActualNumberOfRgbLeds(); i++) {
                 boardView.setLedColor(i, apa102.getColor(i));
             }
         }

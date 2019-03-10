@@ -36,7 +36,7 @@ class BoardView extends JPanel {
     private Rectangle redLed;
     private Rectangle greenLed;
     private Rectangle blueLed;
-    private Ellipse2D.Double[] leds = new Ellipse2D.Double[WorkbenchState.NUMBER_OF_RGB_LEDS];
+    private Ellipse2D.Double[] leds;
     private Rectangle temperatureSensor;
     private Rectangle barometricPressureSensor;
     private boolean buttonAPressed;
@@ -46,7 +46,7 @@ class BoardView extends JPanel {
     private Symbol.LedLight redLedSymbol;
     private Symbol.LedLight greenLedSymbol;
     private Symbol.LedLight blueLedSymbol;
-    private Symbol.LedLight[] ledLightSymbols = new Symbol.LedLight[WorkbenchState.NUMBER_OF_RGB_LEDS];
+    private Symbol.LedLight[] ledLightSymbols;
 
     private boolean showGraph;
     private GraphRenderer graphRenderer;
@@ -57,35 +57,14 @@ class BoardView extends JPanel {
 
         super();
         setBackground(Color.WHITE);
+        setPreferredSize(new Dimension(800, 500));
 
         this.workbench = workbench;
 
-        buttonA = new Rectangle(72, 270, 72, 22);
-        buttonB = new Rectangle(155, 270, 72, 22);
-        buttonC = new Rectangle(238, 270, 72, 22);
-        redLed = new Rectangle(100, 258, 18, 8);
-        greenLed = new Rectangle(182, 258, 18, 8);
-        blueLed = new Rectangle(264, 258, 18, 8);
-        int radius = 10;
-        leds[0] = new Ellipse2D.Double(293 - radius, 115 - radius, 2 * radius, 2 * radius);
-        leds[1] = new Ellipse2D.Double(260 - radius, 98 - radius, 2 * radius, 2 * radius);
-        leds[2] = new Ellipse2D.Double(226 - radius, 89 - radius, 2 * radius, 2 * radius);
-        leds[3] = new Ellipse2D.Double(189 - radius, 86 - radius, 2 * radius, 2 * radius);
-        leds[4] = new Ellipse2D.Double(153 - radius, 89 - radius, 2 * radius, 2 * radius);
-        leds[5] = new Ellipse2D.Double(118 - radius, 98 - radius, 2 * radius, 2 * radius);
-        leds[6] = new Ellipse2D.Double(85 - radius, 115 - radius, 2 * radius, 2 * radius);
-        temperatureSensor = new Rectangle(186, 133, 10, 10);
-        barometricPressureSensor = new Rectangle(228, 141, 8, 8);
-
-        setPreferredSize(new Dimension(800, 500));
         setBoardType(workbench.getBoardType());
-
         redLedSymbol = new Symbol.LedLight(Color.RED, 8, 8, 16, 8);
         greenLedSymbol = new Symbol.LedLight(Color.GREEN, 8, 8, 16, 8);
         blueLedSymbol = new Symbol.LedLight(Color.BLUE, 8, 8, 16, 8);
-        for (int i = 0; i < ledLightSymbols.length; i++) {
-            ledLightSymbols[i] = new Symbol.LedLight(Color.BLACK, 16, 16, 12, 12);
-        }
 
         addMouseListener(new MouseAdapter() {
             @Override
@@ -139,13 +118,71 @@ class BoardView extends JPanel {
 
     }
 
+    public int getActualNumberOfRgbLeds() {
+        return leds.length;
+    }
+
+    private void setupSensorHub() {
+        temperatureSensor = new Rectangle(360, -32, 10, 10);
+        barometricPressureSensor = new Rectangle(380, -32, 10, 10);
+        buttonA = new Rectangle(120, -32, 72, 22);
+        buttonB = new Rectangle(200, -32, 72, 22);
+        buttonC = new Rectangle(280, -32, 72, 22);
+        redLed = new Rectangle(20, -25, 18, 8);
+        greenLed = new Rectangle(50, -25, 18, 8);
+        blueLed = new Rectangle(80, -25, 18, 8);
+        leds = new Ellipse2D.Double[workbench.getNumberOfRgbLeds()];
+        int radius = 10;
+        int n = Math.round(385f / (float) radius);
+        int m = Math.round((float) leds.length / (float) n);
+        int count = 0;
+        for (int i = 0; i <= m; i++) { // rows
+            for (int j = 0; j <= n; j++) { // column
+                if (count >= leds.length) break;
+                leds[count] = new Ellipse2D.Double(-100 + j * 20, 420 + i * 20, 2 * radius, 2 * radius);
+                count++;
+            }
+        }
+        ledLightSymbols = new Symbol.LedLight[leds.length];
+        for (int i = 0; i < ledLightSymbols.length; i++) {
+            ledLightSymbols[i] = new Symbol.LedLight(Color.BLACK, 16, 16, 12, 12);
+        }
+    }
+
+    private void setupRainbowHAT() {
+        temperatureSensor = new Rectangle(186, 133, 10, 10);
+        barometricPressureSensor = new Rectangle(228, 141, 8, 8);
+        buttonA = new Rectangle(72, 270, 72, 22);
+        buttonB = new Rectangle(155, 270, 72, 22);
+        buttonC = new Rectangle(238, 270, 72, 22);
+        redLed = new Rectangle(100, 258, 18, 8);
+        greenLed = new Rectangle(182, 258, 18, 8);
+        blueLed = new Rectangle(264, 258, 18, 8);
+        int radius = 10;
+        leds = new Ellipse2D.Double[WorkbenchState.NUMBER_OF_RGB_LEDS];
+        leds[0] = new Ellipse2D.Double(293 - radius, 115 - radius, 2 * radius, 2 * radius);
+        leds[1] = new Ellipse2D.Double(260 - radius, 98 - radius, 2 * radius, 2 * radius);
+        leds[2] = new Ellipse2D.Double(226 - radius, 89 - radius, 2 * radius, 2 * radius);
+        leds[3] = new Ellipse2D.Double(189 - radius, 86 - radius, 2 * radius, 2 * radius);
+        leds[4] = new Ellipse2D.Double(153 - radius, 89 - radius, 2 * radius, 2 * radius);
+        leds[5] = new Ellipse2D.Double(118 - radius, 98 - radius, 2 * radius, 2 * radius);
+        leds[6] = new Ellipse2D.Double(85 - radius, 115 - radius, 2 * radius, 2 * radius);
+        ledLightSymbols = new Symbol.LedLight[leds.length];
+        for (int i = 0; i < ledLightSymbols.length; i++) {
+            ledLightSymbols[i] = new Symbol.LedLight(Color.BLACK, 16, 16, 12, 12);
+        }
+    }
+
     public void setBoardType(byte boardType) {
         switch (boardType) {
             case IoTWorkbench.RAINBOW_HAT:
                 image = Toolkit.getDefaultToolkit().createImage(getClass().getResource("images/rainbow_hat.png"));
+                setupRainbowHAT();
                 break;
-            default:
+            case IoTWorkbench.SENSOR_HUB:
                 image = Toolkit.getDefaultToolkit().createImage(getClass().getResource("images/raspberry_pi_3.png"));
+                setupSensorHub();
+                break;
         }
     }
 
@@ -160,11 +197,11 @@ class BoardView extends JPanel {
         g2.clearRect(0, 0, w, h);
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        drawGridLines(g2, 20, 20, w, h);
 
         int wi = image.getWidth(this);
-        int hi = image.getHeight(this);
         xImageOffset = (w - wi) / 2;
-        yImageOffset = (h - hi) / 2;
+        yImageOffset = 50;
 
         g2.drawImage(image, xImageOffset, yImageOffset, this);
 
@@ -179,6 +216,10 @@ class BoardView extends JPanel {
             ledLightSymbols[i].paintIcon(this, g, (int) (leds[i].x + a), (int) (leds[i].y + b));
         }
 
+        g2.setColor(Color.BLACK);
+        g2.draw(buttonA);
+        g2.draw(buttonB);
+        g2.draw(buttonC);
         if (buttonAPressed) {
             g2.setColor(buttonPressedColor);
             g2.fill(buttonA);
@@ -192,19 +233,21 @@ class BoardView extends JPanel {
             g2.fill(buttonC);
         }
 
-        String display = workbench.getAlphanumericString();
-        for (int i = 0; i < display.length(); i++) {
-            String s = Character.toString(display.charAt(i));
-            if (!"-".equals(s)) {
-                g2.translate(85 + i * 62, 170);
-                g2.scale(1.3, 1);
-                g2.shear(-0.1, 0);
-                g2.setColor(Color.GREEN);
-                g2.setFont(new Font("Courier New", Font.ITALIC | Font.BOLD, 24));
-                drawString(g2, LcdFont.format(Integer.parseInt(s)), 0, 0);
-                g2.shear(0.1, 0);
-                g2.scale(1.0 / 1.3, 1);
-                g2.translate(-85 - i * 62, -170);
+        if (workbench.getBoardType() == IoTWorkbench.RAINBOW_HAT) {
+            String display = workbench.getAlphanumericString();
+            for (int i = 0; i < display.length(); i++) {
+                String s = Character.toString(display.charAt(i));
+                if (!"-".equals(s)) {
+                    g2.translate(85 + i * 62, 170);
+                    g2.scale(1.3, 1);
+                    g2.shear(-0.1, 0);
+                    g2.setColor(Color.GREEN);
+                    g2.setFont(new Font("Courier New", Font.ITALIC | Font.BOLD, 24));
+                    drawString(g2, LcdFont.format(Integer.parseInt(s)), 0, 0);
+                    g2.shear(0.1, 0);
+                    g2.scale(1.0 / 1.3, 1);
+                    g2.translate(-85 - i * 62, -170);
+                }
             }
         }
 
@@ -276,6 +319,18 @@ class BoardView extends JPanel {
 
         g2.dispose();
 
+    }
+
+    private void drawGridLines(Graphics2D g, int dx, int dy, int w, int h) {
+        g.setColor(Color.LIGHT_GRAY);
+        int nx = Math.round((float) w / (float) dx);
+        for (int x = 0; x < nx; x++) {
+            g.drawLine(x * dx, 0, x * dx, h);
+        }
+        int ny = Math.round((float) h / (float) dy);
+        for (int y = 0; y < ny; y++) {
+            g.drawLine(0, y * dy, w, y * dy);
+        }
     }
 
     public void setShowGraph(boolean showGraph) {

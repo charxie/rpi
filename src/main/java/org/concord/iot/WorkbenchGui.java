@@ -371,10 +371,14 @@ class WorkbenchGui implements GraphListener, ThreadPoolListener {
 
     @Override
     public void graphClosed(GraphEvent e) {
+        final Preferences pref = Preferences.userNodeForPackage(IoTWorkbench.class);
+        pref.putBoolean("show_graph", workbench.boardView.getShowGraph());
     }
 
     @Override
     public void graphOpened(GraphEvent e) {
+        final Preferences pref = Preferences.userNodeForPackage(IoTWorkbench.class);
+        pref.putBoolean("show_graph", workbench.boardView.getShowGraph());
     }
 
     @Override
