@@ -293,6 +293,18 @@ class WorkbenchGui implements GraphListener, ThreadPoolListener {
         subMenu.add(mi);
         bg.add(mi);
 
+        examplesMenu.addSeparator();
+
+        mi = new JCheckBoxMenuItem("Rotate Servo");
+        mi.addItemListener(e -> {
+            boolean selected = e.getStateChange() == ItemEvent.SELECTED;
+            workbench.taskFactory.rotateServoTask.setStopped(!selected);
+            if (selected) {
+                workbench.taskFactory.rotateServoTask.run();
+            }
+        });
+        examplesMenu.add(mi);
+
         mi = new JMenuItem("Repeat Buzzer");
         mi.addActionListener(e -> {
             workbench.buzzer.blink(1000, 10000);

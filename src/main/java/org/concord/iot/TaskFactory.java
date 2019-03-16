@@ -12,6 +12,7 @@ class TaskFactory {
     private IoTWorkbench workbench;
     private final Object lock = new Object();
 
+    Task rotateServoTask;
     Task blinkRedLedTask;
     Task blinkGreenLedTask;
     Task blinkBlueLedTask;
@@ -42,6 +43,23 @@ class TaskFactory {
     }
 
     private void createTasks() {
+
+        rotateServoTask = new Task("Rotate Servo", workbench);
+        rotateServoTask.setRunnable(() -> {
+            while (true) {
+                try {
+                    workbench.rotateServo(1);
+                    Thread.sleep(500);
+                    workbench.rotateServo(2);
+                    Thread.sleep(500);
+                } catch (InterruptedException ex) {
+                }
+                if (rotateServoTask.isStopped()) {
+                    workbench.rotateServo(0);
+                    break;
+                }
+            }
+        });
 
         blinkRedLedTask = new Task("Blinking Red LED", workbench);
         blinkRedLedTask.setRunnable(() -> {

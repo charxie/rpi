@@ -70,8 +70,8 @@ public class LIS3DH {
         System.out.println("LIS3DH: ax : " + ax);
         System.out.println("LIS3DH: ay : " + ay);
         System.out.println("LIS3DH: az : " + az);
-        System.out.println("LIS3DH: Angular acceleration about X : " + angularAboutX);
-        System.out.println("LIS3DH: Angular acceleration about Y : " + angularAboutY);
+        //System.out.println("LIS3DH: Angular acceleration about X : " + angularAboutX);
+        //System.out.println("LIS3DH: Angular acceleration about Y : " + angularAboutY);
     }
 
     public int getAx() {

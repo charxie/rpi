@@ -45,6 +45,7 @@ public class IoTWorkbench {
     GpioPinDigitalOutput greenLed;
     GpioPinDigitalOutput blueLed;
     GpioPinDigitalOutput buzzer;
+    GpioPinDigitalOutput servo;
     APA102 apa102;
     AlphanumericDisplay display;
     String displayMode = "None";
@@ -141,6 +142,7 @@ public class IoTWorkbench {
                 break;
             case SENSOR_HUB:
                 buzzer = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_00, "Buzzer", PinState.LOW);
+                servo = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_01, "Servo", PinState.LOW);
                 redLed = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_23, "Red LED", PinState.LOW);
                 greenLed = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_24, "Green LED", PinState.LOW);
                 blueLed = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_25, "Blue LED", PinState.LOW);
@@ -267,6 +269,27 @@ public class IoTWorkbench {
         ThreadPoolEvent e = new ThreadPoolEvent(this);
         for (ThreadPoolListener l : threadPoolListeners) {
             l.updated(e);
+        }
+    }
+
+    void rotateServo(int k) {
+        if (servo != null) {
+            int a = servo.getPin().getAddress();
+            SoftPwm.softPwmStop(a);
+            SoftPwm.softPwmCreate(a, 0, 50);
+            switch (k) {
+                case 1:
+                    SoftPwm.softPwmWrite(a, 5);
+                    break;
+                case 2:
+                    SoftPwm.softPwmWrite(a, 25);
+                    break;
+                case 3:
+                    SoftPwm.softPwmWrite(a, 15);
+                    break;
+                default:
+                    SoftPwm.softPwmWrite(a, 0);
+            }
         }
     }
 
