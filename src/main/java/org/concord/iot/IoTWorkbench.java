@@ -4,9 +4,13 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.firebase.database.*;
+import com.pi4j.component.temperature.TemperatureSensor;
+import com.pi4j.component.temperature.impl.TmpDS18B20DeviceType;
 import com.pi4j.io.gpio.*;
 import com.pi4j.io.gpio.event.GpioPinListenerDigital;
 import com.pi4j.io.i2c.I2CBus;
+import com.pi4j.io.w1.W1Device;
+import com.pi4j.io.w1.W1Master;
 import com.pi4j.wiringpi.Gpio;
 import com.pi4j.wiringpi.SoftPwm;
 import org.concord.iot.drivers.*;
@@ -56,6 +60,7 @@ public class IoTWorkbench {
     private VL53L0X vl53l0x; // distance sensor based on time of flight
     private VCNL4010 vcnl4010; // luminance and proximity
     private LIS3DH lis3dh; // three-axis acceleration
+    private List<W1Device> oneWireDevices;
 
     private DatabaseReference database;
 
@@ -146,6 +151,8 @@ public class IoTWorkbench {
                 redLed = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_23, "Red LED", PinState.LOW);
                 greenLed = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_24, "Green LED", PinState.LOW);
                 blueLed = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_25, "Blue LED", PinState.LOW);
+                W1Master master = new W1Master();
+                oneWireDevices = master.getDevices(TmpDS18B20DeviceType.FAMILY_CODE);
                 try { // temperature, pressure, and humidity
                     bme280 = new BME280();
                 } catch (Exception e) {
@@ -590,6 +597,18 @@ public class IoTWorkbench {
                         axDataStore.add(new SensorDataPoint(currentTime, ax));
                         ayDataStore.add(new SensorDataPoint(currentTime, ay));
                         azDataStore.add(new SensorDataPoint(currentTime, az));
+                    }
+                    if (oneWireDevices != null && !oneWireDevices.isEmpty()) {
+                        for (W1Device device : oneWireDevices) {
+                            if(device instanceof TemperatureSensor) {
+                                System.out.println("Temperature: " + ((TemperatureSensor) device).getTemperature());
+                            }
+                            try {
+                                System.out.println("1-Wire ID: " + device.getId() + " value: " + device.getValue());
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
