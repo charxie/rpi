@@ -601,12 +601,7 @@ public class IoTWorkbench {
                     if (oneWireDevices != null && !oneWireDevices.isEmpty()) {
                         for (W1Device device : oneWireDevices) {
                             if(device instanceof TemperatureSensor) {
-                                System.out.println("Temperature: " + ((TemperatureSensor) device).getTemperature());
-                            }
-                            try {
-                                System.out.println("1-Wire ID: " + device.getId() + " value: " + device.getValue());
-                            } catch (IOException e) {
-                                e.printStackTrace();
+                                System.out.println("******** Temperature: " + ((TemperatureSensor) device).getTemperature());
                             }
                         }
                     }

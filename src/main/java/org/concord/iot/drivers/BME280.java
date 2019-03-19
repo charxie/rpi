@@ -20,7 +20,7 @@ public class BME280 {
 
     public BME280() throws IOException, I2CFactory.UnsupportedBusNumberException {
         I2CBus bus = I2CFactory.getInstance(I2CBus.BUS_1); // Create I2C bus
-        device = bus.getDevice(0x77); // BME280 I2C address is 0x77, returned by "sudo i2cdetect -y 1"
+        device = bus.getDevice(0x76); // BME280 I2C address is 0x76 or 0x77, returned by "sudo i2cdetect -y 1"
     }
 
     public void read() throws IOException {
