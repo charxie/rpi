@@ -19,8 +19,14 @@ public class BME280 {
     private I2CDevice device;
 
     public BME280() throws IOException, I2CFactory.UnsupportedBusNumberException {
-        I2CBus bus = I2CFactory.getInstance(I2CBus.BUS_1); // Create I2C bus
-        device = bus.getDevice(0x76); // BME280 I2C address is 0x76 or 0x77, returned by "sudo i2cdetect -y 1"
+        I2CBus bus = I2CFactory.getInstance(I2CBus.BUS_1);
+        /*
+         *  The 7-bit device address is 111011x. The 6 MSB bits are fixed. The last bit is changeable by
+         * SDO value and can be changed during operation. Connecting SDO to GND results in slave address
+         * 1110110 (0x76); connection it to VDDIO results in slave address 1110111 (0x77).
+         * If unsure, use "sudo i2cdetect -y 1" to check.
+         */
+        device = bus.getDevice(0x76);
     }
 
     public void read() throws IOException {

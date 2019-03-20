@@ -10,6 +10,7 @@ import java.awt.event.*;
 import java.awt.geom.Ellipse2D;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -269,7 +270,17 @@ class BoardView extends JPanel {
                     } else if (workbench.getTemperature() < graphRenderer.getYmin()) {
                         graphRenderer.decreaseYmin();
                     }
-                    graphRenderer.drawData(g2, workbench.getTemperatureDataStore(), "Temperature", false, null);
+                    graphRenderer.drawData(g2, workbench.getTemperatureDataStore(), "Temperature", false, Color.BLACK);
+                    List<SensorDataPoint>[] temperatureArrayDataStore = workbench.getTemperatureArrayDataStore();
+                    if (temperatureArrayDataStore != null) {
+                        Color[] colors = new Color[temperatureArrayDataStore.length];
+                        Arrays.fill(colors, Color.RED);
+                        colors[1] = Color.GREEN;
+                        colors[2] = Color.BLUE;
+                        for (int i = 0; i < temperatureArrayDataStore.length; i++) {
+                            graphRenderer.drawData(g2, temperatureArrayDataStore[i], "Temperature #" + i, false, colors[i]);
+                        }
+                    }
                     break;
                 case 1: // barometric pressure
                     if (workbench.getBarometricPressure() > graphRenderer.getYmax()) {
@@ -467,6 +478,18 @@ class BoardView extends JPanel {
                 double[] minmax = getMinMax(workbench.getTemperatureDataStore());
                 min = minmax[0];
                 max = minmax[1];
+                List<SensorDataPoint>[] temperatureArrayDataStore = workbench.getTemperatureArrayDataStore();
+                if (temperatureArrayDataStore != null) {
+                    for (int i = 0; i < temperatureArrayDataStore.length; i++) {
+                        minmax = getMinMax(temperatureArrayDataStore[i]);
+                        if (minmax[0] < min) {
+                            min = minmax[0];
+                        }
+                        if (minmax[1] > max) {
+                            max = minmax[1];
+                        }
+                    }
+                }
                 break;
             case 1:
                 minmax = getMinMax(workbench.getBarometricPressureDataStore());

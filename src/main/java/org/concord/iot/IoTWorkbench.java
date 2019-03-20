@@ -90,6 +90,7 @@ public class IoTWorkbench {
     private List<ThreadPoolListener> threadPoolListeners;
 
     private List<SensorDataPoint> temperatureDataStore;
+    private List<SensorDataPoint>[] temperatureArrayDataStore;
     private List<SensorDataPoint> barometricPressureDataStore;
     private List<SensorDataPoint> relativeHumidityDataStore;
     private List<SensorDataPoint> visibleLuxDataStore;
@@ -231,6 +232,11 @@ public class IoTWorkbench {
         axDataStore.clear();
         ayDataStore.clear();
         azDataStore.clear();
+        if (temperatureArrayDataStore != null) {
+            for (List<SensorDataPoint> s : temperatureArrayDataStore) {
+                s.clear();
+            }
+        }
         timeZeroMillis = System.currentTimeMillis();
     }
 
@@ -521,7 +527,7 @@ public class IoTWorkbench {
         return currentTime;
     }
 
-    public void startSensorDataCollection() {
+    private void startSensorDataCollection() {
         timeZeroMillis = System.currentTimeMillis();
         threadPool.execute(() -> {
             while (true) {
@@ -598,13 +604,6 @@ public class IoTWorkbench {
                         ayDataStore.add(new SensorDataPoint(currentTime, ay));
                         azDataStore.add(new SensorDataPoint(currentTime, az));
                     }
-                    if (oneWireDevices != null && !oneWireDevices.isEmpty()) {
-                        for (W1Device device : oneWireDevices) {
-                            if(device instanceof TemperatureSensor) {
-                                System.out.println("******** Temperature: " + ((TemperatureSensor) device).getTemperature());
-                            }
-                        }
-                    }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -615,6 +614,38 @@ public class IoTWorkbench {
                     Thread.sleep(sensorDataCollectionInterval);
                 } catch (InterruptedException e) {
                 }
+            }
+        });
+        startOneWireTemperatureSensorDataCollection();
+    }
+
+    // one-wire temperature sensors are much slower, so handle them in a separate thread
+    private void startOneWireTemperatureSensorDataCollection() {
+        if (oneWireDevices == null && oneWireDevices.isEmpty()) {
+            return;
+        }
+        temperatureArrayDataStore = new List[oneWireDevices.size()];
+        for (int i = 0; i < temperatureArrayDataStore.length; i++) {
+            temperatureArrayDataStore[i] = new ArrayList<>();
+        }
+        threadPool.execute(() -> {
+            while (true) {
+                for (int i = 0; i < oneWireDevices.size(); i++) {
+                    W1Device device = oneWireDevices.get(i);
+                    if (device instanceof TemperatureSensor) {
+                        double tmp = ((TemperatureSensor) device).getTemperature();
+                        currentTime = (double) (System.currentTimeMillis() - timeZeroMillis) / (double) sensorDataCollectionInterval;
+                        temperatureArrayDataStore[i].add(new SensorDataPoint(currentTime, tmp));
+                        System.out.printf("DS18B20: Temperature (%s) : %.2f C %n", device.getId(), tmp);
+                    }
+                }
+                if (boardView != null) {
+                    boardView.repaint();
+                }
+//                try {
+//                    Thread.sleep(sensorDataCollectionInterval);
+//                } catch (InterruptedException e) {
+//                }
             }
         });
     }
@@ -644,6 +675,10 @@ public class IoTWorkbench {
 
     public List<SensorDataPoint> getTemperatureDataStore() {
         return temperatureDataStore;
+    }
+
+    public List<SensorDataPoint>[] getTemperatureArrayDataStore() {
+        return temperatureArrayDataStore;
     }
 
     public void setAllowBarometricPressureTransmission(boolean b) {
