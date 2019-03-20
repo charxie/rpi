@@ -35,7 +35,7 @@ class DataViewer {
                 showData("Light", "Visible", workbench.getVisibleLuxDataStore(), "Infrared", workbench.getInfraredLuxDataStore());
                 break;
             case 4:
-                showData("Distance", workbench.getDistanceDataStore());
+                showData("Distance", "Lidar", workbench.getLidarDistanceDataStore(), "Ultrsonic", workbench.getUltrasonicDistanceDataStore());
                 break;
             case 5:
                 showData("Acceleration", "Ax", workbench.getAxDataStore(), "Ay", workbench.getAyDataStore(), "Az", workbench.getAzDataStore());
@@ -62,18 +62,29 @@ class DataViewer {
     }
 
     private void showData(String name, String s1, List<SensorDataPoint> data1, String s2, List<SensorDataPoint> data2) {
-        int n = data1.size();
-        if (n < 1) {
+        int n1 = data1.size();
+        int n2 = data2.size();
+        if (n1 < 1 && n2 < 1) {
             JOptionPane.showMessageDialog(JOptionPane.getFrameForComponent(workbench.boardView), "No data has been collected.", "No data", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
+        int n = Math.max(n1, n2);
         String[] header = new String[]{"Time", s1, s2};
         Object[][] column = new Object[n][3];
         for (int i = 0; i < n; i++) {
-            SensorDataPoint d = data1.get(i);
-            column[i][0] = d.getTime();
-            column[i][1] = d.getValue();
-            column[i][2] = data2.get(i).getValue();
+            if (!data1.isEmpty() && data2.isEmpty()) {
+                column[i][0] = data1.get(i).getTime();
+                column[i][1] = data1.get(i).getValue();
+                column[i][2] = "-";
+            } else if (!data2.isEmpty() && data1.isEmpty()) {
+                column[i][0] = data2.get(i).getTime();
+                column[i][1] = "-";
+                column[i][2] = data2.get(i).getValue();
+            } else {
+                column[i][0] = data1.get(i).getTime();
+                column[i][1] = data1.get(i).getValue();
+                column[i][2] = data2.get(i).getValue();
+            }
         }
         showDataWindow(name, column, header);
     }

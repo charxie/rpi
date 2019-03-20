@@ -272,7 +272,7 @@ class BoardView extends JPanel {
                     }
                     graphRenderer.drawData(g2, workbench.getTemperatureDataStore(), "Temperature", false, Color.BLACK);
                     List<SensorDataPoint>[] temperatureArrayDataStore = workbench.getTemperatureArrayDataStore();
-                    if (temperatureArrayDataStore != null) {
+                    if (temperatureArrayDataStore != null && temperatureArrayDataStore.length > 0) {
                         Color[] colors = new Color[temperatureArrayDataStore.length];
                         Arrays.fill(colors, Color.RED);
                         colors[1] = Color.GREEN;
@@ -308,12 +308,13 @@ class BoardView extends JPanel {
                     graphRenderer.drawData(g2, workbench.getInfraredLuxDataStore(), "Infrared Light", false, Color.RED);
                     break;
                 case 4: // time-of-flight distance
-                    if (workbench.getDistance() > graphRenderer.getYmax()) {
+                    if (workbench.getLidarDistance() > graphRenderer.getYmax() || workbench.getUltrasonicDistance() > graphRenderer.getYmax()) {
                         graphRenderer.increaseYmax();
-                    } else if (workbench.getDistance() < graphRenderer.getYmin()) {
+                    } else if (workbench.getLidarDistance() < graphRenderer.getYmin() || workbench.getUltrasonicDistance() < graphRenderer.getYmin()) {
                         graphRenderer.decreaseYmin();
                     }
-                    graphRenderer.drawData(g2, workbench.getDistanceDataStore(), "Distance", false, null);
+                    graphRenderer.drawData(g2, workbench.getLidarDistanceDataStore(), "Distance (Lidar)", false, Color.BLACK);
+                    graphRenderer.drawData(g2, workbench.getUltrasonicDistanceDataStore(), "Distance (Ultrasonic)", false, Color.MAGENTA);
                     break;
                 case 5: // acceleration
                     if (workbench.getAx() > graphRenderer.getYmax() || workbench.getAy() > graphRenderer.getYmax() || workbench.getAz() > graphRenderer.getYmax()) {
@@ -514,9 +515,16 @@ class BoardView extends JPanel {
                 }
                 break;
             case 4:
-                minmax = getMinMax(workbench.getDistanceDataStore());
+                minmax = getMinMax(workbench.getLidarDistanceDataStore());
                 min = minmax[0];
                 max = minmax[1];
+                minmax = getMinMax(workbench.getUltrasonicDistanceDataStore());
+                if (minmax[0] < min) {
+                    min = minmax[0];
+                }
+                if (minmax[1] > max) {
+                    max = minmax[1];
+                }
                 break;
             case 5:
                 minmax = getMinMax(workbench.getAxDataStore());

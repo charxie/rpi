@@ -54,13 +54,14 @@ public class IoTWorkbench {
     AlphanumericDisplay display;
     String displayMode = "None";
 
+    private List<W1Device> oneWireDevices;
     private BMP280 bmp280; // temperarture and barometric pressure
     private BME280 bme280; // temperature, barometric pressure, and relative humidity
     private TSL2561 tsl2561; // visible and infrared light sensor
     private VL53L0X vl53l0x; // distance sensor based on time of flight
     private VCNL4010 vcnl4010; // luminance and proximity
     private LIS3DH lis3dh; // three-axis acceleration
-    private List<W1Device> oneWireDevices;
+    private HCSR04 hcsr04; // ultrasonic sensor
 
     private DatabaseReference database;
 
@@ -72,7 +73,8 @@ public class IoTWorkbench {
     private double relativeHumidity;
     private double visibleLux;
     private double infraredLux;
-    private int distance;
+    private int lidarDistance;
+    private float ultrasonicDistance;
     private int ax, ay, az;
     boolean allowTemperatureTransmission;
     boolean allowBarometricPressureTransmission;
@@ -95,7 +97,8 @@ public class IoTWorkbench {
     private List<SensorDataPoint> relativeHumidityDataStore;
     private List<SensorDataPoint> visibleLuxDataStore;
     private List<SensorDataPoint> infraredLuxDataStore;
-    private List<SensorDataPoint> distanceDataStore;
+    private List<SensorDataPoint> lidarDistanceDataStore;
+    private List<SensorDataPoint> ultrasonicDistanceDataStore;
     private List<SensorDataPoint> axDataStore;
     private List<SensorDataPoint> ayDataStore;
     private List<SensorDataPoint> azDataStore;
@@ -184,6 +187,7 @@ public class IoTWorkbench {
                     e.printStackTrace();
                     lis3dh = null;
                 }
+                hcsr04 = new HCSR04();
                 break;
         }
 
@@ -195,17 +199,19 @@ public class IoTWorkbench {
         //apa102.setDefaultRainbow(); // test
 
         setupButtons();
-        startSensorDataCollection();
 
         temperatureDataStore = new ArrayList<>();
         barometricPressureDataStore = new ArrayList<>();
         relativeHumidityDataStore = new ArrayList<>();
         visibleLuxDataStore = new ArrayList<>();
         infraredLuxDataStore = new ArrayList<>();
-        distanceDataStore = new ArrayList<>();
+        lidarDistanceDataStore = new ArrayList<>();
+        ultrasonicDistanceDataStore = new ArrayList<>();
         axDataStore = new ArrayList<>();
         ayDataStore = new ArrayList<>();
         azDataStore = new ArrayList<>();
+
+        startSensorDataCollection();
 
         taskFactory = new TaskFactory(this);
 
@@ -228,7 +234,8 @@ public class IoTWorkbench {
         relativeHumidityDataStore.clear();
         visibleLuxDataStore.clear();
         infraredLuxDataStore.clear();
-        distanceDataStore.clear();
+        lidarDistanceDataStore.clear();
+        ultrasonicDistanceDataStore.clear();
         axDataStore.clear();
         ayDataStore.clear();
         azDataStore.clear();
@@ -583,11 +590,11 @@ public class IoTWorkbench {
                         }
                     }
                     if (vl53l0x != null) {
-                        distance = vl53l0x.range();
-                        System.out.printf("VL53L0X: Distance : %d mm %n", distance);
-                        distanceDataStore.add(new SensorDataPoint(currentTime, distance));
+                        lidarDistance = vl53l0x.range();
+                        System.out.printf("VL53L0X: Distance : %d mm %n", lidarDistance);
+                        lidarDistanceDataStore.add(new SensorDataPoint(currentTime, lidarDistance));
                         if (allowDistanceTransmission) {
-                            database.child("distance").setValue(distance, null);
+                            database.child("distance").setValue(lidarDistance, null);
                         }
                     }
                     if (vcnl4010 != null) {
@@ -603,6 +610,14 @@ public class IoTWorkbench {
                         axDataStore.add(new SensorDataPoint(currentTime, ax));
                         ayDataStore.add(new SensorDataPoint(currentTime, ay));
                         azDataStore.add(new SensorDataPoint(currentTime, az));
+                    }
+                    if (hcsr04 != null) {
+                        float x = hcsr04.getDistance();
+                        if (!Float.isNaN(x)) {
+                            ultrasonicDistance = x;
+                            System.out.printf("HC-SR04: Distance : %.3f mm %n", ultrasonicDistance);
+                            ultrasonicDistanceDataStore.add(new SensorDataPoint(currentTime, ultrasonicDistance));
+                        }
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -758,12 +773,20 @@ public class IoTWorkbench {
         return allowDistanceTransmission;
     }
 
-    public int getDistance() {
-        return distance;
+    public int getLidarDistance() {
+        return lidarDistance;
     }
 
-    public List<SensorDataPoint> getDistanceDataStore() {
-        return distanceDataStore;
+    public List<SensorDataPoint> getLidarDistanceDataStore() {
+        return lidarDistanceDataStore;
+    }
+
+    public float getUltrasonicDistance() {
+        return ultrasonicDistance;
+    }
+
+    public List<SensorDataPoint> getUltrasonicDistanceDataStore() {
+        return ultrasonicDistanceDataStore;
     }
 
     public int getAx() {
