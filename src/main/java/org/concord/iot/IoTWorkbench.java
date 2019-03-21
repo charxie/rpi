@@ -8,6 +8,7 @@ import com.pi4j.component.temperature.TemperatureSensor;
 import com.pi4j.component.temperature.impl.TmpDS18B20DeviceType;
 import com.pi4j.io.gpio.*;
 import com.pi4j.io.gpio.event.GpioPinListenerDigital;
+import com.pi4j.io.gpio.trigger.GpioCallbackTrigger;
 import com.pi4j.io.i2c.I2CBus;
 import com.pi4j.io.w1.W1Device;
 import com.pi4j.io.w1.W1Master;
@@ -24,6 +25,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.prefs.Preferences;
@@ -45,6 +47,7 @@ public class IoTWorkbench {
     private GpioPinDigitalInput buttonA;
     private GpioPinDigitalInput buttonB;
     private GpioPinDigitalInput buttonC;
+    private GpioPinDigitalInput pirMotionSensor;
     GpioPinDigitalOutput redLed;
     GpioPinDigitalOutput greenLed;
     GpioPinDigitalOutput blueLed;
@@ -118,6 +121,20 @@ public class IoTWorkbench {
 
         Gpio.wiringPiSetup(); // initialize the wiringPi library, this is needed for PWM
         gpio = GpioFactory.getInstance();
+
+        pirMotionSensor = gpio.provisionDigitalInputPin(RaspiPin.GPIO_06, "PIR Motion Sensor");
+        pirMotionSensor.addTrigger(new GpioCallbackTrigger(PinState.HIGH, () -> {
+            redLed.high();
+            greenLed.high();
+            blueLed.high();
+            return null;
+        }));
+        pirMotionSensor.addTrigger(new GpioCallbackTrigger(PinState.LOW, () -> {
+            redLed.low();
+            greenLed.low();
+            blueLed.low();
+            return null;
+        }));
 
         buttonA = gpio.provisionDigitalInputPin(RaspiPin.GPIO_29, "Button A");
         buttonB = gpio.provisionDigitalInputPin(RaspiPin.GPIO_28, "Button B");
@@ -475,7 +492,6 @@ public class IoTWorkbench {
         GpioPinListenerDigital listener = event -> {
             GpioPin pin = event.getPin();
             PinState pinState = event.getState();
-            System.out.println("GPIO Pin state change: " + pin + " = " + pinState);
             switch (pin.getPin().getAddress()) {
                 case 29:
                     touchA(!pinState.isHigh());
@@ -847,6 +863,7 @@ public class IoTWorkbench {
         buttonA.removeAllListeners();
         buttonB.removeAllListeners();
         buttonC.removeAllListeners();
+        pirMotionSensor.removeAllTriggers();
         redLed.setShutdownOptions(true, PinState.LOW, PinPullResistance.OFF);
         greenLed.setShutdownOptions(true, PinState.LOW, PinPullResistance.OFF);
         blueLed.setShutdownOptions(true, PinState.LOW, PinPullResistance.OFF);
