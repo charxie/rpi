@@ -27,6 +27,25 @@ import org.concord.iot.Util;
 import java.io.IOException;
 
 /**
+ * The pins of the MPU6050 are:
+ * <p>
+ * VCC – Power supply, 3.3 V
+ * GND – Ground
+ * SCL – I2C clock
+ * SDA – I2C data
+ * XDA – Second I2C bus data
+ * XCL – Second I2C bus clock
+ * ADO – Selection of I2C slave address 0x68(=low) 0x69(=high)
+ * INT – Interrupt pin
+ * <p>
+ * Connect VCC to the 3.3V pin of the Raspberry pi (in case of B+ it’s pin 1)
+ * Connect GND to the ground pin of the Raspberry pi (in case of B+ it’s pin 6)
+ * Connect ADO to ground (this means the MPU6050 uses I2C address 0x68)
+ * The following cabling depends on which I2C bus you want to use on the Raspberry pi. I chose to use bus 1, because bus 0 didn’t work for some reason. In case of B+ with I2C bus 1 you have connect the MPU6050 to the Raspberry pi this way:
+ * <p>
+ * Connect SCL to the SCL-1 pin of the Raspberry pi (in case of B+ it’s pin 5)
+ * Connect SDA to the SDA-1 pin of the Raspberry pi (in case of B+ it’s pin 3)
+ *
  * <b>Implementation of the MPU6050 component.</b>
  *
  * <p><b>[datasheet - p.7]</b> Product Overview</p>
@@ -127,13 +146,10 @@ import java.io.IOException;
  * Enjoy ! :)</p>
  *
  * @author Julien Louette &amp; Ga&euml;l Wittorski
- * @version 1.0
+ *
  */
-public class MPU6050 {
 
-    /* -----------------------------------------------------------------------
-     *                            DEFAULT VALUES
-     * -----------------------------------------------------------------------*/
+public class MPU6050 {
 
     /**
      * Default address of the MPU6050 device.
@@ -160,10 +176,6 @@ public class MPU6050 {
      * It is impossible to calculate an angle for the z axis from the accelerometer.
      */
     private static final double ACCEL_Z_ANGLE = 0;
-
-    /* -----------------------------------------------------------------------
-     *                          REGISTERS ADDRESSES
-     * -----------------------------------------------------------------------*/
 
     /**
      * <b>[datasheet 2 - p.11]</b> Sample Rate Divider
@@ -374,10 +386,6 @@ public class MPU6050 {
      */
     public static final int MPU6050_REG_ADDR_GYRO_ZOUT_L = 0x48; // 72
 
-    /* -----------------------------------------------------------------------
-     *                             VARIABLES
-     * -----------------------------------------------------------------------*/
-
     /**
      * The i2c bus used by the component.
      *
@@ -412,8 +420,6 @@ public class MPU6050 {
      */
     private double gyroLSBSensitivity;
 
-    private Thread updatingThread = null;
-    private boolean updatingThreadStopped = true;
     private long lastUpdateTime = 0;
 
     // ACCELEROMETER
@@ -530,10 +536,6 @@ public class MPU6050 {
      */
     private double filteredAngleZ = 0.;
 
-    /* -----------------------------------------------------------------------
-     *                             CONSTRUCTORS
-     * -----------------------------------------------------------------------*/
-
     /**
      * Constructor for a new MPU6050 using the default i2c address
      * and the default value for the DLPF setting.
@@ -558,7 +560,7 @@ public class MPU6050 {
     public MPU6050(int i2cAddress, int dlpfCfg, int smplrtDiv) throws Exception {
         try {
             bus = I2CFactory.getInstance(I2CBus.BUS_1);
-            device = bus.getDevice(0x68);
+            device = bus.getDevice(i2cAddress);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -601,10 +603,6 @@ public class MPU6050 {
 
         calibrateSensors();
     }
-
-    /* -----------------------------------------------------------------------
-     *                             METHODS
-     * -----------------------------------------------------------------------*/
 
     /**
      * Returns the Sample Rate of the MPU6050.
@@ -659,7 +657,6 @@ public class MPU6050 {
         accelY /= accelLSBSensitivity;
         double accelZ = readWord2C(MPU6050_REG_ADDR_ACCEL_ZOUT_H);
         accelZ /= accelLSBSensitivity;
-
         return new double[]{accelX, accelY, -accelZ};
     }
 
@@ -677,7 +674,6 @@ public class MPU6050 {
         gyroY /= gyroLSBSensitivity;
         double gyroZ = readWord2C(MPU6050_REG_ADDR_GYRO_ZOUT_H);
         gyroZ /= gyroLSBSensitivity;
-
         return new double[]{gyroX, gyroY, gyroZ};
     }
 
@@ -710,50 +706,10 @@ public class MPU6050 {
     }
 
     /**
-     * Starts the thread responsible to update MPU6050 values in background.
-     */
-    public void startUpdatingThread() {
-        if (updatingThread == null || !updatingThread.isAlive()) {
-            updatingThreadStopped = false;
-            lastUpdateTime = System.currentTimeMillis();
-            updatingThread = new Thread(() -> {
-                while (!updatingThreadStopped) {
-                    try {
-                        updateValues();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        break;
-                    }
-                }
-            });
-            updatingThread.start();
-        } else {
-            System.out.println("Updating thread of the MPU6050 is already started.");
-        }
-    }
-
-    /**
-     * Stops the thread responsible to update MPU6050 values in background.
-     *
-     * @throws InterruptedException if any thread has interrupted the current thread.
-     *                              The interrupted status of the current thread is cleared when this exception is thrown.
-     */
-    public void stopUpdatingThread() throws InterruptedException {
-        updatingThreadStopped = true;
-        try {
-            updatingThread.join();
-        } catch (InterruptedException e) {
-            System.out.println("Exception when joining the updating thread.");
-            throw e;
-        }
-        updatingThread = null;
-    }
-
-    /**
      * Update values for the accelerometer angles, gyroscope angles and filtered angles values.
      * <p><i>This method is used with the updating thread.</i></p>
      */
-    private void updateValues() throws Exception {
+    public void updateValues() throws Exception {
         // Accelerometer
         double[] accelerations = readScaledAccelerometerValues();
         accelAccelerationX = accelerations[0];
@@ -794,8 +750,6 @@ public class MPU6050 {
      * @return the accelerations for the x, y and z axis. [-1, -1, -1] if the updating thread isn't running.
      */
     public double[] getAccelAccelerations() {
-        if (updatingThreadStopped)
-            return new double[]{-1., -1., -1.};
         return new double[]{accelAccelerationX, accelAccelerationY, accelAccelerationZ};
     }
 
@@ -807,8 +761,6 @@ public class MPU6050 {
      * @return the angle values for the x, y and z axis. [-1, -1, -1] if the updating thread isn't running.
      */
     public double[] getAccelAngles() {
-        if (updatingThreadStopped)
-            return new double[]{-1., -1., -1.};
         return new double[]{accelAngleX, accelAngleY, accelAngleZ};
     }
 
@@ -820,8 +772,6 @@ public class MPU6050 {
      * @return the angular speed values for the x, y and z axis. [-1, -1, -1] if the updating thread isn't running.
      */
     public double[] getGyroAngularSpeeds() {
-        if (updatingThreadStopped)
-            return new double[]{-1., -1., -1.};
         return new double[]{gyroAngularSpeedX, gyroAngularSpeedY, gyroAngularSpeedZ};
     }
 
@@ -833,8 +783,6 @@ public class MPU6050 {
      * @return the angles values from the gyroscope for the x, y and z axis. [-1, -1, -1] if the updating thread isn't running.
      */
     public double[] getGyroAngles() {
-        if (updatingThreadStopped)
-            return new double[]{-1., -1., -1.};
         return new double[]{gyroAngleX, gyroAngleY, gyroAngleZ};
     }
 
@@ -857,14 +805,8 @@ public class MPU6050 {
      * @return the angles values, in °, filtered with values from the accelerometer and the gyroscope.
      */
     public double[] getFilteredAngles() {
-        if (updatingThreadStopped)
-            return new double[]{-1., -1., -1.};
         return new double[]{filteredAngleX, filteredAngleY, filteredAngleZ};
     }
-
-    /* -----------------------------------------------------------------------
-     *                              UTILS
-     * -----------------------------------------------------------------------*/
 
     /**
      * Reads the content of the reg register (8bits),
@@ -1015,45 +957,4 @@ public class MPU6050 {
         return ACCEL_Z_ANGLE;
     }
 
-    /**
-     * Returns the String representation of an angle, in the "x.xxxx°" format.
-     *
-     * @param angle the angle to convert.
-     * @return the String representation of an angle, in the "x.xxxx°" format.
-     */
-    public static String angleToString(double angle) {
-        return String.format("%.4f", angle) + "°";
-    }
-
-    /**
-     * Returns the String representation of an acceleration value, in the "x.xxxxxxg" format.
-     *
-     * @param accel the acceleration to convert.
-     * @return the String representation of an acceleration value, in the "x.xxxxxxg" format.
-     */
-    public static String accelToString(double accel) {
-        return String.format("%.6f", accel) + "g";
-    }
-
-    /**
-     * Returns the String representation of an angular speed value, in the "x.xxxx°/s" format.
-     *
-     * @param angularSpeed the angular speed to convert.
-     * @return the String representation of an angular speed value, in the "x.xxxx°/s" format.
-     */
-    public static String angularSpeedToString(double angularSpeed) {
-        return String.format("%.4f", angularSpeed) + "°/s";
-    }
-
-    /**
-     * Returns a String representation of a triplet of values, in the "x: X\t y: Y\t z: Z" format.
-     *
-     * @param x the first value of the triplet.
-     * @param y the second value of the triplet.
-     * @param z the thirs value of the triplet.
-     * @return a String representation of a triplet of values, in the "x: X\t y: Y\t z: Z" format.
-     */
-    public static String xyzValuesToString(String x, String y, String z) {
-        return "x: " + x + "\ty: " + y + "\tz: " + z;
-    }
 }

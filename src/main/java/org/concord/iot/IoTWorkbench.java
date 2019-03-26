@@ -65,6 +65,7 @@ public class IoTWorkbench {
     private VCNL4010 vcnl4010; // luminance and proximity
     private LIS3DH lis3dh; // three-axis acceleration
     private HCSR04 hcsr04; // ultrasonic sensor
+    private MPU6050 mpu6050; // gyroscope and accelerometer
 
     private DatabaseReference database;
 
@@ -79,6 +80,8 @@ public class IoTWorkbench {
     private int lidarDistance;
     private float ultrasonicDistance;
     private int ax, ay, az;
+    private double[] accelerations;
+    private double[] gyroAngularSpeeds;
     boolean allowTemperatureTransmission;
     boolean allowBarometricPressureTransmission;
     boolean allowRelativeHumidityTransmission;
@@ -205,6 +208,12 @@ public class IoTWorkbench {
                 } catch (Exception e) {
                     e.printStackTrace();
                     lis3dh = null;
+                }
+                try {
+                    mpu6050 = new MPU6050();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    mpu6050 = null;
                 }
                 hcsr04 = new HCSR04();
                 break;
@@ -628,6 +637,13 @@ public class IoTWorkbench {
                         axDataStore.add(new SensorDataPoint(currentTime, ax));
                         ayDataStore.add(new SensorDataPoint(currentTime, ay));
                         azDataStore.add(new SensorDataPoint(currentTime, az));
+                    }
+                    if (mpu6050 != null) {
+                        mpu6050.updateValues();
+                        accelerations = mpu6050.getAccelAccelerations();
+                        gyroAngularSpeeds = mpu6050.getGyroAngularSpeeds();
+                        System.out.printf("MPU6060: Accelerations : %.2f, %.2f, %.2f %n", accelerations[0], accelerations[1], accelerations[2]);
+                        System.out.printf("MPU6060: Gyro Angular Speeds : %.2f, %.2f, %.2f %n", gyroAngularSpeeds[0], gyroAngularSpeeds[1], gyroAngularSpeeds[2]);
                     }
                     if (hcsr04 != null) {
                         float x = hcsr04.getDistance();
