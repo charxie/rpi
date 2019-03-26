@@ -13,6 +13,14 @@ import java.io.File;
 
 public final class Util {
 
+    public static void sleepMilliseconds(long millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
     /**
      * If the user does not input the extension specified by the file filter, automatically augment the file name with the specified extension.
      */
