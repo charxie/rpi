@@ -81,6 +81,7 @@ public class IoTWorkbench {
     private float ultrasonicDistance;
     private int ax, ay, az;
     private double[] accelerations;
+    private double[] gyroAngles;
     private double[] gyroAngularSpeeds;
     boolean allowTemperatureTransmission;
     boolean allowBarometricPressureTransmission;
@@ -641,8 +642,10 @@ public class IoTWorkbench {
                     if (mpu6050 != null) {
                         mpu6050.updateValues();
                         accelerations = mpu6050.getAccelAccelerations();
+                        gyroAngles = mpu6050.getGyroAngles();
                         gyroAngularSpeeds = mpu6050.getGyroAngularSpeeds();
                         System.out.printf("MPU6060: Accelerations : %.2f, %.2f, %.2f %n", accelerations[0], accelerations[1], accelerations[2]);
+                        System.out.printf("MPU6060: Gyro Angles : %.2f, %.2f, %.2f %n", gyroAngles[0], gyroAngles[1], gyroAngles[2]);
                         System.out.printf("MPU6060: Gyro Angular Speeds : %.2f, %.2f, %.2f %n", gyroAngularSpeeds[0], gyroAngularSpeeds[1], gyroAngularSpeeds[2]);
                     }
                     if (hcsr04 != null) {

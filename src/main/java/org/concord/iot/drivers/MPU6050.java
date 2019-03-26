@@ -737,8 +737,8 @@ public class MPU6050 {
 
         // Complementary Filter
         double alpha = 0.96;
-        filteredAngleX = alpha * (filteredAngleX + deltaGyroAngleX) + (1. - alpha) * accelAngleX;
-        filteredAngleY = alpha * (filteredAngleY + deltaGyroAngleY) + (1. - alpha) * accelAngleY;
+        filteredAngleX = alpha * (filteredAngleX + deltaGyroAngleX) + (1.0 - alpha) * accelAngleX;
+        filteredAngleY = alpha * (filteredAngleY + deltaGyroAngleY) + (1.0 - alpha) * accelAngleY;
         filteredAngleZ = filteredAngleZ + deltaGyroAngleZ;
     }
 
