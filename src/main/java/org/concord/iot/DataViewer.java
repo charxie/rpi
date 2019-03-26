@@ -97,10 +97,12 @@ class DataViewer {
         }
         String[] header = new String[]{"Time", name};
         Object[][] column = new Object[n][2];
-        for (int i = 0; i < n; i++) {
-            SensorDataPoint d = data.get(i);
-            column[i][0] = d.getTime();
-            column[i][1] = d.getValue();
+        synchronized (data) {
+            for (int i = 0; i < n; i++) {
+                SensorDataPoint d = data.get(i);
+                column[i][0] = d.getTime();
+                column[i][1] = d.getValue();
+            }
         }
         showDataWindow(name, column, header);
     }

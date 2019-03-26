@@ -23,9 +23,9 @@ import java.awt.*;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
-import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.prefs.Preferences;
@@ -127,12 +127,14 @@ public class IoTWorkbench {
             redLed.high();
             greenLed.high();
             blueLed.high();
+            buzz(2);
             return null;
         }));
         pirMotionSensor.addTrigger(new GpioCallbackTrigger(PinState.LOW, () -> {
             redLed.low();
             greenLed.low();
             blueLed.low();
+            buzz(0);
             return null;
         }));
 
@@ -217,16 +219,16 @@ public class IoTWorkbench {
 
         setupButtons();
 
-        temperatureDataStore = new ArrayList<>();
-        barometricPressureDataStore = new ArrayList<>();
-        relativeHumidityDataStore = new ArrayList<>();
-        visibleLuxDataStore = new ArrayList<>();
-        infraredLuxDataStore = new ArrayList<>();
-        lidarDistanceDataStore = new ArrayList<>();
-        ultrasonicDistanceDataStore = new ArrayList<>();
-        axDataStore = new ArrayList<>();
-        ayDataStore = new ArrayList<>();
-        azDataStore = new ArrayList<>();
+        temperatureDataStore = Collections.synchronizedList(new ArrayList<>());
+        barometricPressureDataStore = Collections.synchronizedList(new ArrayList<>());
+        relativeHumidityDataStore = Collections.synchronizedList(new ArrayList<>());
+        visibleLuxDataStore = Collections.synchronizedList(new ArrayList<>());
+        infraredLuxDataStore = Collections.synchronizedList(new ArrayList<>());
+        lidarDistanceDataStore = Collections.synchronizedList(new ArrayList<>());
+        ultrasonicDistanceDataStore = Collections.synchronizedList(new ArrayList<>());
+        axDataStore = Collections.synchronizedList(new ArrayList<>());
+        ayDataStore = Collections.synchronizedList(new ArrayList<>());
+        azDataStore = Collections.synchronizedList(new ArrayList<>());
 
         startSensorDataCollection();
 
@@ -657,7 +659,7 @@ public class IoTWorkbench {
         }
         temperatureArrayDataStore = new List[oneWireDevices.size()];
         for (int i = 0; i < temperatureArrayDataStore.length; i++) {
-            temperatureArrayDataStore[i] = new ArrayList<>();
+            temperatureArrayDataStore[i] = Collections.synchronizedList(new ArrayList<>());
         }
         threadPool.execute(() -> {
             while (true) {

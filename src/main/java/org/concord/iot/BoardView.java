@@ -459,13 +459,15 @@ class BoardView extends JPanel {
 
     private double[] getMinMax(List<SensorDataPoint> data) {
         double min = Double.MAX_VALUE, max = -Double.MAX_VALUE;
-        for (SensorDataPoint s : data) {
-            double v = s.getValue();
-            if (v > max) {
-                max = v;
-            }
-            if (v < min) {
-                min = v;
+        synchronized (data) {
+            for (SensorDataPoint s : data) {
+                double v = s.getValue();
+                if (v > max) {
+                    max = v;
+                }
+                if (v < min) {
+                    min = v;
+                }
             }
         }
         return new double[]{min, max};
