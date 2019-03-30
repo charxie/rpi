@@ -80,6 +80,7 @@ public class IoTWorkbench {
     private int lidarDistance;
     private float ultrasonicDistance;
     private int ax, ay, az;
+    private double pitch, roll;
     private double[] accelerations;
     private double[] gyroAngularSpeeds;
     boolean allowTemperatureTransmission;
@@ -108,6 +109,8 @@ public class IoTWorkbench {
     private List<SensorDataPoint> axDataStore;
     private List<SensorDataPoint> ayDataStore;
     private List<SensorDataPoint> azDataStore;
+    private List<SensorDataPoint> pitchDataStore;
+    private List<SensorDataPoint> rollDataStore;
 
     public IoTWorkbench() {
         init();
@@ -238,6 +241,8 @@ public class IoTWorkbench {
         axDataStore = Collections.synchronizedList(new ArrayList<>());
         ayDataStore = Collections.synchronizedList(new ArrayList<>());
         azDataStore = Collections.synchronizedList(new ArrayList<>());
+        pitchDataStore = Collections.synchronizedList(new ArrayList<>());
+        rollDataStore = Collections.synchronizedList(new ArrayList<>());
 
         startSensorDataCollection();
 
@@ -267,6 +272,8 @@ public class IoTWorkbench {
         axDataStore.clear();
         ayDataStore.clear();
         azDataStore.clear();
+        pitchDataStore.clear();
+        rollDataStore.clear();
         if (temperatureArrayDataStore != null) {
             for (List<SensorDataPoint> s : temperatureArrayDataStore) {
                 s.clear();
@@ -566,7 +573,7 @@ public class IoTWorkbench {
         threadPool.execute(() -> {
             while (true) {
                 try {
-                    currentTime = (double) (System.currentTimeMillis() - timeZeroMillis) / (double) sensorDataCollectionInterval;
+                    currentTime = (double) (System.currentTimeMillis() - timeZeroMillis) / 1000.0;
                     if (bmp280 != null) {
                         double[] results = bmp280.sampleDeviceReads();
                         temperature = results[BMP280.TEMP_VAL_C];
@@ -634,9 +641,13 @@ public class IoTWorkbench {
                         ax = lis3dh.getAx();
                         ay = lis3dh.getAy();
                         az = lis3dh.getAz();
+                        pitch = lis3dh.getPitch();
+                        roll = lis3dh.getRoll();
                         axDataStore.add(new SensorDataPoint(currentTime, ax));
                         ayDataStore.add(new SensorDataPoint(currentTime, ay));
                         azDataStore.add(new SensorDataPoint(currentTime, az));
+                        pitchDataStore.add(new SensorDataPoint(currentTime, pitch));
+                        rollDataStore.add(new SensorDataPoint(currentTime, roll));
                     }
                     if (mpu6050 != null) {
                         mpu6050.updateValues();
@@ -683,7 +694,7 @@ public class IoTWorkbench {
                     W1Device device = oneWireDevices.get(i);
                     if (device instanceof TemperatureSensor) {
                         double tmp = ((TemperatureSensor) device).getTemperature();
-                        currentTime = (double) (System.currentTimeMillis() - timeZeroMillis) / (double) sensorDataCollectionInterval;
+                        currentTime = (double) (System.currentTimeMillis() - timeZeroMillis) / 1000.0;
                         temperatureArrayDataStore[i].add(new SensorDataPoint(currentTime, tmp));
                         System.out.printf("DS18B20: Temperature (%s) : %.2f C %n", device.getId(), tmp);
                     }
@@ -845,6 +856,22 @@ public class IoTWorkbench {
 
     public List<SensorDataPoint> getAzDataStore() {
         return azDataStore;
+    }
+
+    public double getPitch() {
+        return pitch;
+    }
+
+    public List<SensorDataPoint> getPitchDataStore() {
+        return pitchDataStore;
+    }
+
+    public double getRoll() {
+        return roll;
+    }
+
+    public List<SensorDataPoint> getRollDataStore() {
+        return rollDataStore;
     }
 
     private void synchronizeWithCloud() {

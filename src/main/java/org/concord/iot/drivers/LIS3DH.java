@@ -34,6 +34,8 @@ public class LIS3DH {
     private int az = 0;
     private double angularAboutX = 0;
     private double angularAboutY = 0;
+    private double pitch;
+    private double roll;
     private I2CDevice device;
 
     public LIS3DH() throws IOException, I2CFactory.UnsupportedBusNumberException {
@@ -64,14 +66,22 @@ public class LIS3DH {
         angularAboutX = (Math.atan2(ay, az) + 3.14) * 57.3;
         angularAboutY = (Math.atan2(az, ax) + 3.14) * 57.3;
 
+        pitch = Math.toDegrees(Math.atan2(-ax, Math.hypot(ay, az)));
+        roll = Math.toDegrees(Math.atan2(ay, az));
+
     }
 
     public void printf() {
-        System.out.println("LIS3DH: ax : " + ax);
-        System.out.println("LIS3DH: ay : " + ay);
-        System.out.println("LIS3DH: az : " + az);
-        //System.out.println("LIS3DH: Angular acceleration about X : " + angularAboutX);
-        //System.out.println("LIS3DH: Angular acceleration about Y : " + angularAboutY);
+        System.out.printf("LIS3DH: Acceleration : %d, %d, %d %n", ax, ay, az);
+        System.out.printf("LIS3DH: Pitch: %.2f, Roll: %.2f %n", pitch, roll);
+    }
+
+    public double getPitch() {
+        return pitch;
+    }
+
+    public double getRoll() {
+        return roll;
     }
 
     public int getAx() {

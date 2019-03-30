@@ -326,6 +326,15 @@ class BoardView extends JPanel {
                     graphRenderer.drawData(g2, workbench.getAyDataStore(), "Ay", false, Color.GREEN);
                     graphRenderer.drawData(g2, workbench.getAzDataStore(), "Az", false, Color.BLUE);
                     break;
+                case 6: // orientation
+                    if (workbench.getPitch() > graphRenderer.getYmax() || workbench.getRoll() > graphRenderer.getYmax()) {
+                        graphRenderer.increaseYmax();
+                    } else if (workbench.getPitch() < graphRenderer.getYmin() || workbench.getRoll() < graphRenderer.getYmin()) {
+                        graphRenderer.decreaseYmin();
+                    }
+                    graphRenderer.drawData(g2, workbench.getPitchDataStore(), "Pitch", false, Color.RED);
+                    graphRenderer.drawData(g2, workbench.getRollDataStore(), "Roll", false, Color.GREEN);
+                    break;
             }
         }
 
@@ -540,6 +549,18 @@ class BoardView extends JPanel {
                     max = minmax[1];
                 }
                 minmax = getMinMax(workbench.getAzDataStore());
+                if (minmax[0] < min) {
+                    min = minmax[0];
+                }
+                if (minmax[1] > max) {
+                    max = minmax[1];
+                }
+                break;
+            case 6:
+                minmax = getMinMax(workbench.getPitchDataStore());
+                min = minmax[0];
+                max = minmax[1];
+                minmax = getMinMax(workbench.getRollDataStore());
                 if (minmax[0] < min) {
                     min = minmax[0];
                 }
