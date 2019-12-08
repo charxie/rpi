@@ -37,11 +37,11 @@ import java.util.prefs.Preferences;
 public class IoTWorkbench {
 
     public final static String BRAND_NAME = "IoT Workbench";
-    public final static String VERSION_NUMBER = "0.0.1";
+    public final static String VERSION_NUMBER = "0.0.2";
     public final static byte RAINBOW_HAT = 0;
     public final static byte SENSOR_HUB = 1;
 
-    private byte boardType = SENSOR_HUB;
+    private byte boardType = RAINBOW_HAT;
 
     private GpioController gpio;
     private GpioPinDigitalInput buttonA;
@@ -653,8 +653,8 @@ public class IoTWorkbench {
                         mpu6050.updateValues();
                         accelerations = mpu6050.getAccelAccelerations();
                         gyroAngularSpeeds = mpu6050.getGyroAngularSpeeds();
-                        System.out.printf("MPU6060: Accelerations : %.2f, %.2f, %.2f %n", accelerations[0], accelerations[1], accelerations[2]);
-                        System.out.printf("MPU6060: Gyro Angular Speeds : %.2f, %.2f, %.2f %n", gyroAngularSpeeds[0], gyroAngularSpeeds[1], gyroAngularSpeeds[2]);
+                        System.out.printf("MPU6050: Accelerations : %.2f, %.2f, %.2f %n", accelerations[0], accelerations[1], accelerations[2]);
+                        System.out.printf("MPU6050: Gyro Angular Speeds : %.2f, %.2f, %.2f %n", gyroAngularSpeeds[0], gyroAngularSpeeds[1], gyroAngularSpeeds[2]);
                     }
                     if (hcsr04 != null) {
                         float x = hcsr04.getDistance();
@@ -681,7 +681,7 @@ public class IoTWorkbench {
 
     // one-wire temperature sensors are much slower, so handle them in a separate thread
     private void startOneWireTemperatureSensorDataCollection() {
-        if (oneWireDevices == null && oneWireDevices.isEmpty()) {
+        if (oneWireDevices == null || oneWireDevices.isEmpty()) {
             return;
         }
         temperatureArrayDataStore = new List[oneWireDevices.size()];

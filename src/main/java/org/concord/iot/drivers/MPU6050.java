@@ -146,7 +146,6 @@ import java.io.IOException;
  * Enjoy ! :)</p>
  *
  * @author Julien Louette &amp; Ga&euml;l Wittorski
- *
  */
 
 public class MPU6050 {

@@ -13,9 +13,15 @@ class DatabaseHandler {
 
     static void handle(IoTWorkbench workbench, DataSnapshot dataSnapshot) {
 
-        System.out.println("Value changed: " + dataSnapshot.getValue());
+        System.out.println("Value changed : " + dataSnapshot.getValue());
 
-        WorkbenchState state = dataSnapshot.getValue(WorkbenchState.class);
+        WorkbenchState state = null;
+        try {
+            state = dataSnapshot.getValue(WorkbenchState.class);
+        } catch (Exception e) {
+            // sometime I edited the Firebase that accidentially caused the state variable to be incompatible, this should catch the error
+            e.printStackTrace();
+        }
         workbench.allowTemperatureTransmission = state.allowTemperatureTransmission;
         workbench.allowBarometricPressureTransmission = state.allowBarometricPressureTransmission;
         workbench.allowRelativeHumidityTransmission = state.allowRelativeHumidityTransmission;

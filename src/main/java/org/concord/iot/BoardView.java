@@ -332,8 +332,8 @@ class BoardView extends JPanel {
                     } else if (workbench.getPitch() < graphRenderer.getYmin() || workbench.getRoll() < graphRenderer.getYmin()) {
                         graphRenderer.decreaseYmin();
                     }
-                    graphRenderer.drawData(g2, workbench.getPitchDataStore(), "Pitch", false, Color.RED);
-                    graphRenderer.drawData(g2, workbench.getRollDataStore(), "Roll", false, Color.GREEN);
+                    graphRenderer.drawData(g2, workbench.getPitchDataStore(), "Pitch", false, Color.DARK_GRAY);
+                    graphRenderer.drawData(g2, workbench.getRollDataStore(), "Roll", false, Color.MAGENTA);
                     break;
             }
         }
