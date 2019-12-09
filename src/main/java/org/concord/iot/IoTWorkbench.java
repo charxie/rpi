@@ -879,7 +879,16 @@ public class IoTWorkbench {
             FileInputStream serviceAccount = new FileInputStream("raspberry-pi-java-firebase-adminsdk-eeeo1-f7e5dc2054.json");
             FirebaseOptions options = new FirebaseOptions.Builder().setCredentials(GoogleCredentials.fromStream(serviceAccount)).setDatabaseUrl("https://raspberry-pi-java.firebaseio.com").build();
             FirebaseApp.initializeApp(options);
-            database = FirebaseDatabase.getInstance().getReference("iot_workbench_" + user.getName());
+            String reference = "iot_workbench";
+            switch (boardType) {
+                case RAINBOW_HAT:
+                    reference = "rainbow_hat";
+                    break;
+                case SENSOR_HUB:
+                    reference = "sensor_hub";
+                    break;
+            }
+            database = FirebaseDatabase.getInstance().getReference(reference + "_" + user.getName());
             // database.setValue(new WorkbenchState(), null);
             database.addValueEventListener(new ValueEventListener() {
                 @Override
