@@ -22,6 +22,7 @@ class DatabaseHandler {
             // sometime I edited the Firebase that accidentially caused the state variable to be incompatible, this should catch the error
             e.printStackTrace();
         }
+        workbench.sensorDataCollectionInterval = state.sensorDataCollectionInterval;
         workbench.allowTemperatureTransmission = state.allowTemperatureTransmission;
         workbench.allowBarometricPressureTransmission = state.allowBarometricPressureTransmission;
         workbench.allowRelativeHumidityTransmission = state.allowRelativeHumidityTransmission;

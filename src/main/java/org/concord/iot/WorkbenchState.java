@@ -23,6 +23,7 @@ public class WorkbenchState {
     public float visibleLux = 200; // lux
     public float infraredLux = 100; // lux
     public int distance = 10; // mm
+    public int sensorDataCollectionInterval = 1000;
     public boolean allowTemperatureTransmission;
     public boolean allowBarometricPressureTransmission;
     public boolean allowRelativeHumidityTransmission;

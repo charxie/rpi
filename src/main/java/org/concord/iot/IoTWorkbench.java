@@ -69,7 +69,7 @@ public class IoTWorkbench {
 
     private DatabaseReference database;
 
-    private int sensorDataCollectionInterval = 1000; // milliseconds
+    int sensorDataCollectionInterval = 1000; // milliseconds
     private long timeZeroMillis;
     private double currentTime;
     private double temperature;
@@ -715,7 +715,7 @@ public class IoTWorkbench {
         this.sensorDataCollectionInterval = sensorDataCollectionInterval;
         final Preferences pref = Preferences.userNodeForPackage(IoTWorkbench.class);
         pref.putInt("sensor_data_collection_interval", sensorDataCollectionInterval);
-        database.child("sensorDataCollectionInterval").setValue(sensorDataCollectionInterval * 0.001, null);
+        database.child("sensorDataCollectionInterval").setValue(sensorDataCollectionInterval, null);
     }
 
     public int getSensorDataCollectionInterval() {
