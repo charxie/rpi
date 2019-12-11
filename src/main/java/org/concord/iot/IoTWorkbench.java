@@ -578,6 +578,7 @@ public class IoTWorkbench {
                         double[] results = bmp280.sampleDeviceReads();
                         temperature = results[BMP280.TEMP_VAL_C];
                         barometricPressure = results[BMP280.PRES_VAL];
+                        System.out.printf("BMP280: Time : %.2f s %n", currentTime);
                         System.out.printf("BMP280: Temperature in Celsius : %.2f C %n", temperature);
                         System.out.printf("BMP280: Pressure : %.2f hPa %n", barometricPressure);
                         temperatureDataStore.add(new SensorDataPoint(currentTime, temperature));
@@ -714,6 +715,7 @@ public class IoTWorkbench {
         this.sensorDataCollectionInterval = sensorDataCollectionInterval;
         final Preferences pref = Preferences.userNodeForPackage(IoTWorkbench.class);
         pref.putInt("sensor_data_collection_interval", sensorDataCollectionInterval);
+        database.child("sensorDataCollectionInterval").setValue(sensorDataCollectionInterval * 0.001, null);
     }
 
     public int getSensorDataCollectionInterval() {
