@@ -380,7 +380,7 @@ public class IoTWorkbench {
             buzz(0);
         }
         database.child("redLed").setValue(on, null);
-        database.child("fromRpi").setValue(true, null);
+        database.child("buttonA").setValue(on, null);
         displayMode = "Temperature";
         database.child("displayMode").setValue(displayMode, null);
         updateDisplay();
@@ -398,7 +398,7 @@ public class IoTWorkbench {
             buzz(0);
         }
         database.child("greenLed").setValue(on, null);
-        database.child("fromRpi").setValue(true, null);
+        database.child("buttonB").setValue(on, null);
         displayMode = "Pressure";
         database.child("displayMode").setValue(displayMode, null);
         updateDisplay();
@@ -416,7 +416,7 @@ public class IoTWorkbench {
             buzz(0);
         }
         database.child("blueLed").setValue(on, null);
-        database.child("fromRpi").setValue(true, null);
+        database.child("buttonC").setValue(on, null);
         if (boardView != null) {
             boardView.setBlueLedPressed(on);
         }
