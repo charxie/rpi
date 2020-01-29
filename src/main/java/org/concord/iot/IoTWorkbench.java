@@ -37,7 +37,7 @@ import java.util.prefs.Preferences;
 public class IoTWorkbench {
 
     public final static String BRAND_NAME = "IoT Workbench";
-    public final static String VERSION_NUMBER = "0.0.2";
+    public final static String VERSION_NUMBER = "0.0.3";
     public final static byte RAINBOW_HAT = 0;
     public final static byte SENSOR_HUB = 1;
 
@@ -380,6 +380,7 @@ public class IoTWorkbench {
             buzz(0);
         }
         database.child("redLed").setValue(on, null);
+        database.child("fromRpi").setValue(true, null);
         displayMode = "Temperature";
         database.child("displayMode").setValue(displayMode, null);
         updateDisplay();
@@ -397,6 +398,7 @@ public class IoTWorkbench {
             buzz(0);
         }
         database.child("greenLed").setValue(on, null);
+        database.child("fromRpi").setValue(true, null);
         displayMode = "Pressure";
         database.child("displayMode").setValue(displayMode, null);
         updateDisplay();
@@ -414,6 +416,7 @@ public class IoTWorkbench {
             buzz(0);
         }
         database.child("blueLed").setValue(on, null);
+        database.child("fromRpi").setValue(true, null);
         if (boardView != null) {
             boardView.setBlueLedPressed(on);
         }
